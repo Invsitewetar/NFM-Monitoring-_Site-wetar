@@ -8,11 +8,24 @@ st.set_page_config(page_title="NFM Tracking", layout="centered", page_icon="🚢
 st.title("🚢 NFM Tracking Site Wetar")
 st.write("---")
 
-# Cache dimatikan (ttl=0) agar selalu ambil data paling baru dari Excel
+# Paksa update data (ttl=0)
 @st.cache_data(ttl=0)
 def get_data():
     df = pd.read_csv(URL_DATA)
-    df.columns = [str(c).strip().upper() for c in df.columns] # Paksa semua judul kolom jadi HURUF BESAR
+    # Bersihkan nama kolom: Hapus spasi dan ubah ke huruf BESAR
+    df.columns = [str(c).strip().upper() for c in df.columns]
+    
+    # Fungsi membersihkan angka agar bisa dijumlah
+    def to_num(val):
+        if pd.isna(val): return 0.0
+        s = str(val).replace('Rp', '').replace('.', '').replace(',', '.').replace(' ', '').strip()
+        try: return float(s)
+        except: return 0.0
+
+    # Otomatis bersihkan kolom bernilai uang
+    for col in df.columns:
+        if 'VALUE' in col:
+            df[col] = df[col].apply(to_num)
     return df
 
 try:
@@ -21,38 +34,38 @@ try:
 
     if search_query:
         # Cari data berdasarkan Nomor Form
-        result = data[data['NOMOR FORM'].astype(str).str.contains(rf"^{search_query}(/|$)", na=False)]
+        res = data[data['NOMOR FORM'].astype(str).str.contains(rf"^{search_query}(/|$)", na=False)]
 
-        if not result.empty:
-            first_row = result.iloc[0]
+        if not res.empty:
+            row = res.iloc[0]
             st.success("✅ Data Ditemukan")
             
             with st.container(border=True):
-                st.subheader(f"📄 {first_row['NOMOR FORM']}")
+                st.subheader(f"📄 {row['NOMOR FORM']}")
                 st.divider()
                 
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.write(f"**🏢 Dept:** {first_row.get('DEPARTEMENT', '-')}")
-                    st.write(f"**👤 Requestor:** {first_row.get('REQUESTOR', '-')}")
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.write(f"**🏢 Dept:** {row.get('DEPARTEMENT', row.get('DEPT', '-'))}")
+                    st.write(f"**👤 Requestor:** {row.get('REQUESTOR', '-')}")
                 
-                with col2:
-                    # KODE SAKTI: Mencari kolom yang mengandung kata 'PR' tapi bukan 'STATUS'
+                with c2:
+                    # Mencari kolom PR secara cerdas (mencari kata 'PR' yang bukan 'STATUS')
                     pr_cols = [c for c in data.columns if 'PR' in c and 'STATUS' not in c]
-                    pr_val = first_row.get(pr_cols[0], '-') if pr_cols else '-'
+                    pr_val = row.get(pr_cols[0], '-') if pr_cols else '-'
                     
                     st.write(f"**📑 Nomor PR:** {pr_val}")
-                    st.write(f"**✅ Status PR:** {first_row.get('STATUS PR', '-')}")
+                    st.write(f"**✅ Status PR:** {row.get('STATUS PR', '-')}")
                     
-                    # Ambil Outstanding On Site Value
+                    # Outstanding Value
                     out_cols = [c for c in data.columns if 'OUTSTANDING' in c]
-                    out_val = result[out_cols[0]].sum() if out_cols else 0
-                    st.write(f"**💰 Outstanding:** Rp {out_val:,.2f}")
+                    out_amt = res[out_cols[0]].sum() if out_cols else 0
+                    st.write(f"**💰 Outstanding:** Rp {out_amt:,.2f}")
 
                 st.divider()
-                st.info(f"**📑 STATUS REQ:** {first_row.get('STATUS REQ', '-')}")
+                st.info(f"**📑 STATUS REQ:** {row.get('STATUS REQ', '-')}")
         else:
             st.error("❌ Nomor Form tidak ditemukan.")
 
 except Exception as e:
-    st.error(f"Koneksi terganggu. Silakan refresh halaman. Error: {e}")
+    st.error(f"Koneksi terkunci atau data tidak terbaca. Pastikan Google Sheets sudah 'Anyone with the link'. Error: {e}")
