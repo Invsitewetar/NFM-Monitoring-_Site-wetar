@@ -69,7 +69,7 @@ try:
                     pr_col = [c for c in data.columns if 'Nomor PR' in c or 'NO. PR' in c]
                     pr_display = first_row.get(pr_col[0], '-') if pr_col else '-'
                     
-                    st.write(f"**📑 Nomor PR:** {pr_display}")
+                    st.write(f"**📑 NOMOR PR:** {pr_display}")
                     st.write(f"**✅ Status PR:** {first_row.get('STATUS PR', '-')}")
                     st.write(f"**💰 Total Value:** Rp {total_val:,.2f}")
 
