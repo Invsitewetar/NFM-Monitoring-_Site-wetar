@@ -7,7 +7,7 @@ URL_DATA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXL6oLuQJtXHGXlNYgM
 st.set_page_config(page_title="Monitoring NFM Wetar", layout="wide", page_icon="🚢")
 
 st.title("🚢 Monitoring Part Non-Fast Moving (NFM)")
-st.subheader("Site Wetar Logistics Tracker")
+st.subheader("Non Fast Moving (NFM) Tracker")
 
 @st.cache_data(ttl=60)
 def get_data():
