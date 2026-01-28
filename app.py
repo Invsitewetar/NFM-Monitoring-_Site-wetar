@@ -4,15 +4,33 @@ import pandas as pd
 # Link CSV Database
 URL_DATA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXL6oLuQJtXHGXlNYgM_7JgWYzFubZczo-JK9QYHJu8DmY0VzmZAFWIrC_JTDa6X77AkmxbYYd_zX0/pub?output=csv"
 
-# Membuat tampilan terpusat dan rapi
+# Setting Halaman
 st.set_page_config(page_title="NFM Tracking", layout="centered", page_icon="🚢")
 
-# CSS rahasia agar kotak informasi tidak meluber di layar laptop
+# KODE KHUSUS UNTUK BACKGROUND HITAM & DESAIN RAPI
 st.markdown("""
     <style>
-    .block-container { max-width: 800px; padding-top: 2rem; }
-    .stAlert { padding: 10px; }
-    div[data-testid="stMetricValue"] { font-size: 1.5rem; }
+    /* Mengubah background utama menjadi hitam */
+    .stApp {
+        background-color: #0E1117;
+        color: #FFFFFF;
+    }
+    /* Mengatur lebar kotak agar tidak kegedean di laptop */
+    .block-container {
+        max-width: 800px;
+        padding-top: 2rem;
+    }
+    /* Mempercantik kotak container */
+    div[data-testid="stContainer"] {
+        background-color: #161B22;
+        border: 1px solid #30363D;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    /* Warna teks input agar kontras */
+    .stTextInput input {
+        color: white;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -49,7 +67,7 @@ try:
             item_codes = res['Item Code'].astype(str).unique()
             st.success("✅ Data Ditemukan")
             
-            with st.container(border=True):
+            with st.container():
                 st.subheader(f"📄 {row['Nomor Form']}")
                 st.divider()
                 
@@ -57,9 +75,6 @@ try:
                 with c1:
                     st.write(f"**🏢 Dept:** \n{row.get('Departement', '-')}")
                     st.write(f"**👤 Requestor:** \n{row.get('Requestor', '-')}")
-                    st.write("**📦 Item Codes:**")
-                    for code in item_codes:
-                        st.caption(f"`{code}`")
                 
                 with c2:
                     pr_val = row.get('NOMOR PR', row.get('Nomor PR', '-'))
@@ -72,15 +87,4 @@ try:
                 st.divider()
                 st.info(f"**📑 STATUS REQ:** {row.get('STATUS REQ', '-')}")
                 
-                with st.expander("📝 Lihat Detail Deskripsi Barang"):
-                    for _, item in res.iterrows():
-                        st.write(f"• {item['Description']}")
-        else:
-            st.error("❌ Nomor Form tidak ditemukan.")
-
-except Exception as e:
-    st.error(f"Terjadi kesalahan data. Error: {e}")
-
-except Exception as e:
-    st.error(f"Gagal memuat data. Error: {e}")
-    st.error(f"Gagal memuat data. Error: {e}")
+                # REQUEST 1: Item Code dibuat seperti Desk
