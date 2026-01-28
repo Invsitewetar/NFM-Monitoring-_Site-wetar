@@ -35,35 +35,35 @@ try:
             st.success(f"✅ Data Ditemukan")
             
             with st.container(border=True):
-                # 1. JUDUL: Nomor NFM Lengkap
+                # JUDUL: Nomor NFM Lengkap
                 st.subheader(f"📄 {first_row['Nomor Form']}")
                 
                 st.divider()
                 
                 col1, col2 = st.columns(2)
                 with col1:
-                    # Request: Dept di paling atas baru Requestor
+                    # Urutan Baru: Dept di atas Requestor
                     st.write(f"**🏢 Dept:** {first_row.get('Departement', '-')}")
                     st.write(f"**👤 Requestor:** {first_row.get('Requestor', '-')}")
                     
-                    # Rincian Stock Codes (Dibuat dalam expander agar tidak menumpuk)
+                    # Rincian Stock Codes
                     with st.expander(f"📦 Lihat Rincian {len(stock_list)} Stock Codes"):
                         for code in stock_list:
                             st.write(f"- `{code}`")
                 
                 with col2:
-                    # Tampilan Nomor PR
-                    pr_no = first_row.get('Nomor PR', '-') 
+                    # Menggunakan nama kolom sesuai gambar: NO. PR ( Purchase Requistion
+                    pr_no = first_row.get('NO. PR ( Purchase Requistion', '-') 
                     st.write(f"**📑 Nomor PR:** {pr_no}")
                     st.write(f"**✅ Status PR:** {first_row.get('STATUS PR', '-')}")
                     
-                    # Total Value Keseluruhan
+                    # Total Value Keseluruhan 1 NFM
                     st.write(f"**💰 Total Value:** Rp {total_value:,.2f}")
 
                 st.divider()
                 st.info(f"**📑 STATUS REQ:** {first_row.get('STATUS REQ', '-')}")
                 
-                # Menampilkan rincian Description per item di bawah
+                # Rincian Nama Barang
                 with st.expander("📝 Rincian Nama Barang"):
                     for i, row in result.iterrows():
                         st.write(f"• {row['Description']} (Code: {row['Item Code']})")
@@ -73,4 +73,4 @@ try:
         st.info("💡 Masukkan Nomor Form untuk melihat ringkasan.")
 
 except Exception as e:
-    st.error(f"Format data berubah atau koneksi error. Periksa nama kolom di Excel. Error: {e}")
+    st.error(f"Format data berubah atau koneksi error. Error: {e}")
