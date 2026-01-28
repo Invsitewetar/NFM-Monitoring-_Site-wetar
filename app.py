@@ -1,35 +1,32 @@
 import streamlit as st
 import pandas as pd
 
-# Link CSV Database Anda
+# Link CSV Database
 URL_DATA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXL6oLuQJtXHGXlNYgM_7JgWYzFubZczo-JK9QYHJu8DmY0VzmZAFWIrC_JTDa6X77AkmxbYYd_zX0/pub?output=csv"
 
-# Setting Halaman agar tetap rapi di tengah
+# Setting Halaman agar tetap rapi di tengah (Centered)
 st.set_page_config(page_title="NFM Tracking", layout="centered", page_icon="🚢")
 
-# KODE UNTUK BACKGROUND HITAM & DESAIN RAPI
+# CSS UNTUK TEMA PUTIH BERSIH & TAMPILAN RAMPING
 st.markdown("""
     <style>
-    /* Mengubah background utama menjadi hitam */
+    /* Background Putih Bersih */
     .stApp {
-        background-color: #0E1117;
-        color: #FFFFFF;
+        background-color: #FFFFFF;
+        color: #262730;
     }
-    /* Membatasi lebar kotak agar pas di tengah (Centered) */
+    /* Membatasi lebar kotak agar pas di tengah laptop */
     .block-container {
         max-width: 800px;
         padding-top: 2rem;
     }
-    /* Mempercantik kotak container informasi */
+    /* Kotak informasi dengan bayangan halus */
     div[data-testid="stContainer"] {
-        background-color: #161B22;
-        border: 1px solid #30363D;
+        background-color: #F8F9FA;
+        border: 1px solid #E9ECEF;
         border-radius: 10px;
         padding: 20px;
-    }
-    /* Warna teks input agar terlihat di background gelap */
-    .stTextInput input {
-        color: white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -40,7 +37,6 @@ st.write("---")
 @st.cache_data(ttl=0)
 def get_data():
     df = pd.read_csv(URL_DATA)
-    # Membersihkan nama kolom
     df.columns = [str(c).strip() for c in df.columns]
     
     def clean_num(val):
@@ -49,7 +45,6 @@ def get_data():
         try: return float(s)
         except: return 0.0
 
-    # Pastikan kolom-kolom nilai uang diproses sebagai angka
     if 'Value On site' in df.columns:
         df['Value On site'] = df['Value On site'].apply(clean_num)
     if 'Outstanding On Site Value' in df.columns:
@@ -77,26 +72,24 @@ try:
                 with col1:
                     st.write(f"**🏢 Dept:** \n{row.get('Departement', '-')}")
                     st.write(f"**👤 Requestor:** \n{row.get('Requestor', '-')}")
+                    
+                    # POSISI BARU: Item Code di bawah Requestor
+                    with st.expander("📦 Lihat Rincian Item Codes"):
+                        for code in item_codes:
+                            st.write(f"• `{code}`")
                 
                 with col2:
-                    # Menampilkan Nomor PR dari data Excel Anda
                     pr_val = row.get('NOMOR PR', row.get('Nomor PR', '-'))
                     st.write(f"**📑 Nomor PR:** {pr_val}")
                     st.write(f"**✅ Status PR:** {row.get('STATUS PR', '-')}")
                     
-                    # Outstanding Value (menjumlahkan total sisa)
                     out_amt = res['Outstanding On Site Value'].sum() if 'Outstanding On Site Value' in res.columns else 0
                     st.warning(f"**💰 Outstanding:** \nRp {out_amt:,.2f}")
 
                 st.divider()
                 st.info(f"**📑 STATUS REQ:** {row.get('STATUS REQ', '-')}")
                 
-                # REQUEST 1: Item Code dibuat dalam Expander seperti Deskripsi
-                with st.expander("📦 Lihat Rincian Item Codes"):
-                    for code in item_codes:
-                        st.write(f"• `{code}`")
-                
-                # Deskripsi Barang lengkap
+                # Deskripsi Barang di bagian paling bawah
                 with st.expander("📝 Lihat Detail Deskripsi Barang"):
                     for _, item in res.iterrows():
                         st.write(f"• {item['Description']} (Code: {item['Item Code']})")
@@ -104,5 +97,4 @@ try:
             st.error("❌ Nomor Form tidak ditemukan.")
 
 except Exception as e:
-    # Ini bagian yang tadi hilang sehingga menyebabkan error
-    st.error(f"Gagal memuat data. Pastikan format Excel Anda benar. Error: {e}")
+    st.error(f"Gagal memuat data. Error: {e}")
