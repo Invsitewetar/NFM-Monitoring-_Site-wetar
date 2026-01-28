@@ -57,7 +57,7 @@ try:
                     pr_col = [c for c in data.columns if 'Nomor PR' in c]
                     pr_no = first_row.get(pr_col[0], '-') if pr_col else '-'
                     
-                    st.write(f"**📑 Nomor PR:** {pr_no}")
+                    st.write(f"**📑 NOMOR PR:** {pr_no}")
                     st.write(f"**✅ Status PR:** {first_row.get('STATUS PR', '-')}")
                     
                     # Total Harga Keseluruhan
