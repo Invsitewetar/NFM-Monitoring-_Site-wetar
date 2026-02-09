@@ -1,65 +1,73 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
+function sendEmailOnStatusChange(e) {
+  var sheet = e.source.getActiveSheet();
+  var range = e.range;
+  var editedColumn = range.getColumn();
+  
+  // --- KONFIGURASI KOLOM (Hitung dari A=1, B=2, dst) ---
+  var kolomNomorForm = 1;   // Kolom A (Nomor NFM)
+  var kolomItemCode = 2;    // Kolom B (Item Code)
+  var kolomDescription = 3; // Kolom C (Description)
+  var kolomX_NomorPR = 24;  // Kolom X (Nomor PR)
+  var kolomAB_StatusPR = 28; // Kolom AB (Status PR)
+  
+  var emailAnda = "patricia.mauleky@merdekacoppergold.com";
 
-# 1. Konfigurasi Halaman
-st.set_page_config(page_title="NFM Monitoring", layout="wide")
-st.title("📦 NFM & Backlog Monitoring Dashboard")
-st.markdown("---")
-
-# LINK GOOGLE SHEETS TERBARU KAMU
-SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXL6oLuQJtXHGXlNYgM_7JgWYzFubZczo-JK9QYHJu8DmY0VzmZAFWIrC_JTDa6X77AkmxbYYd_zX0/pub?gid=0&single=true&output=csv"
-
-@st.cache_data(ttl=60)
-def load_data():
-    try:
-        data = pd.read_csv(SHEET_URL)
-        data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
-        return data
-    except:
-        return None
-
-df = load_data()
-
-if df is not None:
-    # --- Sidebar Filter ---
-    st.sidebar.header("🔍 Filter NFM")
-    u = st.sidebar.text_input("Cari Unit")
-    p = st.sidebar.text_input("Cari PS Number")
-    w = st.sidebar.text_input("Cari WO")
+  // Pastikan memantau kolom AB (28) atau W (23)
+  if (editedColumn == kolomAB_StatusPR || editedColumn == 23) {
+    var row = range.getRow();
+    var statusBaru = range.getValue().toString().toUpperCase();
     
-    # Logika Filter
-    df_f = df.copy()
-    if u: df_f = df_f[df_f['Unit'].astype(str).str.contains(u, case=False, na=False)]
-    if p: df_f = df_f[df_f['PS Number'].astype(str).str.contains(p, case=False, na=False)]
-    if w: df_f = df_f[df_f['WO'].astype(str).str.contains(w, case=False, na=False)]
+    // AMBIL DATA - Gunakan .getDisplayValue() agar formatnya sesuai dengan yang terlihat di Excel
+    var nomorNFM = sheet.getRange(row, kolomNomorForm).getDisplayValue(); 
+    var nomorPR = sheet.getRange(row, kolomX_NomorPR).getDisplayValue();
+    var itemCode = sheet.getRange(row, kolomItemCode).getDisplayValue();
+    var deskripsi = sheet.getRange(row, kolomDescription).getDisplayValue();
+    
+    var pesanKustom = "";
+    
+    // --- LOGIKA KALIMAT DENGAN NOMOR NFM ---
+    if (statusBaru.includes("PR")) {
+      pesanKustom = "Status <b>NFM " + nomorNFM + "</b> sudah di <b>full approval</b> dan cover <b>Nomor PR: " + nomorPR + "</b>.";
+    } 
+    else if (statusBaru.includes("ON SITE") || statusBaru.includes("ONSITE")) {
+      pesanKustom = "Status <b>NFM " + nomorNFM + "</b> sudah berubah menjadi <b>Onsite</b>, silakan diambil barangnya ke warehouse.";
+    } 
+    else if (statusBaru.includes("ON ORDER")) {
+      pesanKustom = "Status <b>NFM " + nomorNFM + "</b> sementara diproses oleh team Expeditor.";
+    } 
+    else {
+      pesanKustom = "Status <b>NFM " + nomorNFM + "</b> telah diperbarui menjadi: <b>" + statusBaru + "</b>.";
+    }
 
-    # --- BAGIAN DASHBOARD KHUSUS NFM ---
-    if 'Status' in df_f.columns:
-        st.subheader("📊 Statistik Status NFM")
-        counts = df_f['Status'].value_counts()
-        
-        # Metric Utama
-        m1, m2, m3 = st.columns(3)
-        total = len(df_f)
-        nfm_count = counts.get('NFM', 0)
-        gr_count = counts.get('GR', 0)
-        
-        m1.metric("Total Item", total)
-        m2.metric("Status NFM (🔴)", nfm_count, delta=f"{nfm_count/total*100:.1f}% dari total", delta_color="inverse")
-        m3.metric("Status GR (🟢)", gr_count)
+    if (statusBaru !== "" && nomorNFM !== "") {
+      var subjek = "UPDATE NFM: " + nomorNFM + " [" + statusBaru + "]";
+      
+      var pesanHTML = "<div style='font-family: sans-serif; padding: 25px; border: 1px solid #e0e0e0; border-radius: 12px; max-width: 600px; background-color: #ffffff;'>" +
+                  "<h3 style='color: #1a73e8; margin-top: 0;'>🚢 NFM Tracking Site Wetar</h3>" +
+                  "<p style='font-size: 16px; color: #333; line-height: 1.6;'>" + pesanKustom + "</p>" +
+                  
+                  // TABEL RINCIAN BARANG
+                  "<div style='margin-top: 20px; border: 1px solid #eee; border-radius: 8px; overflow: hidden;'>" +
+                  "<table style='width: 100%; border-collapse: collapse; font-size: 14px;'>" +
+                  "<tr style='background-color: #f8f9fa;'><th style='padding: 10px; border-bottom: 1px solid #eee; text-align: left;'>Item Code</th><th style='padding: 10px; border-bottom: 1px solid #eee; text-align: left;'>Description</th></tr>" +
+                  "<tr><td style='padding: 10px; border-bottom: 1px solid #eee;'>" + itemCode + "</td><td style='padding: 10px; border-bottom: 1px solid #eee;'>" + deskripsi + "</td></tr>" +
+                  "</table></div>" +
 
-        # Grafik Batang Khusus Status
-        fig = px.bar(
-            x=counts.index, 
-            y=counts.values,
-            labels={'x': 'Status', 'y': 'Jumlah'},
-            color=counts.index,
-            # Merah untuk NFM, Hijau untuk GR, Biru untuk lainnya
-            color_discrete_map={'NFM': '#ef5350', 'GR': '#66bb6a'}
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
+                  "<p style='margin-top: 20px; font-size: 13px; color: #555;'>Cek rincian lainnya di website tracking NFM.</p>" +
+                  "<hr style='border: 0; border-top: 1px solid #eee; margin: 25px 0;'>" +
+                  "<p style='font-size: 11px; color: #9aa0a6; text-align: center;'>Notifikasi otomatis Site Wetar - Merdeka Copper Gold.</p>" +
+                  "</div>";
+      
+      MailApp.sendEmail({
+        to: emailAnda,
+        subject: subjek,
+        htmlBody: pesanHTML
+      });
+      
+      SpreadsheetApp.getActiveSpreadsheet().toast("Email NFM " + nomorNFM + " sukses terkirim!");
+    }
+  }
+}
     # --- Tabel Detail ---
     st.subheader("📋 Daftar Rincian Barang")
     st.dataframe(df_f, use_container_width=True)
