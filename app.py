@@ -1,76 +1,73 @@
-function sendEmailOnStatusChange(e) {
-  var sheet = e.source.getActiveSheet();
-  var range = e.range;
-  var editedColumn = range.getColumn();
-  
-  // --- KONFIGURASI KOLOM (Hitung dari A=1, B=2, dst) ---
-  var kolomNomorForm = 1;   // Kolom A (Nomor NFM)
-  var kolomItemCode = 2;    // Kolom B (Item Code)
-  var kolomDescription = 3; // Kolom C (Description)
-  var kolomX_NomorPR = 24;  // Kolom X (Nomor PR)
-  var kolomAB_StatusPR = 28; // Kolom AB (Status PR)
-  
-  var emailAnda = "patricia.mauleky@merdekacoppergold.com";
+import streamlit as st
+import pandas as pd
 
-  // Pastikan memantau kolom AB (28) atau W (23)
-  if (editedColumn == kolomAB_StatusPR || editedColumn == 23) {
-    var row = range.getRow();
-    var statusBaru = range.getValue().toString().toUpperCase();
-    
-    // AMBIL DATA - Gunakan .getDisplayValue() agar formatnya sesuai dengan yang terlihat di Excel
-    var nomorNFM = sheet.getRange(row, kolomNomorForm).getDisplayValue(); 
-    var nomorPR = sheet.getRange(row, kolomX_NomorPR).getDisplayValue();
-    var itemCode = sheet.getRange(row, kolomItemCode).getDisplayValue();
-    var deskripsi = sheet.getRange(row, kolomDescription).getDisplayValue();
-    
-    var pesanKustom = "";
-    
-    // --- LOGIKA KALIMAT DENGAN NOMOR NFM ---
-    if (statusBaru.includes("PR")) {
-      pesanKustom = "Status <b>NFM " + nomorNFM + "</b> sudah di <b>full approval</b> dan cover <b>Nomor PR: " + nomorPR + "</b>.";
-    } 
-    else if (statusBaru.includes("ON SITE") || statusBaru.includes("ONSITE")) {
-      pesanKustom = "Status <b>NFM " + nomorNFM + "</b> sudah berubah menjadi <b>Onsite</b>, silakan diambil barangnya ke warehouse.";
-    } 
-    else if (statusBaru.includes("ON ORDER")) {
-      pesanKustom = "Status <b>NFM " + nomorNFM + "</b> sementara diproses oleh team Expeditor.";
-    } 
-    else {
-      pesanKustom = "Status <b>NFM " + nomorNFM + "</b> telah diperbarui menjadi: <b>" + statusBaru + "</b>.";
-    }
+# Judul Utama
+st.set_page_config(page_title="NFM Tracking Site Wetar", layout="centered")
+st.title("🚢 NFM Tracking Site Wetar")
+st.divider()
 
-    if (statusBaru !== "" && nomorNFM !== "") {
-      var subjek = "UPDATE NFM: " + nomorNFM + " [" + statusBaru + "]";
-      
-      var pesanHTML = "<div style='font-family: sans-serif; padding: 25px; border: 1px solid #e0e0e0; border-radius: 12px; max-width: 600px; background-color: #ffffff;'>" +
-                  "<h3 style='color: #1a73e8; margin-top: 0;'>🚢 NFM Tracking Site Wetar</h3>" +
-                  "<p style='font-size: 16px; color: #333; line-height: 1.6;'>" + pesanKustom + "</p>" +
-                  
-                  // TABEL RINCIAN BARANG
-                  "<div style='margin-top: 20px; border: 1px solid #eee; border-radius: 8px; overflow: hidden;'>" +
-                  "<table style='width: 100%; border-collapse: collapse; font-size: 14px;'>" +
-                  "<tr style='background-color: #f8f9fa;'><th style='padding: 10px; border-bottom: 1px solid #eee; text-align: left;'>Item Code</th><th style='padding: 10px; border-bottom: 1px solid #eee; text-align: left;'>Description</th></tr>" +
-                  "<tr><td style='padding: 10px; border-bottom: 1px solid #eee;'>" + itemCode + "</td><td style='padding: 10px; border-bottom: 1px solid #eee;'>" + deskripsi + "</td></tr>" +
-                  "</table></div>" +
+# Link CSV dari Google Sheets kamu
+SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXL6oLuQJtXHGXlNYgM_7JgWYzFubZczo-JK9QYHJu8DmY0VzmZAFWIrC_JTDa6X77AkmxbYYd_zX0/pub?gid=0&single=true&output=csv"
 
-                  "<p style='margin-top: 20px; font-size: 13px; color: #555;'>Cek rincian lainnya di website tracking NFM.</p>" +
-                  "<hr style='border: 0; border-top: 1px solid #eee; margin: 25px 0;'>" +
-                  "<p style='font-size: 11px; color: #9aa0a6; text-align: center;'>Notifikasi otomatis Site Wetar - Merdeka Copper Gold.</p>" +
-                  "</div>";
-      
-      MailApp.sendEmail({
-        to: emailAnda,
-        subject: subjek,
-        htmlBody: pesanHTML
-      });
-      
-      SpreadsheetApp.getActiveSpreadsheet().toast("Email NFM " + nomorNFM + " sukses terkirim!");
-    }
-  }
-}
-    # --- Tabel Detail ---
-    st.subheader("📋 Daftar Rincian Barang")
-    st.dataframe(df_f, use_container_width=True)
+# Fungsi untuk membaca data
+@st.cache_data(ttl=600) # Data di-refresh setiap 10 menit
+def load_data():
+    df = pd.read_csv(SHEET_URL)
+    # Pastikan kolom Nomor Form dibaca sebagai string agar mudah dicari
+    df['Nomor Form'] = df['Nomor Form'].astype(str)
+    return df
 
-else:
+try:
+    df = load_data()
+
+    # Input Nomor Form
+    search_query = st.text_input("🔍 Masukkan Nomor Form:", placeholder="Contoh: 511")
+
+    if search_query:
+        # Cari data berdasarkan kolom 'Nomor Form'
+        # Sesuaikan nama kolom 'Nomor Form' dengan yang ada di Excel kamu
+        result = df[df['Nomor Form'] == search_query]
+
+        if not result.empty:
+            row = result.iloc[0] # Ambil baris pertama yang ditemukan
+            
+            st.success("✅ Data Ditemukan")
+            
+            # Judul Dokumen (Sesuaikan nama kolomnya)
+            # Misalnya kolom 'Deskripsi' atau 'Judul'
+            st.markdown(f"### 📄 {row['Nomor Form']} - {row.get('Judul/Deskripsi', 'Deskripsi Tidak Ada')}")
+            st.divider()
+
+            # Layout 2 Kolom
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.write(f"🏢 **Dept:** {row.get('Dept', 'N/A')}")
+                st.write(f"👤 **Requestor:** {row.get('Requestor', 'N/A')}")
+                with st.expander("📦 Lihat Rincian Item Codes"):
+                    st.write(row.get('Item Codes', 'Tidak ada rincian'))
+
+            with col2:
+                st.write(f"📋 **Nomor PR:** {row.get('Nomor PR', 'N/A')}")
+                st.write(f"✅ **Status PR:** {row.get('Status PR', 'N/A')}")
+                # Outstanding dengan format mata uang
+                outstanding = row.get('Outstanding', 0)
+                st.warning(f"💰 Outstanding: Rp {outstanding:,.2f}")
+
+            st.divider()
+
+            # Status Request (Banner Biru)
+            status_req = row.get('Status Req', 'DALAM PROSES')
+            st.info(f"📑 **STATUS REQ:** {status_req}")
+
+            # Expander Bawah
+            with st.expander("📝 Lihat Detail Deskripsi Barang"):
+                st.write(row.get('Detail Deskripsi', 'Tidak ada detail tambahan.'))
+        else:
+            st.error("❌ Nomor Form tidak ditemukan. Silakan cek kembali.")
+    else:
+        st.info("Silakan masukkan Nomor Form untuk melacak status.")
+
+except Exception as e:
+    st.error(f"Gagal memuat data: {e}")
     st.error("⚠️ Data tidak terbaca. Pastikan link Google Sheets benar.")
