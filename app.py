@@ -1,100 +1,79 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
-# Link CSV Database
-URL_DATA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXL6oLuQJtXHGXlNYgM_7JgWYzFubZczo-JK9QYHJu8DmY0VzmZAFWIrC_JTDa6X77AkmxbYYd_zX0/pub?output=csv"
+# 1. Konfigurasi Halaman
+st.set_page_config(page_title="Maintenance Monitoring", layout="wide")
+st.title("🛠️ Maintenance Backlog & CCO Monitoring")
+st.markdown("---")
 
-# Setting Halaman agar tetap rapi di tengah (Centered)
-st.set_page_config(page_title="NFM Tracking", layout="centered", page_icon="🚢")
+# LINK CSV FINAL
+SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyS_YZ3fhWcPNn9oNC75XF3WmUN2yQHsAD6Z-mm3vPGj7phA3jUVV9_v6GlRMlEDBxzowVy1nwwFdb/pub?gid=1771615802&single=true&output=csv"
 
-# CSS UNTUK TEMA PUTIH BERSIH & TAMPILAN RAMPING
-st.markdown("""
-    <style>
-    /* Background Putih Bersih */
-    .stApp {
-        background-color: #FFFFFF;
-        color: #262730;
-    }
-    /* Membatasi lebar kotak agar pas di tengah laptop */
-    .block-container {
-        max-width: 800px;
-        padding-top: 2rem;
-    }
-    /* Kotak informasi dengan bayangan halus */
-    div[data-testid="stContainer"] {
-        background-color: #F8F9FA;
-        border: 1px solid #E9ECEF;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    </style>
-    """, unsafe_allow_html=True)
+@st.cache_data(ttl=60)
+def load_data():
+    try:
+        df = pd.read_csv(SHEET_CSV_URL)
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+        # Hapus kolom pengetesan
+        cols_to_drop = ['Tes', 'Tes 2']
+        df = df.drop(columns=[c for c in cols_to_drop if c in df.columns], errors='ignore')
+        return df
+    except Exception as e:
+        st.error(f"Gagal memuat data: {e}")
+        return None
 
-st.title("🚢 NFM Tracking Site Wetar")
-st.write("---")
+df = load_data()
 
-@st.cache_data(ttl=0)
-def get_data():
-    df = pd.read_csv(URL_DATA)
-    df.columns = [str(c).strip() for c in df.columns]
+if df is not None:
+    # --- Sidebar Filter ---
+    st.sidebar.header("🔍 Pencarian")
+    search_unit = st.sidebar.text_input("Cari Nomor Unit")
+    search_ps = st.sidebar.text_input("Cari Nomor PS")
+    search_wo = st.sidebar.text_input("Cari Nomor WO")
+
+    # Logika Filter
+    filtered_df = df.copy()
+    if search_unit:
+        filtered_df = filtered_df[filtered_df['Unit Number'].astype(str).str.contains(search_unit, case=False, na=False)]
+    if search_ps:
+        filtered_df = filtered_df[filtered_df['PS Number'].astype(str).str.contains(search_ps, case=False, na=False)]
+    if search_wo:
+        filtered_df = filtered_df[filtered_df['Wo Number'].astype(str).str.contains(search_wo, case=False, na=False)]
+
+    # --- BAGIAN GRAFIK & SUMMARY ---
+    st.subheader("📊 Ringkasan Status")
     
-    def clean_num(val):
-        if pd.isna(val) or val == '-': return 0.0
-        s = str(val).replace('Rp', '').replace('.', '').replace(',', '.').replace(' ', '').strip()
-        try: return float(s)
-        except: return 0.0
+    # Membuat 3 kolom untuk Metric
+    m1, m2, m3 = st.columns(3)
+    total_data = len(filtered_df)
+    
+    # Menghitung jumlah per status (Pastikan nama kolom 'PS Status' sesuai di Sheets kamu)
+    if 'PS Status' in filtered_df.columns:
+        status_counts = filtered_df['PS Status'].value_counts()
+        
+        m1.metric("Total Item", total_data)
+        m2.metric("Sudah GR", status_counts.get('GR', 0))
+        m3.metric("Status NFM", status_counts.get('NFM', 0))
 
-    if 'Value On site' in df.columns:
-        df['Value On site'] = df['Value On site'].apply(clean_num)
-    if 'Outstanding On Site Value' in df.columns:
-        df['Outstanding On Site Value'] = df['Outstanding On Site Value'].apply(clean_num)
-    return df
+        # Menampilkan Grafik Batang
+        fig = px.bar(
+            status_counts, 
+            x=status_counts.index, 
+            y=status_counts.values,
+            labels={'x': 'Status Barang', 'y': 'Jumlah'},
+            color=status_counts.index,
+            color_discrete_map={'GR': '#2ecc71', 'NFM': '#e74c3c', 'Keluar': '#3498db'} # Warna hijau, merah, biru
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("Kolom 'PS Status' tidak ditemukan untuk membuat grafik.")
 
-try:
-    data = get_data()
-    search_query = st.text_input("🔍 Masukkan Nomor Form:").strip()
+    # --- Tabel Detail ---
+    st.subheader("📋 Detail Data")
+    st.dataframe(filtered_df, use_container_width=True)
 
-    if search_query:
-        # Cari data berdasarkan Nomor Form
-        res = data[data['Nomor Form'].astype(str).str.contains(rf"^{search_query}(/|$)", na=False)]
-
-        if not res.empty:
-            row = res.iloc[0]
-            item_codes = res['Item Code'].astype(str).unique()
-            st.success("✅ Data Ditemukan")
-            
-            with st.container():
-                st.subheader(f"📄 {row['Nomor Form']}")
-                st.divider()
-                
-                col1, col2 = st.columns([1, 1])
-                with col1:
-                    st.write(f"**🏢 Dept:** \n{row.get('Departement', '-')}")
-                    st.write(f"**👤 Requestor:** \n{row.get('Requestor', '-')}")
-                    
-                    # POSISI BARU: Item Code di bawah Requestor
-                    with st.expander("📦 Lihat Rincian Item Codes"):
-                        for code in item_codes:
-                            st.write(f"• `{code}`")
-                
-                with col2:
-                    pr_val = row.get('NOMOR PR', row.get('Nomor PR', '-'))
-                    st.write(f"**📑 Nomor PR:** {pr_val}")
-                    st.write(f"**✅ Status PR:** {row.get('STATUS PR', '-')}")
-                    
-                    out_amt = res['Outstanding On Site Value'].sum() if 'Outstanding On Site Value' in res.columns else 0
-                    st.warning(f"**💰 Outstanding:** \nRp {out_amt:,.2f}")
-
-                st.divider()
-                st.info(f"**📑 STATUS REQ:** {row.get('STATUS REQ', '-')}")
-                
-                # Deskripsi Barang di bagian paling bawah
-                with st.expander("📝 Lihat Detail Deskripsi Barang"):
-                    for _, item in res.iterrows():
-                        st.write(f"• {item['Description']} (Code: {item['Item Code']})")
-        else:
-            st.error("❌ Nomor Form tidak ditemukan.")
-
+else:
+    st.warning("⚠️ Menunggu data...")
 except Exception as e:
     st.error(f"Gagal memuat data. Error: {e}")
