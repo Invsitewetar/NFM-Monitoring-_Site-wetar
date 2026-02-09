@@ -15,12 +15,11 @@ def load_data():
     try:
         df = pd.read_csv(SHEET_CSV_URL)
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-        # Hapus kolom pengetesan
+        # Bersihkan kolom percobaan jika ada
         cols_to_drop = ['Tes', 'Tes 2']
         df = df.drop(columns=[c for c in cols_to_drop if c in df.columns], errors='ignore')
         return df
     except Exception as e:
-        st.error(f"Gagal memuat data: {e}")
         return None
 
 df = load_data()
@@ -28,7 +27,7 @@ df = load_data()
 if df is not None:
     # --- Sidebar Filter ---
     st.sidebar.header("🔍 Pencarian")
-    search_unit = st.sidebar.text_input("Cari Nomor Unit")
+    search_unit = st.sidebar.text_input("Cari Nomor Unit (Contoh: GR004)")
     search_ps = st.sidebar.text_input("Cari Nomor PS")
     search_wo = st.sidebar.text_input("Cari Nomor WO")
 
@@ -41,39 +40,36 @@ if df is not None:
     if search_wo:
         filtered_df = filtered_df[filtered_df['Wo Number'].astype(str).str.contains(search_wo, case=False, na=False)]
 
-    # --- BAGIAN GRAFIK & SUMMARY ---
-    st.subheader("📊 Ringkasan Status")
+    # --- BAGIAN VISUALISASI ---
+    st.subheader("📊 Ringkasan Status Barang")
     
-    # Membuat 3 kolom untuk Metric
-    m1, m2, m3 = st.columns(3)
-    total_data = len(filtered_df)
-    
-    # Menghitung jumlah per status (Pastikan nama kolom 'PS Status' sesuai di Sheets kamu)
     if 'PS Status' in filtered_df.columns:
         status_counts = filtered_df['PS Status'].value_counts()
         
-        m1.metric("Total Item", total_data)
-        m2.metric("Sudah GR", status_counts.get('GR', 0))
-        m3.metric("Status NFM", status_counts.get('NFM', 0))
+        # Metric Box (Angka Utama)
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Total Item", len(filtered_df))
+        m2.metric("Selesai (Finished)", status_counts.get('Finished', 0))
+        m3.metric("Status Lainnya", len(filtered_df) - status_counts.get('Finished', 0))
 
-        # Menampilkan Grafik Batang
+        # Grafik Batang Interaktif
         fig = px.bar(
-            status_counts, 
             x=status_counts.index, 
             y=status_counts.values,
-            labels={'x': 'Status Barang', 'y': 'Jumlah'},
+            labels={'x': 'Status', 'y': 'Jumlah Barang'},
+            title="Distribusi Status PS",
             color=status_counts.index,
-            color_discrete_map={'GR': '#2ecc71', 'NFM': '#e74c3c', 'Keluar': '#3498db'} # Warna hijau, merah, biru
+            color_discrete_sequence=px.colors.qualitative.Pastel
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info("Kolom 'PS Status' tidak ditemukan untuk membuat grafik.")
+        st.info("💡 Tip: Pastikan ada kolom 'PS Status' di Sheets untuk melihat grafik.")
 
-    # --- Tabel Detail ---
-    st.subheader("📋 Detail Data")
+    # --- Tabel Data ---
+    st.subheader("📋 Detail Data Monitoring")
     st.dataframe(filtered_df, use_container_width=True)
 
 else:
-    st.warning("⚠️ Menunggu data...")
+    st.warning("⚠️ Menunggu data. Pastikan link Google Sheets sudah benar.")
 except Exception as e:
     st.error(f"Gagal memuat data. Error: {e}")
