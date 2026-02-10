@@ -14,7 +14,7 @@ def load_data():
     try:
         data = pd.read_csv(SHEET_URL)
         data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
-        data.columns = data.columns.str.strip() # Hapus spasi gaib
+        data.columns = data.columns.str.strip() # Menghapus spasi di nama kolom
         return data
     except:
         return None
@@ -24,20 +24,20 @@ df = load_data()
 if df is not None:
     # --- Cari Nama Kolom Otomatis (Cegah KeyError) ---
     all_cols = df.columns.tolist()
-    # Mencari kolom yang mengandung kata 'Departement', 'Form', atau 'Outstanding'
+    # Mencari kolom yang ejaannya mirip dengan Departement dan Outstanding
     col_dept = next((c for c in all_cols if 'departement' in c.lower() or 'dept' in c.lower()), None)
-    col_form = next((c for c in all_cols if 'form' in c.lower()), None)
     col_out = next((c for c in all_cols if 'outstanding' in c.lower() or 'out' in c.lower()), None)
 
-    # --- Sidebar Filter (Unit dihapus) ---
+    # --- Sidebar Filter (Pencarian) ---
     st.sidebar.header("🔍 Pencarian NFM")
     search_nfm = st.sidebar.text_input("Cari Nomor Form (Contoh: 715)")
     search_dept = st.sidebar.text_input("Cari Departement") 
 
     # Logika Filter
     res = df.copy()
-    if search_nfm and col_form:
-        res = res[res[col_form].astype(str).str.contains(search_nfm, na=False)]
+    if search_nfm:
+        # Mencari di kolom pertama (Nomor Form)
+        res = res[res.iloc[:, 0].astype(str).str.contains(search_nfm, na=False)]
     if search_dept and col_dept:
         res = res[res[col_dept].astype(str).str.contains(search_dept, case=False, na=False)]
     
@@ -48,8 +48,7 @@ if df is not None:
         st.subheader("📑 Daftar PR / PO & Status Outstanding")
         
         # Susunan kolom permintaanmu: Description lalu Outstanding di sampingnya
-        # Kita masukkan kolom-kolom penting ke dalam list
-        kolom_pilihan = [col_form, 'NOMOR PR', 'Status PR', 'Item Code', 'Description', col_out, col_dept]
+        kolom_pilihan = [df.columns[0], 'NOMOR PR', 'Status PR', 'Item Code', 'Description', col_out, col_dept]
         
         # Filter hanya kolom yang benar-benar ada di database
         cols_to_show = [c for c in kolom_pilihan if c is not None and c in res.columns]
@@ -63,6 +62,6 @@ if df is not None:
                 for i in res['Item Code'].unique():
                     st.write(f"- {i}")
     else:
-        st.info("Silakan cari berdasarkan Nomor Form atau Departement.")
+        st.info("Gunakan sidebar untuk mencari berdasarkan Nomor Form atau Departement.")
 else:
-    st.error("Gagal memuat data. Periksa link Google Sheets kamu.")error("Gagal memuat data. Periksa link Google Sheets kamu."
+    st.error("Gagal memuat data. Periksa kembali link Google Sheets kamu.")
