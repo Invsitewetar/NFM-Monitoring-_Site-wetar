@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Konfigurasi Halaman
+# 1. Judul Dashboard
 st.set_page_config(page_title="NFM Monitoring", layout="wide")
 st.title("📦 NFM Monitoring Dashboard")
 st.markdown("---")
@@ -14,8 +14,7 @@ def load_data():
     try:
         data = pd.read_csv(SHEET_URL)
         data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
-        # Membersihkan spasi di nama kolom
-        data.columns = data.columns.str.strip()
+        data.columns = data.columns.str.strip() # Hapus spasi gaib
         return data
     except:
         return None
@@ -23,23 +22,24 @@ def load_data():
 df = load_data()
 
 if df is not None:
-    # --- Sidebar Filter ---
+    # --- Cari Nama Kolom Otomatis (Cegah KeyError) ---
+    all_cols = df.columns.tolist()
+    # Mencari kolom yang mengandung kata 'Departement', 'Form', atau 'Outstanding'
+    col_dept = next((c for c in all_cols if 'departement' in c.lower() or 'dept' in c.lower()), None)
+    col_form = next((c for c in all_cols if 'form' in c.lower()), None)
+    col_out = next((c for c in all_cols if 'outstanding' in c.lower() or 'out' in c.lower()), None)
+
+    # --- Sidebar Filter (Unit dihapus) ---
     st.sidebar.header("🔍 Pencarian NFM")
-    search_nfm = st.sidebar.text_input("Cari Nomor Form (Contoh: 724)")
-    # Filter Departement (Ejaan sesuai Sheets kamu)
+    search_nfm = st.sidebar.text_input("Cari Nomor Form (Contoh: 715)")
     search_dept = st.sidebar.text_input("Cari Departement") 
 
     # Logika Filter
     res = df.copy()
-    if search_nfm:
-        # Mencari di kolom 'Nomor Form'
-        if 'Nomor Form' in res.columns:
-            res = res[res['Nomor Form'].astype(str).str.contains(search_nfm, na=False)]
-    
-    if search_dept:
-        # Mencari di kolom 'Departement' (Pastikan ejaan 'Departement' sama dengan di Sheets)
-        if 'Departement' in res.columns:
-            res = res[res['Departement'].astype(str).str.contains(search_dept, case=False, na=False)]
+    if search_nfm and col_form:
+        res = res[res[col_form].astype(str).str.contains(search_nfm, na=False)]
+    if search_dept and col_dept:
+        res = res[res[col_dept].astype(str).str.contains(search_dept, case=False, na=False)]
     
     if not res.empty:
         st.success(f"✅ Ditemukan {len(res)} baris data")
@@ -47,36 +47,22 @@ if df is not None:
         # --- TABEL UTAMA ---
         st.subheader("📑 Daftar PR / PO & Status Outstanding")
         
-        # Kolom Outstanding diletakkan di samping Description
-        kolom_tampil = [
-            'Nomor Form', 
-            'NOMOR PR', 
-            'Status PR', 
-            'Item Code', 
-            'Description', 
-            'Amount Outstanding', 
-            'Departement'
-        ]
+        # Susunan kolom permintaanmu: Description lalu Outstanding di sampingnya
+        # Kita masukkan kolom-kolom penting ke dalam list
+        kolom_pilihan = [col_form, 'NOMOR PR', 'Status PR', 'Item Code', 'Description', col_out, col_dept]
         
-        # Filter hanya kolom yang benar-benar ada di Google Sheets kamu
-        cols_to_show = [c for c in kolom_tampil if c in res.columns]
+        # Filter hanya kolom yang benar-benar ada di database
+        cols_to_show = [c for c in kolom_pilihan if c is not None and c in res.columns]
         
-        if cols_to_show:
-            st.dataframe(res[cols_to_show], use_container_width=True)
-        else:
-            # Jika kolom tidak ketemu, tampilkan semua kolom agar tidak error
-            st.dataframe(res, use_container_width=True)
+        # Menampilkan tabel
+        st.dataframe(res[cols_to_show], use_container_width=True)
             
-        # Detail Item Code
+        # Bagian Daftar Item Code
         if 'Item Code' in res.columns:
             with st.expander("📦 Lihat Daftar Item Code"):
-                items = res['Item Code'].unique()
-                for i in items:
+                for i in res['Item Code'].unique():
                     st.write(f"- {i}")
     else:
-        st.info("Masukkan Nomor Form atau Departement di sidebar untuk melihat rincian.")
-
+        st.info("Silakan cari berdasarkan Nomor Form atau Departement.")
 else:
-    st.error("Gagal memuat data. Periksa link Google Sheets kamu.")
-else:
-    st.error("Gagal memuat data. Periksa link Google Sheets kamu.")
+    st.error("Gagal memuat data. Periksa link Google Sheets kamu.")error("Gagal memuat data. Periksa link Google Sheets kamu."
