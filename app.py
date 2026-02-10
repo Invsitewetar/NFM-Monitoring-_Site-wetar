@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Judul Dashboard
+# 1. Konfigurasi Halaman
 st.set_page_config(page_title="NFM Monitoring", layout="wide")
-st.title("🚢 NFM Tracking Site Wetar")
+st.title("📦 NFM Monitoring Dashboard")
 st.markdown("---")
 
 # Link Google Sheets NFM kamu
@@ -14,6 +14,8 @@ def load_data():
     try:
         data = pd.read_csv(SHEET_URL)
         data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
+        # Membersihkan spasi di awal/akhir nama kolom
+        data.columns = data.columns.str.strip()
         return data
     except:
         return None
@@ -21,47 +23,40 @@ def load_data():
 df = load_data()
 
 if df is not None:
-    # Pencarian Nomor Form NFM
-    search_nfm = st.text_input("🔍 Masukkan Nomor Form NFM (Contoh: 724):")
-    
+    # Sidebar Pencarian
+    st.sidebar.header("🔍 Pencarian NFM")
+    # Kamu bisa cari berdasarkan Nomor Form atau Unit
+    search_nfm = st.sidebar.text_input("Cari Nomor Form (Contoh: 724)")
+    search_unit = st.sidebar.text_input("Cari Unit")
+
+    # Filter Data
+    res = df.copy()
     if search_nfm:
-        # Mencari semua baris yang mengandung nomor NFM tersebut
-        # Ini kuncinya: kita ambil SEMUA baris, bukan cuma satu
-        res = df[df['Nomor Form'].astype(str).str.contains(search_nfm, na=False)]
+        # Menyesuaikan nama kolom 'Nomor Form' di Sheets kamu
+        res = res[res['Nomor Form'].astype(str).str.contains(search_nfm, na=False)]
+    if search_unit:
+        res = res[res['Unit'].astype(str).str.contains(search_unit, case=False, na=False)]
+    
+    if not res.empty:
+        # Menampilkan Ringkasan
+        st.success(f"✅ Ditemukan {len(res)} baris data (Bisa terdiri dari beberapa PO)")
         
-        if not res.empty:
-            st.success(f"✅ Ditemukan {len(res)} baris data untuk NFM ini")
-            
-            # --- Bagian Atas: Informasi Umum NFM (Ambil dari baris pertama) ---
-            first_row = res.iloc[0]
-            st.subheader(f"📄 {first_row.get('Nomor Full', 'Detail NFM')}")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write(f"🏢 **Dept:** {first_row.get('Dept', '-')}")
-                st.write(f"👤 **Requestor:** {first_row.get('Requestor', '-')}")
-            
-            # --- Bagian Bawah: Tabel PR/PO (Menampilkan semua PO yang ada) ---
-            st.markdown("---")
-            st.subheader("📑 Daftar PR / PO & Status Outstanding")
-            
-            # Menampilkan kolom-kolom penting saja agar ringkas
-            po_columns = ['NOMOR PR', 'Status PR', 'Total Value', 'GR Dated', 'SOH ON SITE']
-            # Pastikan kolom ada di data
-            existing_cols = [c for c in po_columns if c in res.columns]
-            
-            if existing_cols:
-                # Menampilkan tabel khusus untuk PO-PO tersebut
-                st.table(res[existing_cols])
-            else:
-                st.warning("Kolom detail PR/PO tidak ditemukan di database.")
-                
-            # Detail Stock Codes (Expander)
-            with st.expander("📦 Lihat Rincian Stock Codes"):
-                for code in res['Stock Code'].unique():
-                    st.code(code)
+        # TABEL UTAMA (Menampilkan semua PO yang ada untuk NFM tersebut)
+        st.subheader("📑 Daftar PR / PO & Status Outstanding")
+        
+        # Kolom yang akan ditampilkan di tabel
+        kolom_tampil = ['Nomor Form', 'NOMOR PR', 'Status PR', 'Total Value', 'Item Code', 'Description', 'Unit']
+        # Hanya tampilkan yang ada di Sheets kamu
+        cols_to_show = [c for c in kolom_tampil if c in res.columns]
+        
+        if cols_to_show:
+            st.dataframe(res[cols_to_show], use_container_width=True)
         else:
-            st.error("❌ Nomor Form NFM tidak ditemukan.")
-else:
-    st.error("Gagal memuat data.")
-    st.error(f"Terjadi kendala pembacaan data: {e}")
+            # Jika kolom di atas tidak ketemu, tampilkan semua kolom saja
+            st.dataframe(res, use_container_width=True)
+            
+        # Detail Item Code (Expander)
+        if 'Item Code' in res.columns:
+            with st.expander("📦 Lihat Daftar Item Code"):
+                for item in res['Item Code'].unique():
+                    st.write(f"- `{item}`")
