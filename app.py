@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Judul Dashboard
+# 1. Konfigurasi Halaman
 st.set_page_config(page_title="NFM Monitoring", layout="wide")
 st.title("📦 NFM Monitoring Dashboard")
 st.markdown("---")
@@ -14,6 +14,7 @@ def load_data():
     try:
         data = pd.read_csv(SHEET_URL)
         data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
+        # Membersihkan spasi di nama kolom
         data.columns = data.columns.str.strip()
         return data
     except:
@@ -22,41 +23,43 @@ def load_data():
 df = load_data()
 
 if df is not None:
-    # Sidebar Pencarian
+    # --- Sidebar Filter Baru (Unit dihapus, ganti Departemen) ---
     st.sidebar.header("🔍 Pencarian NFM")
     search_nfm = st.sidebar.text_input("Cari Nomor Form (Contoh: 724)")
-    search_unit = st.sidebar.text_input("Cari Unit")
+    search_dept = st.sidebar.text_input("Cari Departemen") # Pengganti filter Unit
 
-    # Filter Data
+    # Logika Filter
     res = df.copy()
     if search_nfm:
         res = res[res['Nomor Form'].astype(str).str.contains(search_nfm, na=False)]
-    if search_unit:
-        res = res[res['Unit'].astype(str).str.contains(search_unit, case=False, na=False)]
+    if search_dept:
+        # Mencari berdasarkan kolom Dept di Sheets kamu
+        res = res[res['Dept'].astype(str).str.contains(search_dept, case=False, na=False)]
     
     if not res.empty:
         st.success(f"✅ Ditemukan {len(res)} baris data")
         
-        # --- TABEL UTAMA DENGAN OUTSTANDING ---
+        # --- TABEL UTAMA DENGAN KOLOM OUTSTANDING ---
         st.subheader("📑 Daftar PR / PO & Status Outstanding")
         
-        # Daftar kolom yang ditampilkan
+        # Menyusun kolom sesuai urutan permintaanmu
         kolom_tampil = [
             'Nomor Form', 
             'NOMOR PR', 
             'Status PR', 
-            'Total Value', 
-            'Amount Outstanding', 
             'Item Code', 
-            'Description'
+            'Description', 
+            'Amount Outstanding', # Kolom Outstanding di samping Description
+            'Dept'
         ]
         
-        # Filter hanya kolom yang benar-benar ada di database
+        # Hanya tampilkan kolom yang ada di database kamu
         cols_to_show = [c for c in kolom_tampil if c in res.columns]
         
         if cols_to_show:
             st.dataframe(res[cols_to_show], use_container_width=True)
         else:
+            # Jika kolom spesifik tidak ketemu, tampilkan data apa adanya
             st.dataframe(res, use_container_width=True)
             
         # Bagian Daftar Item Code
@@ -66,6 +69,7 @@ if df is not None:
                 for i in items:
                     st.write(f"- {i}")
     else:
-        st.info("Masukkan Nomor Form di sidebar untuk melihat rincian NFM.")
+        st.info("Gunakan sidebar untuk mencari berdasarkan Nomor Form atau Departemen.")
+
 else:
-    st.error("Gagal memuat data.")
+    st.error("Gagal memuat data. Periksa link Google Sheets kamu.")
