@@ -40,7 +40,7 @@ if df is not None:
         # --- TABEL UTAMA DENGAN OUTSTANDING ---
         st.subheader("📑 Daftar PR / PO & Status Outstanding")
         
-        # Daftar kolom (Item Code sesuai permintaanmu)
+        # Daftar kolom yang ditampilkan
         kolom_tampil = [
             'Nomor Form', 
             'NOMOR PR', 
@@ -51,7 +51,7 @@ if df is not None:
             'Description'
         ]
         
-        # Filter hanya kolom yang ada di database
+        # Filter hanya kolom yang benar-benar ada di database
         cols_to_show = [c for c in kolom_tampil if c in res.columns]
         
         if cols_to_show:
@@ -62,11 +62,10 @@ if df is not None:
         # Bagian Daftar Item Code
         if 'Item Code' in res.columns:
             with st.expander("📦 Lihat Daftar Item Code"):
-                # Kita pakai list sederhana agar tidak error spasi lagi
                 items = res['Item Code'].unique()
                 for i in items:
                     st.write(f"- {i}")
     else:
         st.info("Masukkan Nomor Form di sidebar untuk melihat rincian NFM.")
 else:
-    st.error("Gagal memuat data.")}`")
+    st.error("Gagal memuat data.")
