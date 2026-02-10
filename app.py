@@ -22,23 +22,24 @@ def load_data():
 df = load_data()
 
 if df is not None:
-    # --- Sidebar Pencarian (Requestor sudah dihapus sesuai permintaan) ---
+    # --- Sidebar Pencarian (Pakai No. Form Pendek) ---
     st.sidebar.header("🔍 Pencarian NFM")
-    search_nfm = st.sidebar.text_input("Cari Nomor Form")
+    search_no_form = st.sidebar.text_input("Masukkan No. Form (Contoh: 761)")
     search_dept = st.sidebar.text_input("Cari Departement") 
 
     # Logika Filter
     res = df.copy()
     
     # Cari Nama Kolom secara otomatis
-    col_dept = next((c for c in res.columns if 'departement' in c.lower() or 'dept' in c.lower()), None)
-    # KUNCI: Cari hanya kolom yang ada tulisan 'Outstanding'
-    col_out = next((c for c in res.columns if 'outstanding' in c.lower()), None)
+    col_no_form = next((c for c in res.columns if 'NO FORM' == c.upper() or 'NO. FORM' == c.upper()), None)
+    col_dept = next((c for c in res.columns if 'DEPARTEMENT' in c.upper() or 'DEPT' in c.upper()), None)
+    col_out = next((c for c in res.columns if 'OUTSTANDING ON SITE VALUE' == c.upper()), None)
     
-    # Filter Form (Case insensitive agar mobile/MOBILE ketemu)
-    if search_nfm:
-        res = res[res.iloc[:, 0].astype(str).str.contains(search_nfm, na=False, case=False)]
+    # Filter No Form (Mencari angka pendek)
+    if search_no_form and col_no_form:
+        res = res[res[col_no_form].astype(str).str.contains(search_no_form, na=False)]
     
+    # Filter Departement
     if search_dept and col_dept:
         res = res[res[col_dept].astype(str).str.contains(search_dept, na=False, case=False)]
     
@@ -46,32 +47,26 @@ if df is not None:
         st.success(f"✅ Ditemukan {len(res)} baris data")
         st.subheader("📑 Daftar PR / PO & Status Outstanding")
         
-        # --- MENYUSUN KOLOM (Hanya Outstanding yang muncul, Value On Site dibuang) ---
-        kolom_wajib = ['Nomor Form', 'Requestor', 'NOMOR PR', 'Status PR', 'Item Code', 'Description']
+        # --- MENYUSUN TABEL ---
+        # Daftar kolom yang ingin ditampilkan
+        kolom_pilihan = [col_no_form, 'Nomor Form', 'Requestor', 'NOMOR PR', 'Status PR', 'Item Code', 'Description', col_out, col_dept]
         
-        # Ambil kolom yang memang ada di database
-        final_cols = [c for c in kolom_wajib if c in res.columns]
+        # Ambil kolom yang memang ada di database dan buang yang None
+        final_cols = [c for c in kolom_pilihan if c is not None and c in res.columns]
         
-        # Masukkan kolom Outstanding tepat setelah Description (HANYA JIKA ADA KATA OUTSTANDING)
-        if col_out and col_out not in final_cols:
-            # Pastikan kolom 'Value On site' tidak ikut masuk
-            if 'Value On site' in final_cols:
-                final_cols.remove('Value On site')
-            final_cols.append(col_out)
-            
-        # Masukkan Departement di paling akhir
-        if col_dept and col_dept not in final_cols:
-            final_cols.append(col_dept)
+        # Pastikan 'Value On site' dibuang jika terbawa otomatis
+        if 'Value On site' in final_cols:
+            final_cols.remove('Value On site')
 
         # Tampilkan Tabel
         st.dataframe(res[final_cols], use_container_width=True)
             
-        # Daftar Item Code
+        # Detail Item Code
         if 'Item Code' in res.columns:
             with st.expander("📦 Lihat Daftar Item Code"):
                 for i in res['Item Code'].unique():
                     st.write(f"- {i}")
     else:
-        st.info("Data tidak ditemukan. Masukkan kata kunci pencarian.")
+        st.info("Data tidak ditemukan. Coba ketik nomor pendeknya saja (misal: 761).")
 else:
-    st.error("Gagal memuat data. Periksa link Google Sheets kamu.")
+    st.error("Gagal memuat data. Periksa kembali link Google Sheets kamu.")
