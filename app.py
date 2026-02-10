@@ -14,7 +14,7 @@ def load_data():
     try:
         data = pd.read_csv(SHEET_URL)
         data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
-        # Membersihkan spasi di nama kolom agar tidak error
+        # Bersihkan spasi di awal/akhir nama kolom agar tidak error
         data.columns = data.columns.str.strip()
         return data
     except:
@@ -25,24 +25,20 @@ df = load_data()
 if df is not None:
     # --- Sidebar Filter ---
     st.sidebar.header("🔍 Pencarian NFM")
-    search_nfm = st.sidebar.text_input("Cari Nomor Form (Contoh: 715)")
+    search_nfm = st.sidebar.text_input("Cari Nomor Form")
     search_dept = st.sidebar.text_input("Cari Departement") 
-    search_req = st.sidebar.text_input("Cari Requestor") # Fitur Baru
+    search_req = st.sidebar.text_input("Cari Requestor")
 
     # Logika Filter
     res = df.copy()
-    
-    # Filter Nomor Form
     if search_nfm:
-        if 'Nomor Form' in res.columns:
-            res = res[res['Nomor Form'].astype(str).str.contains(search_nfm, na=False)]
-    
-    # Filter Departement
+        # Mencari di kolom 'Nomor Form'
+        col_form = next((c for c in res.columns if 'form' in c.lower()), res.columns[0])
+        res = res[res[col_form].astype(str).str.contains(search_nfm, na=False)]
     if search_dept:
-        if 'Departement' in res.columns:
-            res = res[res['Departement'].astype(str).str.contains(search_dept, case=False, na=False)]
-
-    # Filter Requestor (Logika Baru)
+        col_dept = next((c for c in res.columns if 'departement' in c.lower() or 'dept' in c.lower()), None)
+        if col_dept:
+            res = res[res[col_dept].astype(str).str.contains(search_dept, case=False, na=False)]
     if search_req:
         if 'Requestor' in res.columns:
             res = res[res['Requestor'].astype(str).str.contains(search_req, case=False, na=False)]
@@ -53,24 +49,25 @@ if df is not None:
         # --- TABEL UTAMA ---
         st.subheader("📑 Daftar PR / PO & Status Outstanding")
         
-        # Kolom yang ingin ditampilkan (Outstanding di samping Description)
-        kolom_tampil = [
+        # Nama kolom yang kamu inginkan (sesuai ejaan yang kamu berikan)
+        kolom_target = [
             'Nomor Form', 
             'Requestor',
             'NOMOR PR', 
             'Status PR', 
             'Item Code', 
             'Description', 
-            'Amount Outstanding', 
+            'Outstanding On Site Value', # Kolom yang kamu minta
             'Departement'
         ]
         
-        # Hanya tampilkan kolom yang benar-benar ada di file Sheets
-        cols_to_show = [c for c in kolom_tampil if c in res.columns]
+        # Filter hanya kolom yang benar-benar ada di database
+        cols_to_show = [c for c in kolom_target if c in res.columns]
         
         if cols_to_show:
             st.dataframe(res[cols_to_show], use_container_width=True)
         else:
+            # Jika kolom spesifik tidak ketemu, tampilkan semua kolom saja
             st.dataframe(res, use_container_width=True)
             
         # Detail Item Code
@@ -80,7 +77,7 @@ if df is not None:
                 for i in items:
                     st.write(f"- {i}")
     else:
-        st.info("Data tidak ditemukan. Masukkan kata kunci di sidebar.")
+        st.info("Masukkan kata kunci pencarian di sidebar.")
 
 else:
-    st.error("Gagal memuat data. Periksa koneksi internet atau link Google Sheets kamu.")
+    st.error("Gagal memuat data. Periksa link Google Sheets kamu.")
