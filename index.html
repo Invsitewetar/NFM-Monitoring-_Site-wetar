@@ -9,11 +9,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body { background-color: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; }
-        .white-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .white-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         .input-track { background: #ffffff; border: 2px solid #cbd5e1; color: #1e293b; }
-        .input-track:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        .input-track:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
         .btn-blue { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; transition: all 0.3s ease; }
-        .btn-blue:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+        .btn-blue:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
         .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -22,11 +22,107 @@
 
     <section class="py-16 flex flex-col items-center justify-center px-4 mb-8 bg-white border-b border-slate-200">
         <div class="mb-8 flex flex-col items-center text-center">
-            <div class="w-16 h-16 bg-blue-600 rounded-2xl rotate-12 mb-6 flex items-center justify-center shadow-lg shadow-blue-200">
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl rotate-12 mb-6 flex items-center justify-center shadow-lg shadow-blue-100">
                 <span class="text-3xl font-bold -rotate-12 text-white italic">W</span>
             </div>
             <h1 class="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight text-slate-900 uppercase italic">WETAR - NFM TRACKING</h1>
-            <p class="text-slate-500 font-medium italic">Monitor status material berdasarkan <b>Nomor NFM</b> secara real-time</p>
+            <p class="text-slate-500 font-medium italic">Tracking status material menggunakan <b>Nomor NFM</b></p>
         </div>
 
         <div class="w-full max-w-2xl flex flex-col md:flex-row gap-3 px-4">
+            <input type="text" id="nfmSearchInput" placeholder="Masukkan Nomor NFM (Contoh: 721)..." 
+                   class="input-track flex-1 px-6 py-4 rounded-xl font-bold transition-all">
+            <button onclick="trackNFM()" class="btn-blue px-10 py-4 rounded-xl font-bold flex items-center justify-center gap-2 uppercase tracking-wider">
+                <span>Track NFM</span>
+                <div id="trackSpinner" class="loading-spinner"></div>
+            </button>
+        </div>
+        <div id="nfmResult" class="mt-8 w-full max-w-2xl px-4 text-center"></div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-4 md:px-8">
+        
+        <div class="mb-8 border-l-4 border-blue-600 pl-4">
+            <h2 class="text-2xl font-bold text-slate-800 uppercase italic tracking-tighter text-blue-700">Inventory Summary Report</h2>
+            <p class="text-slate-500 text-sm italic">Site Wetar Database Summary - Update Feb 2026</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="white-card p-6 border-b-4 border-blue-500">
+                <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2 italic">Tiba On-Site (Bulan Ini)</p>
+                <div class="text-4xl font-black text-slate-800">42 <span class="text-sm font-normal text-slate-400 italic">Items</span></div>
+                <div class="text-[10px] text-blue-600 mt-2 font-bold uppercase italic">Status: Completed</div>
+            </div>
+            <div class="white-card p-6 border-b-4 border-orange-400">
+                <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2 italic">Outstanding Value On-Site</p>
+                <div class="text-4xl font-black text-slate-800">Rp 1.8M</div>
+                <div class="text-[10px] text-orange-600 mt-2 font-bold uppercase italic">Pending Approval/Shipment</div>
+            </div>
+            <div class="white-card p-6 border-b-4 border-emerald-500">
+                <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2 italic">Total On-Site Stock</p>
+                <div class="text-4xl font-black text-slate-800">156</div>
+                <div class="text-[10px] text-emerald-600 mt-2 font-bold uppercase italic italic">Asset Valuation</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="white-card p-8">
+                <h3 class="text-lg font-bold mb-6 italic uppercase tracking-widest text-slate-700">NFM Breakdown Status</h3>
+                <div class="h-[350px]">
+                    <canvas id="nfmDeptChart"></canvas>
+                </div>
+            </div>
+
+            <div class="white-card p-8">
+                <h3 class="text-lg font-bold mb-6 italic uppercase tracking-widest text-blue-600 italic">Recent Tracking History</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[12px] text-left">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-100 uppercase font-bold italic">
+                                <th class="pb-3 px-2">Tanggal</th>
+                                <th class="pb-3 px-2">No NFM</th>
+                                <th class="pb-3 px-2">Requestor</th>
+                                <th class="pb-3 px-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="nfmTableBody" class="divide-y divide-slate-50 text-slate-600">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXL6oLuQJtXHGXlNYgM_7JgWYzFubZczo-JK9QYHJu8DmY0VzmZAFWIrC_JTDa6X77AkmxbYYd_zX0/pub?gid=0&single=true&output=csv';
+        let nfmData = [];
+
+        async function fetchNFMData() {
+            try {
+                const response = await fetch(sheetUrl);
+                const csvData = await response.text();
+                const rows = csvData.split('\n').slice(1);
+                
+                nfmData = rows.map(row => {
+                    const cols = row.split(',');
+                    return {
+                        tanggal: cols[0],
+                        noNFM: cols[2] ? cols[2].trim() : "",
+                        nomorFormFull: cols[3] ? cols[3].trim() : "",
+                        noPR: cols[6] ? cols[6].trim() : "TBA", // Mengambil data PR
+                        requestor: cols[5],
+                        outstandingValue: cols[4] ? cols[4] : "0" // Mengambil data Value
+                    };
+                }).filter(item => item.noNFM);
+
+                renderDashboard();
+            } catch (error) {
+                console.error('Fetch Error:', error);
+            }
+        }
+
+        function renderDashboard() {
+            const tbody = document.getElementById('nfmTableBody');
+            tbody.innerHTML = nfmData.slice(0, 10).map(item => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-3 px-2 font-medium">${item.
