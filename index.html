@@ -6,199 +6,27 @@
     <title>Wetar NFM Tracking & Executive Report</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #0f1014; color: white; font-family: 'Inter', sans-serif; }
-        .glass-card { background: rgba(26, 28, 35, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; backdrop-filter: blur(10px); }
-        .input-track { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .btn-track { background: linear-gradient(135deg, #E50914 0%, #7d060b 100%); transition: all 0.3s ease; }
-        .btn-track:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(229, 9, 20, 0.3); }
-        .loading-spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #E50914; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        body { background-color: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; }
+        .white-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .input-track { background: #ffffff; border: 2px solid #cbd5e1; color: #1e293b; }
+        .input-track:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        .btn-blue { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; transition: all 0.3s ease; }
+        .btn-blue:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="min-h-screen pb-12">
 
-    <section class="h-[50vh] flex flex-col items-center justify-center px-4 mb-12 border-b border-white/5 bg-gradient-to-b from-red-900/20 to-transparent">
-        <div class="mb-8 flex flex-col items-center">
-            <div class="w-16 h-16 bg-red-600 rounded-2xl rotate-12 mb-6 flex items-center justify-center shadow-2xl">
-                <span class="text-3xl font-black -rotate-12 italic">W</span>
+    <section class="py-16 flex flex-col items-center justify-center px-4 mb-8 bg-white border-b border-slate-200">
+        <div class="mb-8 flex flex-col items-center text-center">
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl rotate-12 mb-6 flex items-center justify-center shadow-lg shadow-blue-200">
+                <span class="text-3xl font-bold -rotate-12 text-white italic">W</span>
             </div>
-            <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tight italic uppercase">WETAR - NFM TRACKING</h1>
-            <p class="text-gray-400 font-light italic text-center">Cari status material menggunakan <b>Nomor NFM (Form No)</b> secara real-time</p>
+            <h1 class="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight text-slate-900 uppercase italic">WETAR - NFM TRACKING</h1>
+            <p class="text-slate-500 font-medium italic">Monitor status material berdasarkan <b>Nomor NFM</b> secara real-time</p>
         </div>
 
         <div class="w-full max-w-2xl flex flex-col md:flex-row gap-3 px-4">
-            <input type="text" id="nfmSearchInput" placeholder="Masukkan Nomor NFM (Contoh: 761)..." 
-                   class="input-track flex-1 px-6 py-4 rounded-xl text-white outline-none focus:border-red-600 transition-all font-bold">
-            <button onclick="trackNFM()" class="btn-track px-12 py-4 rounded-xl font-bold flex items-center justify-center gap-2 uppercase tracking-widest">
-                <span>Track NFM</span>
-                <div id="trackSpinner" class="loading-spinner"></div>
-            </button>
-        </div>
-        <div id="nfmResult" class="mt-8 w-full max-w-2xl px-4"></div>
-    </section>
-
-    <main class="max-w-7xl mx-auto px-4 md:px-8">
-        
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <div>
-                <h2 class="text-2xl font-bold italic uppercase tracking-tighter">NFM Executive Report</h2>
-                <p class="text-gray-500 text-sm italic">Site Wetar Inventory Summary - 2026</p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="glass-card p-6 border-l-4 border-l-blue-500 shadow-xl">
-                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 italic">Tiba On-Site (Bulan Ini)</p>
-                <div class="text-4xl font-black">42 <span class="text-sm font-normal text-gray-500 italic">Items</span></div>
-                <div class="text-[10px] text-green-400 mt-2 font-bold uppercase italic">▲ 12% Variance</div>
-            </div>
-            <div class="glass-card p-6 border-l-4 border-l-red-600 shadow-xl">
-                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 italic">Outstanding (Process)</p>
-                <div class="text-4xl font-black" id="totalOutstanding">18</div>
-                <div class="text-[10px] text-red-500 mt-2 font-bold uppercase italic">Needs Attention</div>
-            </div>
-            <div class="glass-card p-6 border-l-4 border-l-green-600 shadow-xl">
-                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 italic">Total Stock On-Site</p>
-                <div class="text-4xl font-black">156</div>
-                <div class="text-[10px] text-blue-500 mt-2 font-bold uppercase italic">Nilai: Rp 4.2M</div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="glass-card p-8">
-                <h3 class="text-lg font-bold mb-6 italic uppercase tracking-widest">NFM Breakdown by Department</h3>
-                <div class="h-[350px]">
-                    <canvas id="nfmDeptChart"></canvas>
-                </div>
-            </div>
-
-            <div class="glass-card p-8">
-                <h3 class="text-lg font-bold mb-6 italic uppercase tracking-widest text-red-500">Recent Request (Google Sheets)</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-[11px] text-left">
-                        <thead>
-                            <tr class="text-gray-500 border-b border-white/5 uppercase font-black italic">
-                                <th class="pb-3 italic">Tanggal</th>
-                                <th class="pb-3 italic">No NFM</th>
-                                <th class="pb-3 italic">Dept</th>
-                                <th class="pb-3 italic">Requestor</th>
-                            </tr>
-                        </thead>
-                        <tbody id="nfmTableBody" class="divide-y divide-white/5 text-gray-300">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXL6oLuQJtXHGXlNYgM_7JgWYzFubZczo-JK9QYHJu8DmY0VzmZAFWIrC_JTDa6X77AkmxbYYd_zX0/pub?gid=0&single=true&output=csv';
-        let nfmData = [];
-
-        async function fetchNFMData() {
-            try {
-                const response = await fetch(sheetUrl);
-                const csvData = await response.text();
-                const rows = csvData.split('\n').slice(1);
-                
-                nfmData = rows.map(row => {
-                    const cols = row.split(',');
-                    return {
-                        tanggal: cols[0],
-                        noNFM: cols[2], // Mengambil NO FORM
-                        nomorFormFull: cols[3], // Nomor Form Lengkap
-                        warehouse: cols[4],
-                        requestor: cols[5],
-                        departemen: cols[6] ? cols[6].trim() : "Unknown"
-                    };
-                }).filter(item => item.noNFM);
-
-                renderDashboard();
-            } catch (error) {
-                console.error('Fetch Error:', error);
-            }
-        }
-
-        function renderDashboard() {
-            // Update Table
-            const tbody = document.getElementById('nfmTableBody');
-            tbody.innerHTML = nfmData.slice(0, 10).map(item => `
-                <tr class="hover:bg-white/5 transition">
-                    <td class="py-3 italic">${item.tanggal}</td>
-                    <td class="py-3 font-bold text-white">${item.noNFM}</td>
-                    <td class="py-3 text-[10px] italic font-bold">${item.departemen}</td>
-                    <td class="py-3">${item.requestor}</td>
-                </tr>
-            `).join('');
-
-            // Update Chart
-            const deptCounts = {};
-            nfmData.forEach(item => {
-                deptCounts[item.departemen] = (deptCounts[item.departemen] || 0) + 1;
-            });
-
-            const ctx = document.getElementById('nfmDeptChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(deptCounts),
-                    datasets: [{
-                        label: 'Item Qty',
-                        data: Object.values(deptCounts),
-                        backgroundColor: '#E50914',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
-                        y: { ticks: { color: '#fff', font: { size: 10, weight: 'bold' } } }
-                    }
-                }
-            });
-        }
-
-        function trackNFM() {
-            const input = document.getElementById('nfmSearchInput').value.trim();
-            const resultArea = document.getElementById('nfmResult');
-            const spinner = document.getElementById('trackSpinner');
-
-            if(!input) return;
-            spinner.style.display = 'inline-block';
-            
-            setTimeout(() => {
-                const found = nfmData.find(item => item.noNFM === input || item.nomorFormFull.includes(input));
-                spinner.style.display = 'none';
-
-                if(found) {
-                    resultArea.innerHTML = `
-                        <div class="glass-card p-6 border-l-4 border-l-green-500 animate-pulse">
-                            <h4 class="text-green-500 font-black mb-2 uppercase italic tracking-widest">✅ DATA DITEMUKAN</h4>
-                            <div class="grid grid-cols-2 gap-4 text-sm uppercase italic">
-                                <div><p class="text-gray-500 text-[10px]">No NFM</p><p class="font-bold">${found.noNFM}</p></div>
-                                <div><p class="text-gray-500 text-[10px]">Departemen</p><p class="font-bold">${found.departemen}</p></div>
-                                <div><p class="text-gray-500 text-[10px]">Requestor</p><p class="font-bold">${found.requestor}</p></div>
-                                <div><p class="text-gray-500 text-[10px]">Warehouse</p><p class="font-bold">${found.warehouse}</p></div>
-                            </div>
-                        </div>`;
-                } else {
-                    resultArea.innerHTML = `
-                        <div class="glass-card p-6 border-l-4 border-l-red-600">
-                            <h4 class="text-red-500 font-black uppercase italic tracking-widest">❌ NOMOR NFM TIDAK ADA</h4>
-                            <p class="text-xs text-gray-400 mt-1">Pastikan Nomor Form yang Anda masukkan benar (Contoh: 761).</p>
-                        </div>`;
-                }
-            }, 600);
-        }
-
-        fetchNFMData();
-    </script>
-</body>
-</html>
