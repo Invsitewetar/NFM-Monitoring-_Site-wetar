@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parts Movement Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #141414; color: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        .chart-container { background: rgba(45, 45, 45, 0.6); border-radius: 8px; padding: 20px; }
+    </style>
+</head>
+<body>
+    <nav class="flex justify-between items-center p-6 bg-black sticky top-0 z-50">
+        <h1 class="text-red-600 text-3xl font-extrabold tracking-tighter">PARTSFLIX</h1>
+        <div class="flex gap-6 text-gray-300 text-sm font-medium">
+            <a href="#" class="text-white">Dashboard</a>
+            <a href="#">Backlog</a>
+            <a href="#">CCO History</a>
+        </div>
+    </nav>
+
+    <div class="p-8">
+        <div class="mb-10">
+            <h2 class="text-4xl font-bold mb-2">Tren Pengambilan Parts</h2>
+            <p class="text-gray-400">Monitoring real-time pergerakan material dan status backlog.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+            <div class="lg:col-span-2 chart-container border border-zinc-800">
+                <h3 class="text-lg font-semibold mb-4 text-red-500">Statistik Pengambilan Unit (Bulanan)</h3>
+                <canvas id="partsChart"></canvas>
+            </div>
+            
+            <div class="chart-container border border-zinc-800 flex flex-col justify-center items-center">
+                <h3 class="text-gray-400 uppercase text-xs tracking-widest mb-2">Total Backlog Aktif</h3>
+                <span class="text-6xl font-black text-red-600">24</span>
+                <p class="mt-4 text-sm text-center text-gray-500">Ada 5 CCO mendesak yang butuh approval segera.</p>
+                <button class="mt-6 bg-white text-black px-6 py-2 rounded font-bold hover:bg-gray-200 transition">Update Data</button>
+            </div>
+        </div>
+
+        <h3 class="text-xl font-bold mb-4">Backlog & CCO Terkini</h3>
+        <div class="flex gap-4 overflow-x-auto pb-6">
+            <div class="min-w-[280px] bg-zinc-900 rounded-lg p-5 border border-zinc-800 hover:scale-105 transition-transform">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="bg-red-600 text-[10px] px-2 py-1 rounded font-bold">URGENT</span>
+                    <span class="text-gray-500 text-xs">#CCO-99</span>
+                </div>
+                <h4 class="font-bold text-lg">Engine Component A</h4>
+                <p class="text-xs text-gray-400 mt-2">Menunggu kedatangan parts dari pusat.</p>
+                <div class="mt-4 bg-zinc-800 h-1 w-full rounded-full">
+                    <div class="bg-red-600 h-1 w-[75%]"></div>
+                </div>
+            </div>
+            </div>
+    </div>
+
+    <script>
+        // Data untuk Grafik
+        const ctx = document.getElementById('partsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+                datasets: [{
+                    label: 'Jumlah Pengambilan Parts',
+                    data: [12, 19, 15, 25, 22, 30],
+                    borderColor: '#E50914', // Warna Merah Netflix
+                    backgroundColor: 'rgba(229, 9, 20, 0.2)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { grid: { color: '#333' }, ticks: { color: '#999' } },
+                    x: { grid: { display: false }, ticks: { color: '#999' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
