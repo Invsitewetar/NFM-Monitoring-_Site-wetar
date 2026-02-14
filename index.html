@@ -1,128 +1,725 @@
-<!DOCTYPE html>
+
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar NFM Tracking & Executive Report</title>
+    <title>Wetar Intelligence Sync - NFM OS v5.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; }
-        .white-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .input-track { background: #ffffff; border: 2px solid #cbd5e1; color: #1e293b; }
-        .input-track:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .btn-blue { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; transition: all 0.3s ease; }
-        .btn-blue:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        :root {
+            --primary: #0061ff;
+            --bg: #f8fafc;
+            --sidebar: #111827;
+        }
+
+        body { 
+            background-color: var(--bg); 
+            color: #1e293b; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            letter-spacing: -0.01em;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar { 
+            width: 80px; height: 100vh; position: fixed; left: 0; top: 0; 
+            background: var(--sidebar); z-index: 50; display: flex; 
+            flex-direction: column; align-items: center; padding: 24px 0;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar:hover { width: 220px; }
+
+        .sidebar-item { 
+            width: calc(100% - 24px); height: 50px; display: flex; align-items: center; 
+            padding: 0 14px; color: #94a3b8; margin-bottom: 8px; 
+            border-radius: 12px; cursor: pointer; transition: all 0.2s ease;
+            overflow: hidden; white-space: nowrap;
+        }
+        .sidebar-item svg { min-width: 24px; margin-right: 16px; }
+        .sidebar-item:hover, .sidebar-item.active { background: rgba(255,255,255,0.1); color: white; }
+        .sidebar-item.active { background: var(--primary); box-shadow: 0 8px 16px rgba(0,97,255,0.3); }
+
+        .main-content { margin-left: 80px; min-height: 100vh; transition: margin-left 0.3s ease; }
+
+        .glass-card { 
+            background: white; border: 1px solid #f1f5f9; 
+            border-radius: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03);
+        }
+        
+        .kpi-title { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; }
+        .kpi-value { font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 4px; }
+
+        .sub-board-tab {
+            padding: 12px 24px; border-radius: 12px; font-weight: 700;
+            font-size: 11px; text-transform: uppercase; color: #64748b;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        .sub-board-tab.active { color: white; background: var(--primary); box-shadow: 0 4px 12px rgba(0,97,255,0.2); }
+
+        .input-field {
+            width: 100%; border: 1px solid #e2e8f0; border-radius: 14px;
+            padding: 12px 14px; outline: none; transition: all 0.2s;
+            font-weight: 600; color: #1e293b; font-size: 13px; background: #fff;
+        }
+        .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(0,97,255,0.1); }
+        
+        label { font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 6px; display: block; }
+        
+        .nfm-table th { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; padding: 16px 24px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+        .nfm-table td { padding: 16px 24px; border-bottom: 1px solid #f8fafc; font-size: 13px; font-weight: 600; }
+        
+        .loading-overlay { position: fixed; inset: 0; background: white; z-index: 110; display: flex; align-items: center; justify-content: center; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        .item-row { background: #fff; border: 1px solid #f1f5f9; padding: 20px; border-radius: 20px; margin-bottom: 16px; position: relative; }
+        .po-badge { background: #eff6ff; color: #1d4ed8; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+        .sc-badge { background: #f0fdf4; color: #166534; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+        .qty-badge { background: #fff7ed; color: #c2410c; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+        .wh-badge { background: #1e293b; color: white; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+
+        /* Animation */
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="min-h-screen pb-12">
+<body>
 
-    <section class="py-16 flex flex-col items-center justify-center px-4 mb-8 bg-white border-b border-slate-200">
-        <div class="mb-8 flex flex-col items-center text-center">
-            <div class="w-16 h-16 bg-blue-600 rounded-2xl rotate-12 mb-6 flex items-center justify-center shadow-lg shadow-blue-100">
-                <span class="text-3xl font-bold -rotate-12 text-white italic">W</span>
-            </div>
-            <h1 class="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight text-slate-900 uppercase italic">WETAR - NFM TRACKING</h1>
-            <p class="text-slate-500 font-medium italic">Tracking status material menggunakan <b>Nomor NFM</b></p>
+    <!-- Loading -->
+    <div id="loading" class="loading-overlay">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+            <p class="text-xs font-bold text-slate-400 tracking-widest uppercase italic text-center">Sinkronisasi Dashboard...<br><span class="text-[9px] opacity-50">Wetar Intelligence v5.1</span></p>
         </div>
+    </div>
 
-        <div class="w-full max-w-2xl flex flex-col md:flex-row gap-3 px-4">
-            <input type="text" id="nfmSearchInput" placeholder="Masukkan Nomor NFM (Contoh: 721)..." 
-                   class="input-track flex-1 px-6 py-4 rounded-xl font-bold transition-all">
-            <button onclick="trackNFM()" class="btn-blue px-10 py-4 rounded-xl font-bold flex items-center justify-center gap-2 uppercase tracking-wider">
-                <span>Track NFM</span>
-                <div id="trackSpinner" class="loading-spinner"></div>
-            </button>
-        </div>
-        <div id="nfmResult" class="mt-8 w-full max-w-2xl px-4 text-center"></div>
-    </section>
-
-    <main class="max-w-7xl mx-auto px-4 md:px-8">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center font-black text-white mb-12 border border-white/5 shadow-inner">W</div>
         
-        <div class="mb-8 border-l-4 border-blue-600 pl-4">
-            <h2 class="text-2xl font-bold text-slate-800 uppercase italic tracking-tighter text-blue-700">Inventory Summary Report</h2>
-            <p class="text-slate-500 text-sm italic">Site Wetar Database Summary - Update Feb 2026</p>
+        <div onclick="switchView('report')" id="nav-report" class="sidebar-item active" title="Dashboard">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span class="font-bold text-sm ml-4">Dashboard</span>
+        </div>
+        
+        <div onclick="switchView('add-data')" id="nav-add-data" class="sidebar-item" title="Input Data">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span class="font-bold text-sm ml-4">Input Data Baru</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="white-card p-6 border-b-4 border-blue-500">
-                <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2 italic">Tiba On-Site (Bulan Ini)</p>
-                <div class="text-4xl font-black text-slate-800">42 <span class="text-sm font-normal text-slate-400 italic">Items</span></div>
-                <div class="text-[10px] text-blue-600 mt-2 font-bold uppercase italic">Status: Completed</div>
+        <div onclick="switchView('output')" id="nav-output" class="sidebar-item" title="Output/Archive">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span class="font-bold text-sm ml-4">Output Data (Issued)</span>
+        </div>
+
+        <div onclick="switchView('tracking')" id="nav-tracking" class="sidebar-item" title="Search & Update">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <span class="font-bold text-sm ml-4">Smart Tracking</span>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <!-- Header -->
+        <header class="bg-white/80 backdrop-blur-md px-10 py-6 flex items-center justify-between sticky top-0 z-40 border-b border-slate-100">
+            <div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tighter italic uppercase">Wetar Intelligence <span class="text-blue-600">Sync</span></h1>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1" id="currentBoardLabel">Executive Report</p>
             </div>
-            <div class="white-card p-6 border-b-4 border-orange-400">
-                <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2 italic">Outstanding Value On-Site</p>
-                <div class="text-4xl font-black text-slate-800">Rp 1.8M</div>
-                <div class="text-[10px] text-orange-600 mt-2 font-bold uppercase italic">Pending Approval/Shipment</div>
+            <div class="flex items-center gap-3">
+                <button onclick="downloadExecutiveReport()" class="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-black transition active:scale-95 shadow-lg shadow-slate-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Download Report
+                </button>
             </div>
-            <div class="white-card p-6 border-b-4 border-emerald-500">
-                <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2 italic">Total On-Site Stock</p>
-                <div class="text-4xl font-black text-slate-800">156</div>
-                <div class="text-[10px] text-emerald-600 mt-2 font-bold uppercase italic italic">Asset Valuation</div>
+        </header>
+
+        <!-- Dynamic Boards Navigation -->
+        <div id="tabContainer" class="px-10 py-4 bg-white border-b border-slate-200 flex items-center gap-3 overflow-x-auto scrollbar-hide">
+            <div id="subBoardList" class="flex items-center gap-2">
+                <div id="tab-ALL" class="sub-board-tab active" onclick="filterBoard('ALL')">All Dept</div>
+                <div id="tab-MAINTENANCE-FIXED-PLANT" class="sub-board-tab" onclick="filterBoard('MAINTENANCE FIXED PLANT')">Maint Fixed Plant</div>
+                <div id="tab-MAINTENANCE-MOBILE" class="sub-board-tab" onclick="filterBoard('MAINTENANCE MOBILE')">Maint Mobile</div>
+                <div id="tab-PROCESSING" class="sub-board-tab" onclick="filterBoard('PROCESSING')">Processing</div>
+                <div id="tab-MINING" class="sub-board-tab" onclick="filterBoard('MINING')">Mining</div>
+                <div id="tab-OHS" class="sub-board-tab" onclick="filterBoard('OHS')">OHS</div>
+                <div id="tab-SCM" class="sub-board-tab" onclick="filterBoard('SCM')">SCM</div>
+                <div id="tab-CAMP-FACILITY" class="sub-board-tab" onclick="filterBoard('CAMP FACILITY')">Camp Facility</div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="white-card p-8">
-                <h3 class="text-lg font-bold mb-6 italic uppercase tracking-widest text-slate-700">NFM Breakdown Status</h3>
-                <div class="h-[350px]">
-                    <canvas id="nfmDeptChart"></canvas>
+        <!-- View: Dashboard Report -->
+        <div id="view-report" class="p-10 space-y-10 animate-fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="glass-card p-8"><p class="kpi-title">Total Outstanding</p><div id="statTotalOutstanding" class="kpi-value text-blue-600">Rp 0</div></div>
+                <div class="glass-card p-8"><p class="kpi-title">Value Arrived (On Site)</p><div id="statTotalCompleted" class="kpi-value text-emerald-600">Rp 0</div></div>
+                <div class="glass-card p-8"><p class="kpi-title">Avg Site Aging</p><div id="statAvgAging" class="kpi-value text-amber-600">0 Days</div></div>
+                <div class="glass-card p-8"><p class="kpi-title">Total Value Issued</p><div id="statTotalIssued" class="kpi-value text-indigo-600">Rp 0</div></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <div class="lg:col-span-2 glass-card p-10">
+                    <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest mb-10">Planned Value Trends</h3>
+                    <div class="h-80"><canvas id="growthChart"></canvas></div>
+                </div>
+                <div class="glass-card p-10 flex flex-col items-center">
+                    <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest mb-10 text-center">Value Distribution</h3>
+                    <div class="h-64 w-full flex items-center justify-center"><canvas id="deptPieChart"></canvas></div>
+                    <div id="pieLegend" class="mt-10 w-full space-y-4"></div>
                 </div>
             </div>
 
-            <div class="white-card p-8">
-                <h3 class="text-lg font-bold mb-6 italic uppercase tracking-widest text-blue-600 italic">Recent Tracking History</h3>
+            <div class="glass-card overflow-hidden">
+                <div class="p-10 border-b border-slate-50 flex justify-between items-center">
+                    <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest">Heatmap Analysis per Departemen</h3>
+                    <span class="text-[9px] bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-black uppercase italic tracking-tighter">Live Web Sync Active</span>
+                </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-[12px] text-left">
-                        <thead>
-                            <tr class="text-slate-400 border-b border-slate-100 uppercase font-bold italic">
-                                <th class="pb-3 px-2">Tanggal</th>
-                                <th class="pb-3 px-2">No NFM</th>
-                                <th class="pb-3 px-2">Requestor</th>
-                                <th class="pb-3 px-2">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="nfmTableBody" class="divide-y divide-slate-50 text-slate-600">
-                            </tbody>
+                    <table class="w-full text-left nfm-table">
+                        <thead class="bg-slate-50/50"><tr><th>Departemen</th><th>Avg Aging</th><th>Total Requests</th><th class="text-right">Total Value PR/PO</th></tr></thead>
+                        <tbody id="deptSummaryTable" class="divide-y divide-slate-50"></tbody>
                     </table>
                 </div>
             </div>
         </div>
+
+        <!-- View: Output Data (Issued History) -->
+        <div id="view-output" class="hidden p-10 space-y-10 animate-fade-in">
+            <div class="glass-card overflow-hidden border-t-8 border-emerald-500">
+                <div class="p-10 border-b border-slate-50 flex justify-between items-center bg-white">
+                    <h3 class="text-slate-900 font-black text-xl uppercase tracking-tighter italic text-emerald-500">Logistics Output Data (Issued Items)</h3>
+                    <button onclick="downloadIssuedLog()" class="bg-emerald-600 text-white text-[10px] font-black px-6 py-3 rounded-2xl hover:bg-emerald-700 transition uppercase tracking-widest shadow-lg shadow-emerald-100">Export Issued Log</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left nfm-table">
+                        <thead class="bg-slate-50/50">
+                            <tr>
+                                <th>Tanggal Update</th>
+                                <th>NFM #</th>
+                                <th>WHRS</th>
+                                <th>Item Issued Detail</th>
+                                <th>Dept</th>
+                                <th>Req By</th>
+                                <th class="text-right">Price @</th>
+                                <th class="text-right">Total Value Issued</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outputDataTable" class="divide-y divide-slate-50"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Add New Data -->
+        <div id="view-add-data" class="hidden p-10 max-w-7xl mx-auto animate-fade-in">
+            <div class="glass-card p-12 border-t-[10px] border-blue-600 shadow-2xl">
+                <div class="mb-10 text-center">
+                    <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Input Data NFM Baru</h2>
+                </div>
+                
+                <form id="nfmForm" class="grid grid-cols-1 md:grid-cols-2 gap-8" onsubmit="saveNFMData(event)">
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <label>Pilih Departemen</label>
+                            <select id="input_dept" class="input-field" required>
+                                <option value="">-- Pilih Departemen --</option>
+                                <option value="MAINTENANCE FIXED PLANT">MAINTENANCE FIXED PLANT</option>
+                                <option value="MAINTENANCE MOBILE">MAINTENANCE MOBILE</option>
+                                <option value="PROCESSING">PROCESSING</option>
+                                <option value="MINING">MINING</option>
+                                <option value="OHS">OHS</option>
+                                <option value="SCM">SCM</option>
+                                <option value="CAMP FACILITY">CAMP FACILITY</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Pilih WHRS (Gudang)</label>
+                            <select id="input_whrs" class="input-field" required>
+                                <option value="">-- Pilih Gudang --</option>
+                                <option value="MAIN">MAIN</option>
+                                <option value="RTBL">RTBL</option>
+                                <option value="WWBJ">WWBJ</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label>Nama Requestor (Yang Req)</label>
+                        <input type="text" id="input_requestor" class="input-field" placeholder="Nama Personil" required>
+                    </div>
+                    <div>
+                        <label>Nomor NFM</label>
+                        <input type="text" id="input_noNFM" class="input-field" placeholder="e.g. 721" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label>Nomor Form (Full ID)</label>
+                        <input type="text" id="input_formId" class="input-field" placeholder="e.g. 721/BTR-MTC/XII/2025" required>
+                    </div>
+                    
+                    <div class="md:col-span-2 p-8 bg-slate-50 rounded-3xl border border-slate-200 shadow-inner">
+                        <div class="flex justify-between items-center mb-6">
+                            <label class="mb-0 text-slate-900">Daftar Line Item (Aktual)</label>
+                            <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-white bg-blue-600 px-4 py-2 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-100">+ TAMBAH LINE</button>
+                        </div>
+                        <div id="itemListContainer">
+                            <div class="item-row grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div><label>Nomor PO</label><input type="text" class="input-field item-po" placeholder="Nomor PO" required></div>
+                                <div><label>Stock Code (SC)</label><input type="text" class="input-field item-sc" placeholder="Stock Code" required></div>
+                                <div><label>QTY Order</label><input type="number" class="input-field item-qty" placeholder="0" required></div>
+                                <div><label>Price (Rp)</label><input type="number" class="input-field item-price" placeholder="Harga Satuan" required></div>
+                                <div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" placeholder="Deskripsi item..." required></textarea></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label>Tanggal Input Data</label>
+                        <input type="date" id="input_date" class="input-field" required>
+                    </div>
+                    <div>
+                        <label>Status Global (Awal)</label>
+                        <select id="input_status" class="input-field">
+                            <option value="PR">PR</option>
+                            <option value="On Order">On Order</option>
+                            <option value="IN Transit">IN Transit</option>
+                            <option value="On Site">On Site</option>
+                        </select>
+                    </div>
+                    
+                    <div class="md:col-span-2 mt-8">
+                        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-2xl transition-all flex items-center justify-center gap-4 text-sm uppercase tracking-widest active:scale-[0.98]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                            SYNC DATA KE CLOUD
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div id="formFeedback" class="mt-6 text-center"></div>
+        </div>
+
+        <!-- View: Smart Tracking -->
+        <div id="view-tracking" class="hidden p-10 max-w-6xl mx-auto text-center">
+            <div class="bg-slate-900 rounded-[50px] p-16 text-white shadow-3xl overflow-hidden relative">
+                <div class="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px] -mr-40 -mt-40"></div>
+                <h2 class="text-4xl font-black mb-6 tracking-tighter uppercase italic text-center text-white italic">Track & Update <span class="text-blue-400">Actual Status</span></h2>
+                <div class="flex flex-col md:flex-row gap-5 max-w-3xl mx-auto p-3 bg-white/10 rounded-3xl border border-white/10 backdrop-blur-md">
+                    <input type="text" id="nfmSearchInput" class="flex-1 bg-transparent border-none px-8 py-5 text-white font-bold text-xl outline-none placeholder:text-slate-600" placeholder="Nomor NFM atau Form ID..." onkeypress="if(event.key === 'Enter') trackNFM()">
+                    <button onclick="trackNFM()" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-2xl font-black text-sm uppercase transition-all shadow-xl shadow-blue-900">Cari</button>
+                </div>
+            </div>
+            <div id="nfmResult" class="mt-12 text-left space-y-10 pb-20"></div>
+        </div>
     </main>
 
-    <script>
-        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXL6oLuQJtXHGXlNYgM_7JgWYzFubZczo-JK9QYHJu8DmY0VzmZAFWIrC_JTDa6X77AkmxbYYd_zX0/pub?gid=0&single=true&output=csv';
-        let nfmData = [];
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        async function fetchNFMData() {
-            try {
-                const response = await fetch(sheetUrl);
-                const csvData = await response.text();
-                const rows = csvData.split('\n').slice(1);
-                
-                nfmData = rows.map(row => {
-                    const cols = row.split(',');
-                    return {
-                        tanggal: cols[0],
-                        noNFM: cols[2] ? cols[2].trim() : "",
-                        nomorFormFull: cols[3] ? cols[3].trim() : "",
-                        noPR: cols[6] ? cols[6].trim() : "TBA", // Mengambil data PR
-                        requestor: cols[5],
-                        outstandingValue: cols[4] ? cols[4] : "0" // Mengambil data Value
-                    };
-                }).filter(item => item.noNFM);
+        const apiKey = "";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-nfm-actual-v51';
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let user = null;
+        let allData = [];
+        let filteredData = [];
+        let charts = {};
+        let activeFilter = 'ALL';
+        let currentView = 'report';
 
-                renderDashboard();
-            } catch (error) {
-                console.error('Fetch Error:', error);
-            }
+        window.onload = async () => {
+            const initAuth = async () => { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }};
+            await initAuth();
+            onAuthStateChanged(auth, (u) => { user = u; if(u) listenToData(); });
+            document.getElementById('loading').style.display = 'none';
+        };
+
+        function listenToData() {
+            const q = collection(db, 'artifacts', appId, 'public', 'data', 'nfm_entries');
+            onSnapshot(q, (snapshot) => {
+                allData = snapshot.docs.map(d => ({
+                    ...d.data(),
+                    id: d.id,
+                    aging: calculateAging(d.data().tanggalInput)
+                }));
+                filterBoard(activeFilter);
+                if(currentView === 'output') renderOutputData();
+            });
         }
 
-        function renderDashboard() {
-            const tbody = document.getElementById('nfmTableBody');
-            tbody.innerHTML = nfmData.slice(0, 10).map(item => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="py-3 px-2 font-medium">${item.
+        function calculateAging(inputDate) {
+            if (!inputDate) return 0;
+            const diff = Math.floor((new Date() - new Date(inputDate)) / (1000 * 60 * 60 * 24));
+            return diff < 0 ? 0 : diff;
+        }
+
+        window.addItemRow = () => {
+            const container = document.getElementById('itemListContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'item-row grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 border-t pt-8 animate-fade-in';
+            newRow.innerHTML = `
+                <div><label>Nomor PO</label><input type="text" class="input-field item-po" placeholder="Nomor PO" required></div>
+                <div><label>Stock Code (SC)</label><input type="text" class="input-field item-sc" placeholder="Stock Code" required></div>
+                <div><label>QTY Order</label><input type="number" class="input-field item-qty" placeholder="Jumlah" required></div>
+                <div><label>Price (Rp)</label><input type="number" class="input-field item-price" placeholder="Harga Satuan" required></div>
+                <div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" placeholder="Deskripsi item..." required></textarea></div>
+                <button type="button" onclick="this.parentElement.remove()" class="absolute top-4 right-4 text-red-500 hover:text-red-700 transition"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"></path></svg></button>
+            `;
+            container.appendChild(newRow);
+        };
+
+        window.saveNFMData = async (e) => {
+            e.preventDefault();
+            if (!user) return;
+            const btn = document.getElementById('submitBtn');
+            const feedback = document.getElementById('formFeedback');
+            btn.disabled = true;
+            
+            const rows = document.querySelectorAll('.item-row');
+            let totalValue = 0;
+            const items = Array.from(rows).map(row => {
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                totalValue += (qty * price);
+                return {
+                    po: row.querySelector('.item-po').value.trim(),
+                    sc: row.querySelector('.item-sc').value.trim().toUpperCase(),
+                    qtyOrder: qty,
+                    qtyArrived: 0,
+                    qtyIssued: 0,
+                    price: price,
+                    desc: row.querySelector('.item-desc').value.trim(),
+                    itemStatus: document.getElementById('input_status').value
+                };
+            });
+
+            const newEntry = {
+                dept: document.getElementById('input_dept').value,
+                whrs: document.getElementById('input_whrs').value,
+                requestor: document.getElementById('input_requestor').value.trim().toUpperCase(),
+                noNFM: document.getElementById('input_noNFM').value.trim(),
+                formId: document.getElementById('input_formId').value.trim(),
+                items: items, 
+                tanggalInput: document.getElementById('input_date').value,
+                tanggalUpdate: new Date().toISOString().split('T')[0],
+                value: totalValue, 
+                timestamp: Date.now()
+            };
+
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'nfm_entries'), newEntry);
+                feedback.innerHTML = `<div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl font-bold uppercase text-xs tracking-widest italic animate-fade-in">Berhasil: Sinkron Cloud Sukses!</div>`;
+                document.getElementById('nfmForm').reset();
+                document.getElementById('itemListContainer').innerHTML = `
+                    <div class="item-row grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div><label>Nomor PO</label><input type="text" class="input-field item-po" placeholder="Nomor PO" required></div>
+                        <div><label>Stock Code (SC)</label><input type="text" class="input-field item-sc" placeholder="Stock Code" required></div>
+                        <div><label>QTY Order</label><input type="number" class="input-field item-qty" placeholder="Jumlah" required></div>
+                        <div><label>Price (Rp)</label><input type="number" class="input-field item-price" placeholder="Harga Satuan" required></div>
+                        <div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" placeholder="Deskripsi item..." required></textarea></div>
+                    </div>`;
+                setTimeout(() => switchView('report'), 1500);
+            } catch (err) { feedback.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl font-bold text-xs">Error Koneksi.</div>`; }
+            finally { btn.disabled = false; }
+        };
+
+        window.trackNFM = () => {
+            const input = document.getElementById('nfmSearchInput').value.trim();
+            const resultDiv = document.getElementById('nfmResult');
+            if (!input) return;
+            const found = allData.find(item => item.noNFM === input || item.formId.includes(input));
+            if (found) {
+                resultDiv.innerHTML = `
+                <div class="glass-card p-12 border-t-8 border-blue-600 animate-fade-in shadow-2xl relative">
+                    <div class="flex justify-between items-start mb-10">
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded uppercase tracking-[0.2em]">Live Tracking Insight</span>
+                                <span class="wh-badge uppercase">${found.whrs}</span>
+                            </div>
+                            <h3 class="text-5xl font-black text-slate-900 tracking-tighter mt-4 italic">NFM #${found.noNFM}</h3>
+                            <p class="text-slate-400 font-bold text-sm mt-1 uppercase italic tracking-widest tracking-tighter">${found.formId}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic mb-2">Requested By: ${found.requestor}</p>
+                            <span class="px-5 py-2 bg-slate-900 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-md">Status Updates</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <label class="text-slate-900 font-black">Line Item Actual Status</label>
+                        <div class="overflow-x-auto">
+                            <table class="w-full nfm-table bg-slate-50/50 rounded-3xl overflow-hidden shadow-inner">
+                                <thead>
+                                    <tr>
+                                        <th>PO / Stock Code / Desc</th>
+                                        <th>Target</th>
+                                        <th>Arrival</th>
+                                        <th>Issued</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${(found.items || []).map((item, idx) => `
+                                        <tr>
+                                            <td>
+                                                <p class="font-black text-blue-600 text-[14px]">PO: ${item.po}</p>
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">SC: ${item.sc}</p>
+                                                <p class="text-[10px] text-slate-500 italic max-w-xs mt-1 leading-relaxed">${item.desc}</p>
+                                            </td>
+                                            <td class="font-black text-slate-900 text-center">${item.qtyOrder}</td>
+                                            <td>
+                                                <input type="number" id="arr_${found.id}_${idx}" value="${item.qtyArrived || 0}" 
+                                                    class="input-field w-20 border-none shadow-sm text-center bg-blue-100/50 font-black">
+                                            </td>
+                                            <td>
+                                                <input type="number" id="iss_${found.id}_${idx}" value="${item.qtyIssued || 0}" 
+                                                    class="input-field w-20 border-none shadow-sm text-center bg-emerald-100/50 font-black">
+                                            </td>
+                                            <td>
+                                                <select id="stat_${found.id}_${idx}" class="input-field text-[10px] uppercase font-black border-none shadow-sm h-10 w-32">
+                                                    <option value="PR" ${item.itemStatus === 'PR' ? 'selected' : ''}>PR</option>
+                                                    <option value="On Order" ${item.itemStatus === 'On Order' ? 'selected' : ''}>On Order</option>
+                                                    <option value="IN Transit" ${item.itemStatus === 'IN Transit' ? 'selected' : ''}>IN Transit</option>
+                                                    <option value="On Site" ${item.itemStatus === 'On Site' ? 'selected' : ''}>On Site</option>
+                                                    <option value="Issued" ${item.itemStatus === 'Issued' ? 'selected' : ''}>Issued</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-10 p-8 bg-blue-600 rounded-[32px] text-white flex flex-col md:flex-row items-center justify-between shadow-2xl gap-4">
+                            <div class="text-center md:text-left">
+                                <h4 class="font-black uppercase text-sm tracking-widest italic tracking-tighter">Commit Actual Updates</h4>
+                                <p class="text-[10px] opacity-70 font-bold uppercase mt-1 tracking-widest">Update QTY & Status per item akan langsung tersimpan di Cloud</p>
+                            </div>
+                            <button onclick="updateNFMActual('${found.id}')" class="bg-white text-blue-600 font-black px-10 py-4 rounded-2xl hover:bg-slate-100 transition uppercase text-xs shadow-lg active:scale-95 whitespace-nowrap">Simpan Perubahan</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-12 bg-slate-50 p-10 rounded-[32px] border border-slate-100 mt-10">
+                        <div><p class="kpi-title">Departemen</p><p class="font-black text-slate-900 uppercase mt-1 text-lg">${found.dept}</p></div>
+                        <div><p class="kpi-title">Current Aging</p><p class="font-black text-slate-900 mt-1 text-lg">${found.aging} Days</p></div>
+                        <div><p class="kpi-title">Total Planned Value</p><p class="font-black text-blue-600 mt-1 text-lg">Rp ${formatCurrency(found.value)}</p></div>
+                    </div>
+                </div>`;
+            } else {
+                resultDiv.innerHTML = `<div class="p-12 text-center bg-red-50 text-red-600 rounded-[40px] font-black uppercase text-sm border border-red-100 italic tracking-widest tracking-tighter shadow-sm">Data NFM tidak ditemukan dalam database Cloud.</div>`;
+            }
+        };
+
+        window.updateNFMActual = async (docId) => {
+            const found = allData.find(d => d.id === docId);
+            if (!found) return;
+
+            const updatedItems = (found.items || []).map((item, idx) => {
+                const arrVal = parseFloat(document.getElementById(`arr_${docId}_${idx}`).value) || 0;
+                const issVal = parseFloat(document.getElementById(`iss_${docId}_${idx}`).value) || 0;
+                const statVal = document.getElementById(`stat_${docId}_${idx}`).value;
+                return {
+                    ...item,
+                    qtyArrived: arrVal,
+                    qtyIssued: issVal,
+                    itemStatus: statVal
+                };
+            });
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId);
+                await updateDoc(docRef, { 
+                    items: updatedItems,
+                    tanggalUpdate: new Date().toISOString().split('T')[0]
+                });
+                alert("SUKSES: Data Aktual Line Item Telah Diperbarui!");
+                trackNFM(); 
+            } catch (e) { alert("Error: Gagal Sinkronisasi Database."); }
+        };
+
+        window.updateUI = () => {
+            const totalOut = filteredData.reduce((a, b) => a + b.value, 0);
+            
+            const totalArrivedValue = filteredData.reduce((acc, entry) => {
+                const entryArrived = (entry.items || []).reduce((itemAcc, item) => itemAcc + ((item.qtyArrived || 0) * (item.price || 0)), 0);
+                return acc + entryArrived;
+            }, 0);
+
+            const totalIssuedValue = filteredData.reduce((acc, entry) => {
+                const entryIssued = (entry.items || []).reduce((itemAcc, item) => itemAcc + ((item.qtyIssued || 0) * (item.price || 0)), 0);
+                return acc + entryIssued;
+            }, 0);
+
+            const avgAging = filteredData.length > 0 ? Math.round(filteredData.reduce((a, b) => a + b.aging, 0) / filteredData.length) : 0;
+            const rate = totalOut > 0 ? ((totalArrivedValue / totalOut) * 100).toFixed(1) : 0;
+
+            document.getElementById('statTotalOutstanding').innerText = `Rp ${formatCurrency(totalOut)}`;
+            document.getElementById('statTotalCompleted').innerText = `Rp ${formatCurrency(totalArrivedValue)}`;
+            document.getElementById('statAvgAging').innerText = `${avgAging} Days`;
+            document.getElementById('statTotalIssued').innerText = `Rp ${formatCurrency(totalIssuedValue)}`;
+            document.getElementById('statCompletionRate').innerText = `${rate}%`;
+
+            renderCharts();
+            renderTables();
+        }
+
+        function formatCurrency(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + ' Juta';
+            return num.toLocaleString('id-ID');
+        }
+
+        function renderCharts() {
+            const ctxG = document.getElementById('growthChart').getContext('2d');
+            const dataMap = filteredData.reduce((acc, i) => { const d = i.tanggalInput.substring(0, 7); acc[d] = (acc[d] || 0) + i.value; return acc; }, {});
+            const sortedLabels = Object.keys(dataMap).sort();
+            if (charts.growth) charts.growth.destroy();
+            charts.growth = new Chart(ctxG, { type: 'bar', data: { labels: sortedLabels, datasets: [{ label: 'Planned Value', data: sortedLabels.map(l => dataMap[l]), backgroundColor: '#0061ff', borderRadius: 10 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: false }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 10, weight: '700' } } } } } });
+
+            const ctxP = document.getElementById('deptPieChart').getContext('2d');
+            const values = filteredData.reduce((acc, i) => { acc[i.dept] = (acc[i.dept] || 0) + i.value; return acc; }, {});
+            const sortedDept = Object.entries(values).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const colors = ['#0061ff', '#10b981', '#f59e0b', '#ef4444', '#6366f1'];
+            if (charts.pie) charts.pie.destroy();
+            charts.pie = new Chart(ctxP, { type: 'doughnut', data: { labels: sortedDept.map(s => s[0]), datasets: [{ data: sortedDept.map(s => s[1]), backgroundColor: colors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '85%', plugins: { legend: false } } });
+            document.getElementById('pieLegend').innerHTML = sortedDept.map((s, i) => `<div class="flex items-center justify-between"><div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full" style="background:${colors[i]}"></div><span class="text-[11px] font-bold text-slate-500 uppercase truncate w-32">${s[0]}</span></div><span class="text-[11px] font-black text-slate-900">${formatCurrency(s[1])}</span></div>`).join('');
+        }
+
+        function renderTables() {
+            const table = document.getElementById('deptSummaryTable');
+            const stats = filteredData.reduce((acc, i) => { if(!acc[i.dept]) acc[i.dept] = {v:0, c:0, a:0}; acc[i.dept].v += i.value; acc[i.dept].c++; acc[i.dept].a += i.aging; return acc; }, {});
+            table.innerHTML = Object.entries(stats).sort((a,b) => b[1].v - a[1].v).map(([name, s]) => `<tr class="hover:bg-slate-50 transition"><td class="px-8 py-6 font-bold uppercase text-slate-800">${name}</td><td class="px-8 py-6 text-xs font-black ${s.a/s.c > 90 ? 'text-red-600' : 'text-slate-900'}">${Math.round(s.a/s.c)} <span class="font-bold text-slate-400">D</span></td><td class="px-8 py-6 text-xs font-bold text-slate-500">${s.c} requests</td><td class="px-8 py-6 font-black text-right text-blue-600">Rp ${formatCurrency(s.v)}</td></tr>`).join('');
+        }
+
+        function renderOutputData() {
+            const table = document.getElementById('outputDataTable');
+            const rows = [];
+            allData.forEach(entry => {
+                (entry.items || []).forEach(item => {
+                    if (item.qtyIssued > 0) {
+                        rows.push({
+                            date: entry.tanggalUpdate || '-',
+                            nfm: entry.noNFM,
+                            whrs: entry.whrs,
+                            po: item.po,
+                            sc: item.sc,
+                            desc: item.desc,
+                            dept: entry.dept,
+                            req: entry.requestor,
+                            qty: item.qtyIssued,
+                            price: item.price,
+                            total: item.qtyIssued * item.price
+                        });
+                    }
+                });
+            });
+            
+            table.innerHTML = rows.map(r => `
+                <tr class="hover:bg-slate-50 transition text-[12px]">
+                    <td class="font-bold text-slate-400">${r.date}</td>
+                    <td class="font-black text-blue-600">#${r.nfm}</td>
+                    <td class="font-black uppercase">${r.whrs}</td>
+                    <td>
+                        <div class="flex gap-2">
+                            <span class="po-badge">${r.po}</span>
+                            <span class="sc-badge">${r.sc}</span>
+                            <span class="qty-badge">QTY: ${r.qty}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 italic mt-1">${r.desc}</p>
+                    </td>
+                    <td class="uppercase font-bold">${r.dept}</td>
+                    <td class="uppercase font-bold text-slate-500">${r.req}</td>
+                    <td class="text-right">Rp ${formatCurrency(r.price)}</td>
+                    <td class="text-right font-black text-slate-900">Rp ${formatCurrency(r.total)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // --- EXPORT FEATURES ---
+        window.downloadExecutiveReport = () => {
+            const totalOut = document.getElementById('statTotalOutstanding').innerText;
+            const totalArr = document.getElementById('statTotalCompleted').innerText;
+            const totalIss = document.getElementById('statTotalIssued').innerText;
+            const avgAging = document.getElementById('statAvgAging').innerText;
+            const rate = document.getElementById('statCompletionRate').innerText;
+
+            let csv = `EXECUTIVE SUMMARY - WETAR INTELLIGENCE SYNC\n`;
+            csv += `Filter: ${activeFilter}\n`;
+            csv += `Total Outstanding,${totalOut.replace(/,/g, '')}\n`;
+            csv += `Value Arrived (On Site),${totalArr.replace(/,/g, '')}\n`;
+            csv += `Total Value Issued,${totalIss.replace(/,/g, '')}\n`;
+            csv += `Average Site Aging,${avgAging}\n`;
+            csv += `Completion Progress,${rate}\n\n`;
+
+            csv += `DEPARTMENT BREAKDOWN (HEATMAP)\n`;
+            csv += `Department,Average Aging,Requests,Total Value PR/PO\n`;
+            
+            const stats = filteredData.reduce((acc, i) => { 
+                if(!acc[i.dept]) acc[i.dept] = {v:0, c:0, a:0}; 
+                acc[i.dept].v += i.value; 
+                acc[i.dept].c++; 
+                acc[i.dept].a += i.aging; 
+                return acc; 
+            }, {});
+
+            Object.entries(stats).forEach(([name, s]) => {
+                csv += `"${name}",${Math.round(s.a/s.c)} Days,${s.c},"${formatCurrency(s.v).replace(/,/g, '')}"\n`;
+            });
+
+            downloadCSV(csv, `Executive_Report_${activeFilter}_${new Date().toISOString().split('T')[0]}.csv`);
+        };
+
+        window.downloadIssuedLog = () => {
+            let csv = `ISSUED LOG - SITE LOGISTICS\n`;
+            csv += `Date,NFM#,WHRS,PO,StockCode,Description,Department,Requestor,QtyIssued,UnitPrice,TotalValue\n`;
+
+            allData.forEach(entry => {
+                (entry.items || []).forEach(item => {
+                    if (item.qtyIssued > 0) {
+                        csv += `"${entry.tanggalUpdate || '-'}","#${entry.noNFM}","${entry.whrs}","${item.po}","${item.sc}","${item.desc}","${entry.dept}","${entry.requestor}",${item.qtyIssued},${item.price},${item.qtyIssued * item.price}\n`;
+                    }
+                });
+            });
+
+            downloadCSV(csv, `Issued_Log_Wetar_${new Date().toISOString().split('T')[0]}.csv`);
+        };
+
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.filterBoard = (deptName) => {
+            activeFilter = deptName;
+            document.querySelectorAll('.sub-board-tab').forEach(tab => tab.classList.remove('active'));
+            const targetId = 'tab-' + deptName.replace(/\s+/g, '-');
+            const targetTab = document.getElementById(targetId);
+            if (targetTab) targetTab.classList.add('active');
+            if (currentView !== 'report' && currentView !== 'output') switchView('report');
+            filteredData = deptName === 'ALL' ? allData : allData.filter(i => i.dept === deptName);
+            document.getElementById('currentBoardLabel').innerText = deptName === 'ALL' ? "Executive Report" : `Executive Report: ${deptName}`;
+            updateUI();
+        };
+
+        window.switchView = (view) => {
+            currentView = view;
+            document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
+            document.getElementById('view-' + view).classList.remove('hidden');
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            const navItem = document.getElementById('nav-' + view);
+            if(navItem) navItem.classList.add('active');
+            if(view === 'report') updateUI();
+            if(view === 'output') renderOutputData();
+        };
+    </script>
+</body>
+</html>
