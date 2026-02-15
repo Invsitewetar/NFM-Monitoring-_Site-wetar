@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive NFM OS</title>
+    <title>Wetar Intelligence Sync - Executive Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
             letter-spacing: -0.01em;
         }
 
-        /* Modern Sidebar Design */
+        /* Sidebar Styling */
         .sidebar { 
             width: 80px; height: 100vh; position: fixed; left: 0; top: 0; 
             background: var(--sidebar); z-index: 50; display: flex; 
@@ -29,7 +29,7 @@
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 4px 0 24px rgba(0,0,0,0.05);
         }
-        .sidebar:hover { width: 220px; }
+        .sidebar:hover { width: 240px; }
 
         .sidebar-item { 
             width: calc(100% - 24px); height: 50px; display: flex; align-items: center; 
@@ -49,16 +49,15 @@
         }
         
         .kpi-title { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; }
-        .kpi-value { font-size: 24px; font-weight: 800; color: #0f172a; margin-top: 4px; }
+        .kpi-value { font-size: 26px; font-weight: 800; color: #0f172a; margin-top: 4px; }
 
         .sub-board-tab {
-            padding: 12px 24px; border-radius: 12px; font-weight: 700;
-            font-size: 11px; text-transform: uppercase; color: #64748b;
+            padding: 12px 20px; border-radius: 12px; font-weight: 700;
+            font-size: 10px; text-transform: uppercase; color: #64748b;
             cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;
-            background: #fff; border: 1px solid transparent;
+            background: #fff; border: 1px solid #f1f5f9;
         }
-        .sub-board-tab:hover { background: #f1f5f9; }
-        .sub-board-tab.active { color: white; background: var(--primary); box-shadow: 0 4px 12px rgba(0,97,255,0.2); }
+        .sub-board-tab.active { color: white; background: var(--primary); border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,97,255,0.2); }
 
         .input-field {
             width: 100%; border: 1px solid #e2e8f0; border-radius: 14px;
@@ -69,34 +68,37 @@
         
         label { font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 6px; display: block; }
         
-        .nfm-table th { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; padding: 16px 24px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
-        .nfm-table td { padding: 16px 24px; border-bottom: 1px solid #f8fafc; font-size: 13px; font-weight: 600; }
+        .nfm-table th { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; padding: 16px 20px; border-bottom: 1px solid #f1f5f9; }
+        .nfm-table td { padding: 16px 20px; border-bottom: 1px solid #f8fafc; font-size: 13px; font-weight: 600; }
         
         .loading-overlay { position: fixed; inset: 0; background: white; z-index: 110; display: flex; align-items: center; justify-content: center; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-        .item-row { background: #fff; border: 1px solid #f1f5f9; padding: 20px; border-radius: 20px; margin-bottom: 16px; position: relative; }
+        .item-row { background: #fff; border: 1px solid #f1f5f9; padding: 20px; border-radius: 20px; margin-bottom: 16px; position: relative; transition: all 0.2s; }
+        .item-row:hover { border-color: var(--primary); }
+        
         .po-badge { background: #eff6ff; color: #1d4ed8; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
         .sc-badge { background: #f0fdf4; color: #166534; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
         .qty-badge { background: #fff7ed; color: #c2410c; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
         .wh-badge { background: #1e293b; color: white; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
 
-        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
+    <!-- Splash Loading -->
     <div id="loading" class="loading-overlay">
         <div class="flex flex-col items-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-4"></div>
-            <p class="text-xs font-bold text-slate-400 tracking-widest uppercase italic text-center">Sinkronisasi Database Aktuil...<br><span class="text-[9px] opacity-50 uppercase mt-2">Wetar Intelligence v5.1</span></p>
+            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-6"></div>
+            <p class="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase italic">Wetar Intelligence v5.2</p>
         </div>
     </div>
 
-    <!-- Sidebar Navigation -->
+    <!-- Navigation Sidebar -->
     <aside class="sidebar">
-        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center font-black text-white mb-12 border border-white/5 shadow-inner">W</div>
+        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center font-black text-white mb-12 border border-white/5">W</div>
         
         <div onclick="switchView('report')" id="nav-report" class="sidebar-item active" title="Dashboard">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -108,37 +110,34 @@
             <span class="font-bold text-sm ml-4">Input Data Baru</span>
         </div>
 
-        <div onclick="switchView('output')" id="nav-output" class="sidebar-item" title="Output/Archive">
+        <div onclick="switchView('output')" id="nav-output" class="sidebar-item" title="Logs Archive">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span class="font-bold text-sm ml-4">Output (Issued)</span>
+            <span class="font-bold text-sm ml-4">History (Issued)</span>
         </div>
 
-        <div onclick="switchView('tracking')" id="nav-tracking" class="sidebar-item" title="Search & Update">
+        <div onclick="switchView('tracking')" id="nav-tracking" class="sidebar-item" title="Tracking & Actual">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <span class="font-bold text-sm ml-4">Smart Tracking</span>
         </div>
     </aside>
 
     <main class="main-content">
-        <!-- Dashboard Header -->
+        <!-- Main Header -->
         <header class="bg-white/80 backdrop-blur-md px-10 py-6 flex items-center justify-between sticky top-0 z-40 border-b border-slate-100">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tighter italic uppercase">Wetar Intelligence <span class="text-blue-600">Sync</span></h1>
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1" id="currentBoardLabel">Executive Report</p>
             </div>
             <div class="flex items-center gap-3">
-                <button onclick="downloadExecutiveReport()" class="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-black transition active:scale-95 shadow-lg shadow-slate-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    Download Report
-                </button>
+                <button onclick="downloadExecutiveReport()" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-black transition active:scale-95 shadow-lg">Download CSV</button>
             </div>
         </header>
 
-        <!-- Department Tabs -->
-        <div id="tabContainer" class="px-10 py-4 bg-white border-b border-slate-200 flex items-center gap-3 overflow-x-auto scrollbar-hide">
+        <!-- Department Filters -->
+        <div id="tabContainer" class="px-10 py-4 bg-white border-b border-slate-200 flex items-center gap-2 overflow-x-auto scrollbar-hide">
             <div id="subBoardList" class="flex items-center gap-2">
                 <div id="tab-ALL" class="sub-board-tab active" onclick="filterBoard('ALL')">All Dept</div>
-                <div id="tab-MAINTENANCE-FIXED-PLANT" class="sub-board-tab" onclick="filterBoard('MAINTENANCE FIXED PLANT')">Maint Fixed Plant</div>
+                <div id="tab-MAINTENANCE-FIXED-PLANT" class="sub-board-tab" onclick="filterBoard('MAINTENANCE FIXED PLANT')">Maint Fixed</div>
                 <div id="tab-MAINTENANCE-MOBILE" class="sub-board-tab" onclick="filterBoard('MAINTENANCE MOBILE')">Maint Mobile</div>
                 <div id="tab-PROCESSING" class="sub-board-tab" onclick="filterBoard('PROCESSING')">Processing</div>
                 <div id="tab-MINING" class="sub-board-tab" onclick="filterBoard('MINING')">Mining</div>
@@ -150,32 +149,28 @@
 
         <!-- VIEW: DASHBOARD -->
         <div id="view-report" class="p-10 space-y-10 animate-fade-in">
-            <!-- Summary KPIs -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="glass-card p-8"><p class="kpi-title">Total Outstanding</p><div id="statTotalOutstanding" class="kpi-value text-blue-600">Rp 0</div></div>
                 <div class="glass-card p-8"><p class="kpi-title">Value On Site</p><div id="statTotalCompleted" class="kpi-value text-emerald-600">Rp 0</div></div>
                 <div class="glass-card p-8"><p class="kpi-title">Avg Site Aging</p><div id="statAvgAging" class="kpi-value text-amber-600">0 Days</div></div>
-                <div class="glass-card p-8"><p class="kpi-title">Total Value Issued</p><div id="statTotalIssued" class="kpi-value text-indigo-600">Rp 0</div></div>
+                <div class="glass-card p-8"><p class="kpi-title">Total Issued</p><div id="statTotalIssued" class="kpi-value text-indigo-600">Rp 0</div></div>
             </div>
 
-            <!-- Charts Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div class="lg:col-span-2 glass-card p-10">
-                    <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest mb-10">Value PR/PO Growth Trends</h3>
-                    <div class="h-80"><canvas id="growthChart"></canvas></div>
+                <div class="lg:col-span-2 glass-card p-10 h-[450px]">
+                    <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest mb-10">Planned Value Trends</h3>
+                    <canvas id="growthChart"></canvas>
                 </div>
-                <div class="glass-card p-10 flex flex-col items-center">
+                <div class="glass-card p-10 h-[450px] flex flex-col items-center">
                     <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest mb-10 text-center">Value Distribution</h3>
-                    <div class="h-64 w-full flex items-center justify-center"><canvas id="deptPieChart"></canvas></div>
-                    <div id="pieLegend" class="mt-10 w-full space-y-4"></div>
+                    <div class="flex-1 w-full"><canvas id="deptPieChart"></canvas></div>
+                    <div id="pieLegend" class="mt-6 w-full space-y-2"></div>
                 </div>
             </div>
 
-            <!-- Heatmap Table -->
             <div class="glass-card overflow-hidden">
                 <div class="p-10 border-b border-slate-50 flex justify-between items-center">
-                    <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest text-blue-600">Heatmap Analysis per Departemen</h3>
-                    <span class="text-[9px] bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-black uppercase italic tracking-tighter">Live Web Sync Active</span>
+                    <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest">Heatmap Analysis per Departemen</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left nfm-table">
@@ -186,28 +181,27 @@
             </div>
         </div>
 
-        <!-- VIEW: OUTPUT DATA (ISSUED HISTORY) -->
+        <!-- VIEW: HISTORY (ISSUED) -->
         <div id="view-output" class="hidden p-10 space-y-10 animate-fade-in">
             <div class="glass-card overflow-hidden border-t-8 border-emerald-500">
                 <div class="p-10 border-b border-slate-50 flex justify-between items-center bg-white">
                     <div>
-                        <h3 class="text-slate-900 font-black text-xl uppercase tracking-tighter italic text-emerald-500">NFM Issued Logs</h3>
-                        <p class="text-slate-400 font-bold text-xs mt-1 uppercase tracking-widest">Arsip Aktual Pengambilan Barang</p>
+                        <h3 class="text-slate-900 font-black text-xl uppercase tracking-tighter italic text-emerald-500">Logistics Issued Logs</h3>
+                        <p class="text-slate-400 font-bold text-[10px] mt-1 uppercase tracking-widest">Arsip Aktual Pengambilan Barang</p>
                     </div>
-                    <button onclick="downloadIssuedLog()" class="bg-emerald-600 text-white text-[10px] font-black px-6 py-3 rounded-2xl hover:bg-emerald-700 transition uppercase shadow-lg shadow-emerald-100">Export Issued Data</button>
+                    <button onclick="downloadIssuedLog()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition">Export CSV</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left nfm-table">
                         <thead class="bg-slate-50/50">
                             <tr>
-                                <th>Tanggal Update</th>
+                                <th>Tanggal</th>
                                 <th>NFM #</th>
                                 <th>WHRS</th>
-                                <th>Item Details</th>
+                                <th>Item Detail</th>
                                 <th>Dept</th>
-                                <th>Req By</th>
                                 <th class="text-right">Price</th>
-                                <th class="text-right">Issued Value</th>
+                                <th class="text-right">Issued Total</th>
                             </tr>
                         </thead>
                         <tbody id="outputDataTable" class="divide-y divide-slate-50"></tbody>
@@ -216,18 +210,18 @@
             </div>
         </div>
 
-        <!-- VIEW: INPUT DATA -->
+        <!-- VIEW: INPUT FORM -->
         <div id="view-add-data" class="hidden p-10 max-w-7xl mx-auto animate-fade-in">
             <div class="glass-card p-12 border-t-[10px] border-blue-600 shadow-2xl">
                 <div class="mb-10 text-center">
                     <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Input NFM Baru</h2>
-                    <p class="text-slate-400 font-bold text-xs mt-2 uppercase tracking-widest">Sinkronisasi langsung ke database Cloud Site</p>
+                    <p class="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-widest italic tracking-tighter">Sinkronisasi langsung ke database Cloud Site</p>
                 </div>
                 
                 <form id="nfmForm" class="grid grid-cols-1 md:grid-cols-2 gap-8" onsubmit="saveNFMData(event)">
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <label>Pilih Departemen</label>
+                            <label>Departemen</label>
                             <select id="input_dept" class="input-field" required>
                                 <option value="">-- Pilih Departemen --</option>
                                 <option value="MAINTENANCE FIXED PLANT">MAINTENANCE FIXED PLANT</option>
@@ -240,7 +234,7 @@
                             </select>
                         </div>
                         <div>
-                            <label>Pilih WHRS (Gudang)</label>
+                            <label>WHRS (Gudang)</label>
                             <select id="input_whrs" class="input-field" required>
                                 <option value="">-- Pilih Gudang --</option>
                                 <option value="MAIN">MAIN</option>
@@ -251,8 +245,8 @@
                     </div>
                     
                     <div>
-                        <label>Nama Requestor (Yang Req)</label>
-                        <input type="text" id="input_requestor" class="input-field" placeholder="Nama Lengkap" required>
+                        <label>Nama Requestor</label>
+                        <input type="text" id="input_requestor" class="input-field" placeholder="Nama Personil" required>
                     </div>
                     <div>
                         <label>Nomor NFM</label>
@@ -260,24 +254,24 @@
                     </div>
                     <div class="md:col-span-2">
                         <label>Nomor Form (Full ID)</label>
-                        <input type="text" id="input_formId" class="input-field" placeholder="e.g. 721/BTR-MTC/XII/2025" required>
+                        <input type="text" id="input_formId" class="input-field" placeholder="e.g. 721/BTR-SCM/XII/2025" required>
                     </div>
                     
                     <div class="md:col-span-2 p-8 bg-slate-50 rounded-[32px] border border-slate-200 shadow-inner">
                         <div class="flex justify-between items-center mb-6">
                             <div>
-                                <label class="mb-0 text-slate-900 font-black">Daftar Line Item (Actual Planning)</label>
-                                <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase italic">Tambahkan line item sebanyak yang dibutuhkan</p>
+                                <label class="mb-0 text-slate-900 font-black">Line Items (Aktual)</label>
+                                <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase italic tracking-tighter">Total value dihitung otomatis dari harga satuan</p>
                             </div>
                             <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-white bg-blue-600 px-5 py-2.5 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-100">+ TAMBAH LINE</button>
                         </div>
                         <div id="itemListContainer">
                             <div class="item-row grid grid-cols-1 md:grid-cols-4 gap-4 animate-fade-in">
-                                <div><label>Nomor PO</label><input type="text" class="input-field item-po" placeholder="PO" required></div>
-                                <div><label>Stock Code</label><input type="text" class="input-field item-sc" placeholder="SC" required></div>
+                                <div><label>Nomor PO</label><input type="text" class="input-field item-po" placeholder="PO#" required></div>
+                                <div><label>Stock Code</label><input type="text" class="input-field item-sc" placeholder="SC#" required></div>
                                 <div><label>QTY Order</label><input type="number" class="input-field item-qty" placeholder="0" required></div>
-                                <div><label>Price (Rp)</label><input type="number" class="input-field item-price" placeholder="Harga Satuan" required></div>
-                                <div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" placeholder="Deskripsi item..." required></textarea></div>
+                                <div><label>Price (Rp)</label><input type="number" class="input-field item-price" placeholder="Harga Unit" required></div>
+                                <div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" placeholder="Keterangan barang..." required></textarea></div>
                             </div>
                         </div>
                     </div>
@@ -287,7 +281,7 @@
                         <input type="date" id="input_date" class="input-field" required>
                     </div>
                     <div>
-                        <label>Status Global Awal</label>
+                        <label>Status Global</label>
                         <select id="input_status" class="input-field">
                             <option value="PR">PR</option>
                             <option value="On Order">On Order</option>
@@ -297,10 +291,7 @@
                     </div>
                     
                     <div class="md:col-span-2 mt-8">
-                        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-2xl transition-all flex items-center justify-center gap-4 text-sm uppercase tracking-widest active:scale-[0.98]">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                            Kirim ke Database Cloud
-                        </button>
+                        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-2xl transition-all uppercase text-sm tracking-widest">KIRIM DATA KE CLOUD</button>
                     </div>
                 </form>
             </div>
@@ -308,13 +299,13 @@
         </div>
 
         <!-- VIEW: SMART TRACKING -->
-        <div id="view-tracking" class="hidden p-10 max-w-6xl mx-auto text-center">
+        <div id="view-tracking" class="hidden p-10 max-w-6xl mx-auto text-center animate-fade-in">
             <div class="bg-sidebar rounded-[50px] p-16 text-white shadow-3xl overflow-hidden relative">
                 <div class="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-[120px] -mr-40 -mt-40"></div>
-                <h2 class="text-4xl font-black mb-6 tracking-tighter uppercase italic text-center">Track & <span class="text-blue-400">Update Actual</span></h2>
+                <h2 class="text-4xl font-black mb-6 tracking-tighter uppercase italic text-center text-white">Track & Update <span class="text-blue-400 italic">Actual Status</span></h2>
                 <div class="flex flex-col md:flex-row gap-5 max-w-3xl mx-auto p-3 bg-white/10 rounded-3xl backdrop-blur-md">
                     <input type="text" id="nfmSearchInput" class="flex-1 bg-transparent border-none px-8 py-5 text-white font-bold text-xl outline-none placeholder:text-slate-600" placeholder="Nomor NFM atau Form ID..." onkeypress="if(event.key === 'Enter') trackNFM()">
-                    <button onclick="trackNFM()" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-2xl font-black text-sm uppercase transition-all shadow-xl shadow-blue-900">Search</button>
+                    <button onclick="trackNFM()" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-2xl font-black text-sm uppercase transition-all shadow-xl shadow-blue-900">Cari</button>
                 </div>
             </div>
             <div id="nfmResult" class="mt-12 text-left space-y-10 pb-20"></div>
@@ -326,7 +317,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-nfm-sync-v51';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-nfm-sync-v52';
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -348,11 +339,7 @@
 
         function listenToData() {
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'nfm_entries'), (snapshot) => {
-                allData = snapshot.docs.map(d => ({
-                    ...d.data(),
-                    id: d.id,
-                    aging: calculateAging(d.data().tanggalInput)
-                }));
+                allData = snapshot.docs.map(d => ({ ...d.data(), id: d.id, aging: calculateAging(d.data().tanggalInput) }));
                 filterBoard(activeFilter);
                 if(currentView === 'output') renderOutputData();
             });
@@ -374,7 +361,7 @@
                 <div><label>QTY Order</label><input type="number" class="input-field item-qty" required></div>
                 <div><label>Price (Rp)</label><input type="number" class="input-field item-price" required></div>
                 <div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" required></textarea></div>
-                <button type="button" onclick="this.parentElement.remove()" class="absolute top-4 right-4 text-red-500 hover:text-red-700 transition font-black uppercase text-[10px]">Hapus</button>
+                <button type="button" onclick="this.parentElement.remove()" class="absolute top-4 right-4 text-red-500 hover:text-red-700 transition uppercase font-black text-[9px]">Hapus</button>
             `;
             container.appendChild(newRow);
         };
@@ -395,10 +382,7 @@
                 return {
                     po: row.querySelector('.item-po').value.trim(),
                     sc: row.querySelector('.item-sc').value.trim().toUpperCase(),
-                    qtyOrder: qty,
-                    qtyArrived: 0,
-                    qtyIssued: 0,
-                    price: price,
+                    qtyOrder: qty, qtyArrived: 0, qtyIssued: 0, price: price,
                     desc: row.querySelector('.item-desc').value.trim(),
                     itemStatus: document.getElementById('input_status').value
                 };
@@ -417,10 +401,10 @@
                     value: totalValue, 
                     timestamp: Date.now()
                 });
-                feedback.innerHTML = `<div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl font-bold uppercase text-xs animate-fade-in">Berhasil: Sinkron Cloud Sukses!</div>`;
+                feedback.innerHTML = `<div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl font-bold uppercase text-[10px]">Data Terkirim! Dashboard Diupdate.</div>`;
                 document.getElementById('nfmForm').reset();
                 setTimeout(() => switchView('report'), 1500);
-            } catch (err) { feedback.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl font-bold text-xs uppercase">Error Koneksi.</div>`; }
+            } catch (err) { feedback.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl font-bold text-[10px] uppercase">Error Database.</div>`; }
             finally { btn.disabled = false; }
         };
 
@@ -439,21 +423,17 @@
                             <p class="text-slate-400 font-bold text-xs uppercase italic">${found.formId} (${found.whrs})</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 italic">Req By: ${found.requestor}</p>
-                            <span class="px-4 py-2 bg-sidebar text-white rounded-xl font-bold text-[9px] uppercase tracking-widest shadow-lg">Actual Updates</span>
+                            <p class="text-[10px] font-black text-slate-400 italic mb-2 tracking-widest uppercase">Req By: ${found.requestor}</p>
+                            <span class="px-4 py-2 bg-sidebar text-white rounded-xl font-bold text-[9px] uppercase tracking-widest">Database Linked</span>
                         </div>
                     </div>
                     <div class="overflow-x-auto mb-10">
                         <table class="w-full nfm-table bg-slate-50/50 rounded-3xl overflow-hidden shadow-inner">
-                            <thead><tr><th>Item Details</th><th>Target</th><th>Arrival</th><th>Issued</th><th>Status</th></tr></thead>
+                            <thead><tr><th>Item Detail</th><th>Order</th><th>Arrival</th><th>Issued</th><th>Status</th></tr></thead>
                             <tbody>
                                 ${(found.items || []).map((item, idx) => `
                                     <tr>
-                                        <td>
-                                            <p class="font-black text-blue-600 text-[14px]">PO: ${item.po}</p>
-                                            <p class="text-[10px] font-black text-slate-500 uppercase">SC: ${item.sc}</p>
-                                            <p class="text-[10px] text-slate-400 italic mt-1 leading-relaxed">${item.desc}</p>
-                                        </td>
+                                        <td><p class="font-black text-blue-600 text-[14px]">PO: ${item.po}</p><p class="text-[10px] font-black text-slate-400">SC: ${item.sc}</p><p class="text-[10px] italic mt-1">${item.desc}</p></td>
                                         <td class="text-center font-black">${item.qtyOrder}</td>
                                         <td><input type="number" id="arr_${found.id}_${idx}" value="${item.qtyArrived || 0}" class="input-field w-20 border-none bg-blue-100 font-black text-center"></td>
                                         <td><input type="number" id="iss_${found.id}_${idx}" value="${item.qtyIssued || 0}" class="input-field w-20 border-none bg-emerald-100 font-black text-center"></td>
@@ -463,10 +443,10 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="flex justify-end gap-4"><button onclick="updateNFMActual('${found.id}')" class="bg-blue-600 text-white font-black px-10 py-5 rounded-2xl shadow-xl active:scale-95 transition uppercase text-[11px] tracking-widest">Update Data Aktual</button></div>
+                    <div class="flex justify-end gap-4"><button onclick="updateNFMActual('${found.id}')" class="bg-blue-600 text-white font-black px-10 py-5 rounded-2xl shadow-xl active:scale-95 transition uppercase text-[11px] tracking-widest">Simpan Data Aktual</button></div>
                 </div>`;
             } else {
-                resultDiv.innerHTML = `<div class="p-12 text-center bg-red-50 text-red-600 rounded-[40px] font-black uppercase text-sm border border-red-100 shadow-sm tracking-widest">Data NFM tidak ditemukan.</div>`;
+                resultDiv.innerHTML = `<div class="p-12 text-center bg-red-50 text-red-600 rounded-[40px] font-black uppercase text-sm border border-red-100 shadow-sm italic">Data NFM tidak ditemukan.</div>`;
             }
         };
 
@@ -478,11 +458,8 @@
                 qtyIssued: parseFloat(document.getElementById(`iss_${docId}_${idx}`).value) || 0,
                 itemStatus: document.getElementById(`stat_${docId}_${idx}`).value
             }));
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId), { 
-                items: updatedItems, 
-                tanggalUpdate: new Date().toISOString().split('T')[0] 
-            });
-            alert("SUKSES: Data Terupdate!");
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId), { items: updatedItems, tanggalUpdate: new Date().toISOString().split('T')[0] });
+            alert("SUKSES: Data Terupdate Di Cloud!");
             trackNFM();
         };
 
@@ -491,13 +468,11 @@
             const totalArrivedValue = filteredData.reduce((acc, entry) => acc + (entry.items || []).reduce((itemAcc, item) => itemAcc + (item.qtyArrived * item.price), 0), 0);
             const totalIssuedValue = filteredData.reduce((acc, entry) => acc + (entry.items || []).reduce((itemAcc, item) => itemAcc + (item.qtyIssued * item.price), 0), 0);
             const avgAging = filteredData.length > 0 ? Math.round(filteredData.reduce((a, b) => a + b.aging, 0) / filteredData.length) : 0;
-            const rate = totalOut > 0 ? ((totalArrivedValue / totalOut) * 100).toFixed(1) : 0;
 
             document.getElementById('statTotalOutstanding').innerText = `Rp ${formatCurrency(totalOut)}`;
             document.getElementById('statTotalCompleted').innerText = `Rp ${formatCurrency(totalArrivedValue)}`;
             document.getElementById('statAvgAging').innerText = `${avgAging} Days`;
             document.getElementById('statTotalIssued').innerText = `Rp ${formatCurrency(totalIssuedValue)}`;
-            document.getElementById('statCompletionRate').innerText = `${rate}%`;
 
             renderCharts(); renderTables();
         }
@@ -519,6 +494,7 @@
             const sortedDept = Object.entries(values).sort((a,b) => b[1] - a[1]).slice(0, 5);
             if (charts.pie) charts.pie.destroy();
             charts.pie = new Chart(ctxP, { type: 'doughnut', data: { labels: sortedDept.map(s => s[0]), datasets: [{ data: sortedDept.map(s => s[1]), backgroundColor: ['#0061ff', '#10b981', '#f59e0b', '#ef4444', '#6366f1'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: false } } });
+            document.getElementById('pieLegend').innerHTML = sortedDept.map((s, i) => `<div class="flex items-center justify-between"><div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full" style="background:${['#0061ff', '#10b981', '#f59e0b', '#ef4444', '#6366f1'][i]}"></div><span class="truncate w-24">${s[0]}</span></div><span class="font-black">${formatCurrency(s[1])}</span></div>`).join('');
         }
 
         function renderTables() {
@@ -526,10 +502,10 @@
             const stats = filteredData.reduce((acc, i) => { if(!acc[i.dept]) acc[i.dept] = {v:0, c:0, a:0}; acc[i.dept].v += i.value; acc[i.dept].c++; acc[i.dept].a += i.aging; return acc; }, {});
             table.innerHTML = Object.entries(stats).sort((a,b) => b[1].v - a[1].v).map(([name, s]) => `
                 <tr class="hover:bg-slate-50 transition">
-                    <td class="px-8 py-6 font-bold uppercase text-slate-800 text-[12px]">${name}</td>
+                    <td class="px-8 py-6 font-bold uppercase text-[12px] text-slate-800">${name}</td>
                     <td class="px-8 py-6 text-xs font-black">${Math.round(s.a/s.c)} <span class="font-bold text-slate-400 text-[10px]">D</span></td>
-                    <td class="px-8 py-6 text-xs font-bold text-slate-500 uppercase">${s.c} Req</td>
-                    <td class="px-8 py-6 font-black text-right text-blue-600 text-[12px]">Rp ${formatCurrency(s.v)}</td>
+                    <td class="px-8 py-6 text-xs font-bold text-slate-500">${s.c} req</td>
+                    <td class="px-8 py-6 font-black text-right text-blue-600">Rp ${formatCurrency(s.v)}</td>
                 </tr>`).join('');
         }
 
@@ -537,36 +513,22 @@
             const table = document.getElementById('outputDataTable');
             const rows = [];
             allData.forEach(entry => { entry.items.forEach(item => { if (item.qtyIssued > 0) { rows.push({ date: entry.tanggalUpdate, nfm: entry.noNFM, whrs: entry.whrs, po: item.po, sc: item.sc, desc: item.desc, dept: entry.dept, req: entry.requestor, qty: item.qtyIssued, price: item.price, total: item.qtyIssued * item.price }); } }); });
-            table.innerHTML = rows.map(r => `<tr class="hover:bg-slate-50 transition text-[11px]"><td class="font-bold text-slate-400">${r.date}</td><td class="font-black text-blue-600">#${r.nfm}</td><td class="font-black uppercase">${r.whrs}</td><td><span class="po-badge">${r.po}</span> <span class="sc-badge">${r.sc}</span> <span class="qty-badge">${r.qty}</span><br><p class="italic text-slate-400 mt-1">${r.desc}</p></td><td class="uppercase font-bold">${r.dept}</td><td class="uppercase font-bold text-slate-500">${r.req}</td><td class="text-right">Rp ${formatCurrency(r.price)}</td><td class="text-right font-black text-slate-900">Rp ${formatCurrency(r.total)}</td></tr>`).join('');
+            table.innerHTML = rows.map(r => `<tr class="hover:bg-slate-50 transition text-[11px]"><td class="font-bold text-slate-400">${r.date}</td><td class="font-black text-blue-600">#${r.nfm}</td><td class="font-black uppercase">${r.whrs}</td><td><span class="po-badge">${r.po}</span> <span class="sc-badge">${r.sc}</span> <span class="qty-badge">${r.qty}</span><p class="italic text-slate-400 mt-1">${r.desc}</p></td><td class="uppercase font-bold">${r.dept}</td><td class="text-right">Rp ${formatCurrency(r.price)}</td><td class="text-right font-black text-slate-900">Rp ${formatCurrency(r.total)}</td></tr>`).join('');
         }
 
         window.downloadExecutiveReport = () => {
-            const totalOut = document.getElementById('statTotalOutstanding').innerText;
-            const totalArr = document.getElementById('statTotalCompleted').innerText;
-            const totalIss = document.getElementById('statTotalIssued').innerText;
-            const avgAging = document.getElementById('statAvgAging').innerText;
-
-            let csv = `EXECUTIVE SUMMARY - WETAR INTELLIGENCE SYNC\nReport Date,${new Date().toLocaleDateString()}\nFilter,${activeFilter}\n\n`;
-            csv += `KPI,VALUE\nTotal Outstanding,${totalOut}\nValue On Site,${totalArr}\nTotal Value Issued,${totalIss}\nAverage Aging,${avgAging}\n\n`;
-            csv += `DEPARTMENT BREAKDOWN\nDepartment,Avg Aging,Requests,Planned Value\n`;
-            
-            const stats = filteredData.reduce((acc, i) => { if(!acc[i.dept]) acc[i.dept] = {v:0, c:0, a:0}; acc[i.dept].v += i.value; acc[i.dept].c++; acc[i.dept].a += i.aging; return acc; }, {});
-            Object.entries(stats).forEach(([n, s]) => { csv += `"${n}",${Math.round(s.a/s.c)} Days,${s.c},"${formatCurrency(s.v)}"\n`; });
-
+            let csv = `EXECUTIVE SUMMARY - WETAR INTELLIGENCE\nReport Filter,${activeFilter}\n\n`;
+            csv += `KPI,VALUE\nTotal Outstanding,${document.getElementById('statTotalOutstanding').innerText}\nValue On Site,${document.getElementById('statTotalCompleted').innerText}\nAvg Aging,${document.getElementById('statAvgAging').innerText}\nTotal Issued,${document.getElementById('statTotalIssued').innerText}\n\n`;
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Wetar_Executive_Report_${activeFilter}.csv`;
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Wetar_Report_${activeFilter}.csv`;
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         };
 
         window.downloadIssuedLog = () => {
-            let csv = `ISSUED LOG - SITE LOGISTICS\nDate,NFM,WHRS,PO,StockCode,Description,Dept,ReqBy,Qty,Price,Total\n`;
-            allData.forEach(entry => { entry.items.forEach(item => { if (item.qtyIssued > 0) { csv += `"${entry.tanggalUpdate}","#${entry.noNFM}","${entry.whrs}","${item.po}","${item.sc}","${item.desc}","${entry.dept}","${entry.requestor}",${item.qtyIssued},${item.price},${item.qtyIssued * item.price}\n`; } }); });
+            let csv = `ISSUED LOG - SITE LOGISTICS\nDate,NFM,WHRS,PO,StockCode,Dept,ReqBy,Qty,Price,Total\n`;
+            allData.forEach(entry => { entry.items.forEach(item => { if (item.qtyIssued > 0) { csv += `"${entry.tanggalUpdate}","#${entry.noNFM}","${entry.whrs}","${item.po}","${item.sc}","${entry.dept}","${entry.requestor}",${item.qtyIssued},${item.price},${item.qtyIssued * item.price}\n`; } }); });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Issued_Log_Wetar.csv`;
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Issued_Log_Wetar.csv`;
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         };
 
@@ -577,7 +539,7 @@
             if (targetTab) targetTab.classList.add('active');
             if (currentView !== 'report' && currentView !== 'output') switchView('report');
             filteredData = deptName === 'ALL' ? allData : allData.filter(i => i.dept === deptName);
-            document.getElementById('currentBoardLabel').innerText = deptName === 'ALL' ? "Executive Report" : `Report: ${deptName}`;
+            document.getElementById('currentBoardLabel').innerText = deptName === 'ALL' ? "Executive Report" : `Executive: ${deptName}`;
             updateUI();
         };
 
@@ -586,8 +548,7 @@
             document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
             document.getElementById('view-' + view).classList.remove('hidden');
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-            const navItem = document.getElementById('nav-' + view);
-            if(navItem) navItem.classList.add('active');
+            document.getElementById('nav-' + view).classList.add('active');
             if(view === 'report') updateUI();
             if(view === 'output') renderOutputData();
         };
