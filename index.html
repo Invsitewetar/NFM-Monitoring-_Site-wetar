@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive v5.9</title>
+    <title>Wetar Intelligence Sync - Executive v6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -34,7 +34,8 @@
         .nfm-table td { padding: 16px 20px; border-bottom: 1px solid #f8fafc; font-size: 13px; font-weight: 600; }
         
         .loading-overlay { position: fixed; inset: 0; background: white; z-index: 110; display: flex; align-items: center; justify-content: center; }
-        .item-row { background: #fff; border: 1px solid #f1f5f9; padding: 20px; border-radius: 20px; margin-bottom: 16px; position: relative; }
+        .item-row { background: #fff; border: 1px solid #f1f5f9; padding: 20px; border-radius: 20px; margin-bottom: 16px; position: relative; transition: all 0.2s; }
+        .item-row.highlight { border-color: #0061ff; background-color: #f0f7ff; }
         
         .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 9px; font-weight: 900; text-transform: uppercase; }
         .setup-screen { position: fixed; inset: 0; background: #0f172a; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -44,22 +45,26 @@
 </head>
 <body>
 
+    <!-- Layar Loading Utama -->
     <div id="loading" class="loading-overlay">
         <div class="flex flex-col items-center text-center">
             <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-6"></div>
-            <p class="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase italic text-center">Sinkronisasi Cloud & Master Data...<br>Wetar Intelligence v5.9</p>
+            <p class="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase italic">Wetar Intelligence v6.0</p>
+            <p id="loading-sub" class="text-[9px] text-slate-300 mt-2 uppercase font-bold tracking-widest opacity-0 transition-opacity">Sinkronisasi Master & Cloud...</p>
         </div>
     </div>
 
+    <!-- Layar Setup (Jika Config Database Belum Ada) -->
     <div id="setup-screen" class="setup-screen hidden">
         <div class="glass-card max-w-lg w-full p-10 animate-fade-in text-center">
-            <h2 class="text-2xl font-black text-slate-900 uppercase">Aktivasi Database Cloud</h2>
-            <p class="text-xs text-slate-500 font-bold mt-2 mb-8">Salin "Firebase Config" Anda ke kotak di bawah ini.</p>
+            <h2 class="text-2xl font-black text-slate-900 uppercase">Aktivasi Dashboard</h2>
+            <p class="text-xs text-slate-500 font-bold mt-2 mb-8">Salin "Firebase Config" Anda agar data muncul kembali.</p>
             <textarea id="config-input" class="input-field h-48 font-mono text-[10px] mb-6 border-slate-200" placeholder='{ "apiKey": "...", "authDomain": "...", ... }'></textarea>
-            <button onclick="applySetup()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-blue-700 transition active:scale-95 uppercase tracking-widest">Simpan & Jalankan</button>
+            <button onclick="applySetup()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-blue-700 transition active:scale-95 uppercase tracking-widest">Simpan & Mulai</button>
         </div>
     </div>
 
+    <!-- Sidebar Navigasi -->
     <aside class="sidebar">
         <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center font-black text-white mb-12 border border-white/5 shadow-inner">W</div>
         <div onclick="switchView('report')" id="nav-report" class="sidebar-item active" title="Dashboard"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span class="font-bold text-sm ml-4 text-white">Dashboard</span></div>
@@ -69,6 +74,7 @@
     </aside>
 
     <main class="main-content">
+        <!-- Header Atas -->
         <header class="bg-white/80 backdrop-blur-md px-10 py-6 flex items-center justify-between sticky top-0 z-40 border-b border-slate-100">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">Wetar Intelligence <span class="text-blue-600">Sync</span></h1>
@@ -80,6 +86,7 @@
             </div>
         </header>
 
+        <!-- Menu Departemen -->
         <div id="tabContainer" class="px-10 py-4 bg-white border-b border-slate-200 flex items-center gap-2 overflow-x-auto scrollbar-hide">
             <div id="subBoardList" class="flex items-center gap-2">
                 <div id="tab-ALL" class="sub-board-tab active" onclick="filterBoard('ALL')">All Dept</div>
@@ -93,7 +100,7 @@
             </div>
         </div>
 
-        <!-- VIEW: DASHBOARD -->
+        <!-- TAMPILAN DASHBOARD -->
         <div id="view-report" class="p-10 space-y-10 animate-fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="glass-card p-8"><p class="kpi-title">Total Outstanding</p><div id="statTotalOutstanding" class="kpi-value text-blue-600">Rp 0</div></div>
@@ -101,23 +108,25 @@
                 <div class="glass-card p-8"><p class="kpi-title">Avg Site Aging</p><div id="statAvgAging" class="kpi-value text-amber-600">0 Days</div></div>
                 <div class="glass-card p-8"><p class="kpi-title">Total Issued</p><div id="statTotalIssued" class="kpi-value text-indigo-600">Rp 0</div></div>
             </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 <div class="lg:col-span-2 glass-card p-10 h-[400px]"><canvas id="growthChart"></canvas></div>
                 <div class="glass-card p-10 h-[400px] flex flex-col items-center">
-                    <h3 class="text-slate-900 font-black text-sm uppercase mb-10">Distribution</h3>
+                    <h3 class="text-slate-900 font-black text-sm uppercase mb-10">Value Distribution</h3>
                     <div class="flex-1 w-full"><canvas id="deptPieChart"></canvas></div>
                     <div id="pieLegend" class="mt-4 w-full space-y-2"></div>
                 </div>
             </div>
+
             <div class="glass-card overflow-hidden">
                 <table class="w-full text-left nfm-table">
-                    <thead class="bg-slate-50/50"><tr><th>Departemen</th><th>Avg Aging</th><th>Total Requests</th><th class="text-right">Planned Value</th></tr></thead>
+                    <thead class="bg-slate-50/50"><tr><th>Departemen</th><th>Avg Aging</th><th>Requests</th><th class="text-right">Planned Value</th></tr></thead>
                     <tbody id="deptSummaryTable" class="divide-y divide-slate-50"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- VIEW: HISTORY -->
+        <!-- TAMPILAN HISTORY -->
         <div id="view-output" class="hidden p-10 space-y-10 animate-fade-in">
             <div class="glass-card overflow-hidden border-t-8 border-emerald-500">
                 <div class="p-10 border-b border-slate-50 flex justify-between items-center bg-white">
@@ -135,7 +144,7 @@
             </div>
         </div>
 
-        <!-- VIEW: INPUT -->
+        <!-- TAMPILAN INPUT DATA -->
         <div id="view-add-data" class="hidden p-10 max-w-7xl mx-auto animate-fade-in">
             <div class="glass-card p-12 border-t-[10px] border-blue-600 shadow-2xl">
                 <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic text-center mb-10">Input NFM Baru</h2>
@@ -156,11 +165,11 @@
                     
                     <div class="md:col-span-2 p-8 bg-slate-50 rounded-[32px] border border-slate-200">
                         <div class="flex justify-between items-center mb-6">
-                            <label class="mb-0 text-slate-900 font-black uppercase">Line Items (Planning)</label>
-                            <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-white bg-blue-600 px-5 py-2.5 rounded-xl hover:bg-blue-700 transition shadow-lg">+ TAMBAH LINE</button>
+                            <label class="mb-0 text-slate-900 font-black uppercase tracking-tighter">Line Items (Planning)</label>
+                            <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-white bg-blue-600 px-5 py-2.5 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-100">+ TAMBAH LINE</button>
                         </div>
                         <div id="itemListContainer">
-                            <!-- Rows go here -->
+                            <!-- Baris item akan muncul di sini -->
                         </div>
                     </div>
 
@@ -171,14 +180,15 @@
             </div>
         </div>
 
-        <!-- VIEW: TRACKING -->
+        <!-- TAMPILAN SMART TRACKING -->
         <div id="view-tracking" class="hidden p-10 max-w-7xl mx-auto animate-fade-in">
             <div class="bg-white border border-slate-100 rounded-[40px] p-12 text-slate-900 shadow-2xl overflow-hidden relative mb-12">
                 <div class="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full blur-[100px] -mr-40 -mt-40"></div>
+                <!-- Tulisan Smart NFM Tracking warna HITAM PEKAT -->
                 <h2 class="text-4xl font-black mb-8 uppercase tracking-tighter italic text-slate-900">Smart <span class="text-blue-600">NFM Tracking</span></h2>
                 <div class="flex flex-col md:flex-row gap-5 max-w-3xl p-3 bg-slate-50 rounded-3xl border border-slate-200">
                     <input type="text" id="nfmSearchInput" class="flex-1 bg-transparent border-none px-6 py-5 text-slate-900 font-bold text-xl outline-none placeholder:text-slate-400" placeholder="Ketik NFM atau Form ID..." onkeypress="if(event.key === 'Enter') trackNFM()">
-                    <button onclick="trackNFM()" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-2xl font-black text-sm uppercase shadow-xl transition-all active:scale-95 shadow-xl">Cari NFM</button>
+                    <button onclick="trackNFM()" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-2xl font-black text-sm uppercase shadow-xl transition-all active:scale-95">Cari NFM</button>
                 </div>
             </div>
             <div id="nfmResult" class="mb-12 animate-fade-in"></div>
@@ -196,7 +206,8 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // GANTI LINK DI BAWAH DENGAN LINK GOOGLE SHEET CSV ANDA
+        // --- KONFIGURASI GOOGLE SHEET ---
+        // GANTI LINK DI BAWAH INI dengan link CSV dari "Publish to Web" Google Sheet Anda
         const MASTER_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1D4N0m4L3R0k6J6J.../pub?output=csv"; 
 
         let db, auth, appId;
@@ -204,18 +215,27 @@
         let stockMaster = {}; // { stockCode: { desc, price } }
 
         window.onload = async () => {
-            fetchMasterData(); // Load Google Sheet Data
+            fetchMasterData(); // Ambil Data Master dari Google Sheets
             try {
                 let config;
                 if (typeof __firebase_config !== 'undefined' && __firebase_config) {
                     config = JSON.parse(__firebase_config);
-                    appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-nfm-sync-v59';
+                    appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-nfm-sync-v60';
                 } else {
                     const saved = localStorage.getItem('wetar_sync_config');
-                    if (!saved) { document.getElementById('setup-screen').classList.remove('hidden'); document.getElementById('loading').classList.add('hidden'); return; }
-                    config = JSON.parse(saved); appId = 'wetar-nfm-sync-v59';
+                    if (!saved) {
+                        document.getElementById('setup-screen').classList.remove('hidden');
+                        document.getElementById('loading').classList.add('hidden');
+                        return;
+                    }
+                    config = JSON.parse(saved);
+                    appId = 'wetar-nfm-sync-v60';
                 }
-                const app = initializeApp(config); auth = getAuth(app); db = getFirestore(app);
+
+                const app = initializeApp(config);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
                 const initAuth = async () => { 
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } 
                     else { await signInAnonymously(auth); }
@@ -223,35 +243,46 @@
                 await initAuth();
                 onAuthStateChanged(auth, (u) => { if(u) listenToData(); });
                 document.getElementById('loading').style.display = 'none';
-                addItemRow(); // Default row
-            } catch (e) { console.error(e); }
+                
+                // Tambahkan baris pertama secara default
+                if(document.getElementById('itemListContainer').children.length === 0) addItemRow();
+
+            } catch (e) { console.error("Database Init Error:", e); }
         };
 
-        // INTEGRASI GOOGLE SHEETS
+        // INTEGRASI GOOGLE SHEETS MASTER DATA
         async function fetchMasterData() {
             try {
                 const response = await fetch(MASTER_SHEET_URL);
                 const text = await response.text();
-                const rows = text.split('\n').slice(1); // Skip header
+                const rows = text.split('\n').slice(1); // Lewati header
                 const masterList = document.getElementById('stock-master-list');
                 masterList.innerHTML = '';
                 
                 rows.forEach(row => {
-                    const [sc, desc, price] = row.split(',').map(s => s.trim());
+                    const columns = row.split(',').map(s => s.trim());
+                    const sc = columns[0]; // Kolom A
+                    const desc = columns[1]; // Kolom B
+                    const price = columns[2]; // Kolom C
+                    
                     if (sc) {
                         stockMaster[sc.toUpperCase()] = { desc, price: parseFloat(price) || 0 };
                         masterList.innerHTML += `<option value="${sc.toUpperCase()}">${desc}</option>`;
                     }
                 });
-            } catch (err) { console.warn("Master data Google Sheet belum tersedia atau link salah."); }
+            } catch (err) { console.warn("Google Sheet belum ter-publish atau link salah."); }
         }
 
-        function applySetup() {
+        window.applySetup = () => {
             const raw = document.getElementById('config-input').value.trim();
-            try { JSON.parse(raw); localStorage.setItem('wetar_sync_config', raw); location.reload(); } catch(e) { alert("Format salah."); }
-        }
+            try {
+                JSON.parse(raw);
+                localStorage.setItem('wetar_sync_config', raw);
+                location.reload();
+            } catch(e) { alert("Format salah. Pastikan format JSON Firebase benar."); }
+        };
 
-        window.resetAppConfig = () => { if(confirm("Reset database config?")) { localStorage.removeItem('wetar_sync_config'); location.reload(); } };
+        window.resetAppConfig = () => { if(confirm("Reset database config? Data aman di cloud, hanya kunci akses browser ini yang dihapus.")) { localStorage.removeItem('wetar_sync_config'); location.reload(); } };
 
         function listenToData() {
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'nfm_entries'), (snapshot) => {
@@ -281,26 +312,27 @@
             newRow.id = rowId;
             newRow.className = 'item-row grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 border-t pt-8 animate-fade-in';
             newRow.innerHTML = `
-                <div><label>Nomor PO</label><input type="text" class="input-field item-po" required></div>
-                <div><label>Stock Code</label><input type="text" list="stock-master-list" class="input-field item-sc" oninput="handleAutoFill('${rowId}')" required></div>
-                <div><label>QTY Order</label><input type="number" class="input-field item-qty" required></div>
-                <div><label>Price (Rp)</label><input type="number" class="input-field item-price" required></div>
-                <div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" required></textarea></div>
-                <button type="button" onclick="this.parentElement.remove()" class="absolute top-4 right-4 text-red-500 font-black text-[9px] uppercase">Hapus</button>
+                <div><label>Nomor PO</label><input type="text" class="input-field item-po" placeholder="PO#" required></div>
+                <div><label>Stock Code</label><input type="text" list="stock-master-list" class="input-field item-sc" oninput="handleAutoFill('${rowId}')" placeholder="Ketik SC..." required></div>
+                <div><label>QTY Order</label><input type="number" class="input-field item-qty" placeholder="0" required></div>
+                <div><label>Price (Rp)</label><input type="number" class="input-field item-price" placeholder="Harga Unit" required></div>
+                <div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" placeholder="Keterangan barang..." required></textarea></div>
+                <button type="button" onclick="this.parentElement.remove()" class="absolute top-4 right-4 text-red-500 font-black text-[9px] uppercase hover:text-red-700 transition">Hapus</button>
             `;
             container.appendChild(newRow);
         };
 
-        // FITUR AUTO-FILL
+        // LOGIKA AUTO-FILL DARI GOOGLE SHEET
         window.handleAutoFill = (rowId) => {
             const row = document.getElementById(rowId);
             const sc = row.querySelector('.item-sc').value.trim().toUpperCase();
             if (stockMaster[sc]) {
                 row.querySelector('.item-desc').value = stockMaster[sc].desc;
                 row.querySelector('.item-price').value = stockMaster[sc].price;
-                // Highlight visual effect
-                row.classList.add('ring-2', 'ring-blue-500');
-                setTimeout(() => row.classList.remove('ring-2', 'ring-blue-500'), 1000);
+                
+                // Efek visual Berhasil Auto-Fill
+                row.classList.add('highlight');
+                setTimeout(() => row.classList.remove('highlight'), 1500);
             }
         };
 
@@ -313,14 +345,31 @@
                 const q = parseFloat(row.querySelector('.item-qty').value) || 0;
                 const p = parseFloat(row.querySelector('.item-price').value) || 0;
                 totalValue += (q * p);
-                return { po: row.querySelector('.item-po').value.trim(), sc: row.querySelector('.item-sc').value.trim().toUpperCase(), qtyOrder: q, qtyArrived: 0, qtyIssued: 0, price: p, desc: row.querySelector('.item-desc').value.trim(), itemStatus: document.getElementById('input_status').value };
+                return { 
+                    po: row.querySelector('.item-po').value.trim(), 
+                    sc: row.querySelector('.item-sc').value.trim().toUpperCase(), 
+                    qtyOrder: q, qtyArrived: 0, qtyIssued: 0, price: p, 
+                    desc: row.querySelector('.item-desc').value.trim(), 
+                    itemStatus: document.getElementById('input_status').value 
+                };
             });
+
             try {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'nfm_entries'), {
-                    dept: document.getElementById('input_dept').value, whrs: document.getElementById('input_whrs').value, requestor: document.getElementById('input_requestor').value.trim().toUpperCase(), noNFM: document.getElementById('input_noNFM').value.trim(), formId: document.getElementById('input_formId').value.trim(), items: items, tanggalInput: document.getElementById('input_date').value, tanggalUpdate: new Date().toISOString().split('T')[0], value: totalValue, timestamp: Date.now()
+                    dept: document.getElementById('input_dept').value,
+                    whrs: document.getElementById('input_whrs').value,
+                    requestor: document.getElementById('input_requestor').value.trim().toUpperCase(),
+                    noNFM: document.getElementById('input_noNFM').value.trim(),
+                    formId: document.getElementById('input_formId').value.trim(),
+                    items: items,
+                    tanggalInput: document.getElementById('input_date').value,
+                    tanggalUpdate: new Date().toISOString().split('T')[0],
+                    value: totalValue,
+                    timestamp: Date.now()
                 });
-                document.getElementById('nfmForm').reset(); switchView('report');
-            } catch (err) { alert("Error database."); } finally { btn.disabled = false; }
+                document.getElementById('nfmForm').reset();
+                switchView('report');
+            } catch (err) { alert("Error database cloud."); } finally { btn.disabled = false; }
         };
 
         window.trackNFM = () => {
@@ -336,16 +385,16 @@
             return `
             <div class="glass-card p-10 border-t-8 border-blue-600 animate-fade-in shadow-2xl relative mb-12">
                 <div class="flex justify-between items-start mb-10">
-                    <div><span class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded uppercase tracking-widest">Database Linked</span><h3 class="text-4xl font-black text-slate-900 mt-4 italic uppercase">NFM #${found.noNFM}</h3><p class="text-slate-400 font-bold text-xs uppercase italic">${found.formId} (${found.whrs})</p></div>
+                    <div><span class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded uppercase tracking-widest">Sync Real-Time</span><h3 class="text-4xl font-black text-slate-900 mt-4 italic uppercase tracking-tighter">NFM #${found.noNFM}</h3><p class="text-slate-400 font-bold text-xs uppercase italic">${found.formId} (${found.whrs})</p></div>
                     <div class="text-right"><p class="text-[10px] font-black text-slate-400 uppercase italic">Req By: ${found.requestor}</p></div>
                 </div>
                 <div class="overflow-x-auto mb-10">
-                    <table class="w-full nfm-table bg-slate-50/50 rounded-3xl overflow-hidden shadow-inner">
+                    <table class="w-full nfm-table bg-slate-50/50 rounded-3xl overflow-hidden">
                         <thead><tr><th>Item Detail</th><th>Order</th><th>Arrival</th><th>Issued</th><th>Status</th></tr></thead>
                         <tbody>
                             ${(found.items || []).map((item, idx) => `
                                 <tr>
-                                    <td><p class="font-black text-blue-600 text-[13px]">PO: ${item.po}</p><p class="text-[10px] font-black text-slate-400 uppercase">SC: ${item.sc}</p><p class="text-[10px] italic mt-1">${item.desc}</p></td>
+                                    <td><p class="font-black text-blue-600 text-[13px]">PO: ${item.po}</p><p class="text-[10px] font-black text-slate-400 uppercase">SC: ${item.sc}</p><p class="text-[10px] italic mt-1 leading-relaxed">${item.desc}</p></td>
                                     <td class="text-center font-black">${item.qtyOrder}</td>
                                     <td><input type="number" id="arr_${found.id}_${idx}" value="${item.qtyArrived || 0}" class="input-field w-16 bg-blue-100 font-black text-center text-xs border-none"></td>
                                     <td><input type="number" id="iss_${found.id}_${idx}" value="${item.qtyIssued || 0}" class="input-field w-16 bg-emerald-100 font-black text-center text-xs border-none"></td>
@@ -356,8 +405,11 @@
                     </table>
                 </div>
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div id="confirm_delete_${found.id}" class="hidden p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-4 animate-fade-in"><span class="text-[10px] font-black text-red-600 uppercase tracking-widest">Hapus data ini?</span><button onclick="deleteNFMRecord('${found.id}')" class="bg-red-600 text-white text-[9px] font-black px-4 py-1.5 rounded-lg">YA</button><button onclick="toggleDeleteConfirm('${found.id}', false)" class="text-[9px] font-black text-slate-400 uppercase">Batal</button></div>
-                    <div class="flex gap-4"><button onclick="toggleDeleteConfirm('${found.id}', true)" class="text-red-500 font-black text-[10px] px-6 py-4 rounded-xl hover:bg-red-50 transition">Hapus NFM</button><button onclick="updateNFMActual('${found.id}')" class="bg-blue-600 text-white font-black px-10 py-4 rounded-xl shadow-lg active:scale-95 transition uppercase text-[11px] tracking-widest">Update Cloud</button></div>
+                    <div id="confirm_delete_${found.id}" class="hidden p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-4 animate-fade-in"><span class="text-[10px] font-black text-red-600 uppercase tracking-widest">Hapus permanen?</span><button onclick="deleteNFMRecord('${found.id}')" class="bg-red-600 text-white text-[9px] font-black px-4 py-1.5 rounded-lg shadow-sm">YA, HAPUS</button><button onclick="toggleDeleteConfirm('${found.id}', false)" class="text-[9px] font-black text-slate-400 uppercase">Batal</button></div>
+                    <div class="flex gap-4">
+                        <button onclick="toggleDeleteConfirm('${found.id}', true)" class="text-red-500 font-black text-[10px] px-6 py-4 rounded-xl hover:bg-red-50 transition">Hapus NFM</button>
+                        <button onclick="updateNFMActual('${found.id}')" class="bg-blue-600 text-white font-black px-10 py-4 rounded-xl shadow-lg active:scale-95 transition uppercase text-[11px] tracking-widest">Update Cloud</button>
+                    </div>
                 </div>
             </div>`;
         }
@@ -374,12 +426,12 @@
         }
 
         window.toggleDeleteConfirm = (id, show) => { const el = document.getElementById(`confirm_delete_${id}`); if(show) el.classList.remove('hidden'); else el.classList.add('hidden'); };
-        window.deleteNFMRecord = async (docId) => { try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId)); document.getElementById('nfmResult').innerHTML = ''; alert("Dihapus."); } catch (e) { alert("Gagal."); } };
+        window.deleteNFMRecord = async (docId) => { try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId)); document.getElementById('nfmResult').innerHTML = ''; alert("Data dihapus."); } catch (e) { alert("Gagal."); } };
         window.updateNFMActual = async (docId) => {
             const found = allData.find(d => d.id === docId);
             const updatedItems = (found.items || []).map((item, idx) => ({ ...item, qtyArrived: parseFloat(document.getElementById(`arr_${docId}_${idx}`).value) || 0, qtyIssued: parseFloat(document.getElementById(`iss_${docId}_${idx}`).value) || 0, itemStatus: document.getElementById(`stat_${docId}_${idx}`).value }));
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId), { items: updatedItems, tanggalUpdate: new Date().toISOString().split('T')[0] });
-            alert("Terupdate!"); trackNFM();
+            alert("Berhasil diupdate ke cloud!"); trackNFM();
         };
 
         window.updateUI = () => {
@@ -421,7 +473,7 @@
             const table = document.getElementById('outputDataTable');
             const rows = [];
             allData.forEach(entry => { entry.items.forEach(item => { if (item.qtyIssued > 0) { rows.push({ date: entry.tanggalUpdate, nfm: entry.noNFM, whrs: entry.whrs, po: item.po, sc: item.sc, desc: item.desc, dept: entry.dept, qty: item.qtyIssued, price: item.price, total: item.qtyIssued * item.price }); } }); });
-            table.innerHTML = rows.map(r => `<tr class="hover:bg-slate-50 transition text-[11px]"><td class="font-bold text-slate-400 text-[10px]">${r.date}</td><td class="font-black text-blue-600">#${r.nfm}</td><td class="font-black uppercase">${r.whrs}</td><td><span class="po-badge text-[9px] bg-blue-50 text-blue-600 p-1 px-2 rounded">${r.po}</span> <span class="sc-badge text-[9px] bg-slate-50 text-slate-600 p-1 px-2 rounded">${r.sc}</span> <p class="italic text-slate-400 mt-1 leading-relaxed">${r.desc}</p></td><td class="uppercase font-bold">${r.dept}</td><td class="text-right">Rp ${formatCurrency(r.price)}</td><td class="text-right font-black text-slate-900">Rp ${formatCurrency(r.total)}</td></tr>`).join('');
+            table.innerHTML = rows.map(r => `<tr class="hover:bg-slate-50 transition text-[11px]"><td class="font-bold text-slate-400 text-[10px]">${r.date}</td><td class="font-black text-blue-600">#${r.nfm}</td><td class="font-black uppercase">${r.whrs}</td><td><span class="po-badge text-[9px] bg-blue-50 text-blue-600 p-1 px-2 rounded">${r.po}</span> <span class="sc-badge text-[9px] bg-slate-50 text-slate-600 p-1 px-2 rounded">${r.sc}</span> <p class="italic text-slate-400 mt-1 leading-relaxed text-[10px]">${r.desc}</p></td><td class="uppercase font-bold">${r.dept}</td><td class="text-right">Rp ${formatCurrency(r.price)}</td><td class="text-right font-black text-slate-900">Rp ${formatCurrency(r.total)}</td></tr>`).join('');
         }
 
         window.downloadExecutiveReport = () => {
