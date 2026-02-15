@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive v6.0</title>
+    <title>Wetar Intelligence Sync - Executive v6.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -45,36 +45,42 @@
 </head>
 <body>
 
-    <!-- Layar Loading Utama -->
+    <!-- Splash Loading -->
     <div id="loading" class="loading-overlay">
-        <div class="flex flex-col items-center text-center">
+        <div class="flex flex-col items-center text-center p-10">
             <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-6"></div>
-            <p class="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase italic">Wetar Intelligence v6.0</p>
-            <p id="loading-sub" class="text-[9px] text-slate-300 mt-2 uppercase font-bold tracking-widest opacity-0 transition-opacity">Sinkronisasi Master & Cloud...</p>
+            <p class="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase italic">Wetar Intelligence v6.1</p>
+            <p id="loading-msg" class="text-[9px] text-slate-300 mt-4 uppercase font-bold tracking-widest transition-all">Memulai Sistem...</p>
         </div>
     </div>
 
-    <!-- Layar Setup (Jika Config Database Belum Ada) -->
+    <!-- Smart Activation Screen -->
     <div id="setup-screen" class="setup-screen hidden">
-        <div class="glass-card max-w-lg w-full p-10 animate-fade-in text-center">
-            <h2 class="text-2xl font-black text-slate-900 uppercase">Aktivasi Dashboard</h2>
-            <p class="text-xs text-slate-500 font-bold mt-2 mb-8">Salin "Firebase Config" Anda agar data muncul kembali.</p>
-            <textarea id="config-input" class="input-field h-48 font-mono text-[10px] mb-6 border-slate-200" placeholder='{ "apiKey": "...", "authDomain": "...", ... }'></textarea>
-            <button onclick="applySetup()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-blue-700 transition active:scale-95 uppercase tracking-widest">Simpan & Mulai</button>
+        <div class="glass-card max-w-lg w-full p-10 animate-fade-in text-center shadow-2xl">
+            <div class="mb-8">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <h2 class="text-2xl font-black text-slate-900 uppercase">Aktivasi Dashboard</h2>
+                <p class="text-xs text-slate-500 font-bold mt-2 leading-relaxed">Hubungkan database Cloud Anda. Salin objek <span class="text-blue-600">firebaseConfig</span> dari console Firebase ke sini.</p>
+            </div>
+            <textarea id="config-input" class="input-field h-48 font-mono text-[10px] mb-6 border-slate-200 focus:ring-4 focus:ring-blue-50" placeholder='{ "apiKey": "...", "authDomain": "...", ... }'></textarea>
+            <button onclick="applySetup()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-blue-700 transition active:scale-95 uppercase tracking-widest">AKTIFKAN SEKARANG</button>
+            <p class="text-[9px] text-slate-400 mt-6 uppercase font-bold italic">Pastikan format JSON benar (dimulai dengan tanda { )</p>
         </div>
     </div>
 
-    <!-- Sidebar Navigasi -->
+    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center font-black text-white mb-12 border border-white/5 shadow-inner">W</div>
         <div onclick="switchView('report')" id="nav-report" class="sidebar-item active" title="Dashboard"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span class="font-bold text-sm ml-4 text-white">Dashboard</span></div>
         <div onclick="switchView('add-data')" id="nav-add-data" class="sidebar-item" title="Input Data"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg><span class="font-bold text-sm ml-4 text-white">Input Baru</span></div>
-        <div onclick="switchView('output')" id="nav-output" class="sidebar-item" title="Logs Archive"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span class="font-bold text-sm ml-4 text-white">History</span></div>
-        <div onclick="switchView('tracking')" id="nav-tracking" class="sidebar-item" title="Smart Tracking"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><span class="font-bold text-sm ml-4 text-white">Tracking</span></div>
+        <div onclick="switchView('output')" id="nav-output" class="sidebar-item" title="History"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span class="font-bold text-sm ml-4 text-white">History</span></div>
+        <div onclick="switchView('tracking')" id="nav-tracking" class="sidebar-item" title="Tracking"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><span class="font-bold text-sm ml-4 text-white">Tracking</span></div>
     </aside>
 
     <main class="main-content">
-        <!-- Header Atas -->
+        <!-- Header -->
         <header class="bg-white/80 backdrop-blur-md px-10 py-6 flex items-center justify-between sticky top-0 z-40 border-b border-slate-100">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">Wetar Intelligence <span class="text-blue-600">Sync</span></h1>
@@ -86,7 +92,7 @@
             </div>
         </header>
 
-        <!-- Menu Departemen -->
+        <!-- Dynamic Boards Navigation -->
         <div id="tabContainer" class="px-10 py-4 bg-white border-b border-slate-200 flex items-center gap-2 overflow-x-auto scrollbar-hide">
             <div id="subBoardList" class="flex items-center gap-2">
                 <div id="tab-ALL" class="sub-board-tab active" onclick="filterBoard('ALL')">All Dept</div>
@@ -100,7 +106,7 @@
             </div>
         </div>
 
-        <!-- TAMPILAN DASHBOARD -->
+        <!-- DASHBOARD VIEW -->
         <div id="view-report" class="p-10 space-y-10 animate-fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="glass-card p-8"><p class="kpi-title">Total Outstanding</p><div id="statTotalOutstanding" class="kpi-value text-blue-600">Rp 0</div></div>
@@ -108,16 +114,14 @@
                 <div class="glass-card p-8"><p class="kpi-title">Avg Site Aging</p><div id="statAvgAging" class="kpi-value text-amber-600">0 Days</div></div>
                 <div class="glass-card p-8"><p class="kpi-title">Total Issued</p><div id="statTotalIssued" class="kpi-value text-indigo-600">Rp 0</div></div>
             </div>
-
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 <div class="lg:col-span-2 glass-card p-10 h-[400px]"><canvas id="growthChart"></canvas></div>
                 <div class="glass-card p-10 h-[400px] flex flex-col items-center">
-                    <h3 class="text-slate-900 font-black text-sm uppercase mb-10">Value Distribution</h3>
+                    <h3 class="text-slate-900 font-black text-sm uppercase mb-10">Distribution</h3>
                     <div class="flex-1 w-full"><canvas id="deptPieChart"></canvas></div>
                     <div id="pieLegend" class="mt-4 w-full space-y-2"></div>
                 </div>
             </div>
-
             <div class="glass-card overflow-hidden">
                 <table class="w-full text-left nfm-table">
                     <thead class="bg-slate-50/50"><tr><th>Departemen</th><th>Avg Aging</th><th>Requests</th><th class="text-right">Planned Value</th></tr></thead>
@@ -126,11 +130,11 @@
             </div>
         </div>
 
-        <!-- TAMPILAN HISTORY -->
+        <!-- HISTORY VIEW -->
         <div id="view-output" class="hidden p-10 space-y-10 animate-fade-in">
             <div class="glass-card overflow-hidden border-t-8 border-emerald-500">
                 <div class="p-10 border-b border-slate-50 flex justify-between items-center bg-white">
-                    <h3 class="text-slate-900 font-black text-xl uppercase tracking-tighter italic text-emerald-500">Issued Logs (Aktual)</h3>
+                    <h3 class="text-slate-900 font-black text-xl uppercase tracking-tighter italic text-emerald-500">Issued Logs</h3>
                     <button onclick="downloadIssuedLog()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg">Export CSV</button>
                 </div>
                 <div class="overflow-x-auto">
@@ -144,56 +148,47 @@
             </div>
         </div>
 
-        <!-- TAMPILAN INPUT DATA -->
+        <!-- INPUT VIEW -->
         <div id="view-add-data" class="hidden p-10 max-w-7xl mx-auto animate-fade-in">
             <div class="glass-card p-12 border-t-[10px] border-blue-600 shadow-2xl">
                 <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic text-center mb-10">Input NFM Baru</h2>
                 <form id="nfmForm" class="grid grid-cols-1 md:grid-cols-2 gap-8" onsubmit="saveNFMData(event)">
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div><label>Pilih Departemen</label><select id="input_dept" class="input-field" required><option value="">-- Pilih --</option><option value="MAINTENANCE FIXED PLANT">MAINTENANCE FIXED PLANT</option><option value="MAINTENANCE MOBILE">MAINTENANCE MOBILE</option><option value="PROCESSING">PROCESSING</option><option value="MINING">MINING</option><option value="OHS">OHS</option><option value="SCM">SCM</option><option value="CAMP FACILITY">CAMP FACILITY</option></select></div>
-                        <div><label>Pilih WHRS (Gudang)</label><select id="input_whrs" class="input-field" required><option value="">-- Pilih --</option><option value="MAIN">MAIN</option><option value="RTBL">RTBL</option><option value="WWBJ">WWBJ</option></select></div>
+                        <div><label>Pilih WHRS (Gudang)</label><select id="input_whrs" class="input-field" required><option value="MAIN">MAIN</option><option value="RTBL">RTBL</option><option value="WWBJ">WWBJ</option></select></div>
                     </div>
-                    
                     <div>
                         <label>Nama Requestor</label>
-                        <input type="text" id="input_requestor" list="requestor-list" class="input-field" placeholder="Ketik nama atau pilih..." required autocomplete="off">
+                        <input type="text" id="input_requestor" list="requestor-list" class="input-field" placeholder="Pilih atau ketik nama..." required autocomplete="off">
                         <datalist id="requestor-list"></datalist>
                     </div>
-
                     <div><label>Nomor NFM</label><input type="text" id="input_noNFM" class="input-field" placeholder="721" required></div>
                     <div class="md:col-span-2"><label>Nomor Form (Full ID)</label><input type="text" id="input_formId" class="input-field" placeholder="e.g. 721/BTR-SCM/XII/2025" required></div>
-                    
                     <div class="md:col-span-2 p-8 bg-slate-50 rounded-[32px] border border-slate-200">
-                        <div class="flex justify-between items-center mb-6">
-                            <label class="mb-0 text-slate-900 font-black uppercase tracking-tighter">Line Items (Planning)</label>
-                            <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-white bg-blue-600 px-5 py-2.5 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-100">+ TAMBAH LINE</button>
-                        </div>
-                        <div id="itemListContainer">
-                            <!-- Baris item akan muncul di sini -->
-                        </div>
+                        <div class="flex justify-between items-center mb-6"><label class="mb-0 text-slate-900 font-black uppercase">Line Items (Planning)</label><button type="button" onclick="addItemRow()" class="text-[10px] font-black text-white bg-blue-600 px-5 py-2.5 rounded-xl shadow-lg">+ TAMBAH LINE</button></div>
+                        <div id="itemListContainer"></div>
                     </div>
-
                     <div><label>Tanggal Input</label><input type="date" id="input_date" class="input-field" required></div>
                     <div><label>Status Global</label><select id="input_status" class="input-field"><option value="PR">PR</option><option value="On Order">On Order</option><option value="IN Transit">IN Transit</option><option value="On Site">On Site</option></select></div>
-                    <div class="md:col-span-2 mt-8"><button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-2xl transition-all uppercase text-sm">SIMPAN KE CLOUD</button></div>
+                    <div class="md:col-span-2 mt-8"><button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-2xl transition-all uppercase text-sm">SIMPAN DATA</button></div>
                 </form>
             </div>
         </div>
 
-        <!-- TAMPILAN SMART TRACKING -->
+        <!-- TRACKING VIEW -->
         <div id="view-tracking" class="hidden p-10 max-w-7xl mx-auto animate-fade-in">
-            <div class="bg-white border border-slate-100 rounded-[40px] p-12 text-slate-900 shadow-2xl overflow-hidden relative mb-12">
+            <div class="bg-white border border-slate-100 rounded-[40px] p-12 text-slate-900 shadow-2xl overflow-hidden relative mb-12 text-center">
                 <div class="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full blur-[100px] -mr-40 -mt-40"></div>
-                <!-- Tulisan Smart NFM Tracking warna HITAM PEKAT -->
+                <!-- Tulisan Smart NFM Tracking warna HITAM -->
                 <h2 class="text-4xl font-black mb-8 uppercase tracking-tighter italic text-slate-900">Smart <span class="text-blue-600">NFM Tracking</span></h2>
-                <div class="flex flex-col md:flex-row gap-5 max-w-3xl p-3 bg-slate-50 rounded-3xl border border-slate-200">
+                <div class="flex flex-col md:flex-row gap-5 max-w-3xl mx-auto p-3 bg-slate-50 rounded-3xl border border-slate-200">
                     <input type="text" id="nfmSearchInput" class="flex-1 bg-transparent border-none px-6 py-5 text-slate-900 font-bold text-xl outline-none placeholder:text-slate-400" placeholder="Ketik NFM atau Form ID..." onkeypress="if(event.key === 'Enter') trackNFM()">
-                    <button onclick="trackNFM()" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-2xl font-black text-sm uppercase shadow-xl transition-all active:scale-95">Cari NFM</button>
+                    <button onclick="trackNFM()" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-2xl font-black text-sm uppercase shadow-xl transition-all active:scale-95 shadow-xl">Cari NFM</button>
                 </div>
             </div>
             <div id="nfmResult" class="mb-12 animate-fade-in"></div>
             <div class="space-y-6">
-                <div class="flex justify-between items-center px-4"><h3 class="text-slate-900 font-black text-xs uppercase tracking-widest">Monitoring NFM Berjalan</h3><span class="text-[9px] bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-black uppercase">Live Updates</span></div>
+                <div class="flex justify-between items-center px-4"><h3 class="text-slate-900 font-black text-xs uppercase tracking-widest">Daftar NFM Berjalan</h3><span class="text-[9px] bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-black uppercase">Auto-Refresh</span></div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="ongoing-nfm-list"></div>
             </div>
         </div>
@@ -206,35 +201,34 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- KONFIGURASI GOOGLE SHEET ---
-        // GANTI LINK DI BAWAH INI dengan link CSV dari "Publish to Web" Google Sheet Anda
+        // --- GOOGLE SHEET MASTER DATA (SILAKAN GANTI LINK INI) ---
         const MASTER_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1D4N0m4L3R0k6J6J.../pub?output=csv"; 
 
         let db, auth, appId;
         let allData = [], filteredData = [], activeFilter = 'ALL', currentView = 'report', charts = {};
-        let stockMaster = {}; // { stockCode: { desc, price } }
+        let stockMaster = {}; 
 
         window.onload = async () => {
-            fetchMasterData(); // Ambil Data Master dari Google Sheets
+            fetchMasterData();
             try {
                 let config;
                 if (typeof __firebase_config !== 'undefined' && __firebase_config) {
                     config = JSON.parse(__firebase_config);
-                    appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-nfm-sync-v60';
+                    appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-nfm-sync-v61';
                 } else {
-                    const saved = localStorage.getItem('wetar_sync_config');
+                    const saved = localStorage.getItem('wetar_sync_v61_config');
                     if (!saved) {
                         document.getElementById('setup-screen').classList.remove('hidden');
                         document.getElementById('loading').classList.add('hidden');
                         return;
                     }
                     config = JSON.parse(saved);
-                    appId = 'wetar-nfm-sync-v60';
+                    appId = 'wetar-nfm-sync-v61';
                 }
 
+                document.getElementById('loading-msg').innerText = "Menghubungkan Database...";
                 const app = initializeApp(config);
-                auth = getAuth(app);
-                db = getFirestore(app);
+                auth = getAuth(app); db = getFirestore(app);
 
                 const initAuth = async () => { 
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } 
@@ -243,46 +237,46 @@
                 await initAuth();
                 onAuthStateChanged(auth, (u) => { if(u) listenToData(); });
                 document.getElementById('loading').style.display = 'none';
-                
-                // Tambahkan baris pertama secara default
                 if(document.getElementById('itemListContainer').children.length === 0) addItemRow();
 
-            } catch (e) { console.error("Database Init Error:", e); }
+            } catch (e) { 
+                console.error(e);
+                localStorage.removeItem('wetar_sync_v61_config'); // Reset jika salah
+                alert("Konfigurasi Error. Silakan segarkan halaman dan masukkan ulang Config yang benar.");
+            }
         };
 
-        // INTEGRASI GOOGLE SHEETS MASTER DATA
         async function fetchMasterData() {
             try {
                 const response = await fetch(MASTER_SHEET_URL);
                 const text = await response.text();
-                const rows = text.split('\n').slice(1); // Lewati header
+                const rows = text.split('\n').slice(1);
                 const masterList = document.getElementById('stock-master-list');
                 masterList.innerHTML = '';
-                
                 rows.forEach(row => {
-                    const columns = row.split(',').map(s => s.trim());
-                    const sc = columns[0]; // Kolom A
-                    const desc = columns[1]; // Kolom B
-                    const price = columns[2]; // Kolom C
-                    
-                    if (sc) {
-                        stockMaster[sc.toUpperCase()] = { desc, price: parseFloat(price) || 0 };
-                        masterList.innerHTML += `<option value="${sc.toUpperCase()}">${desc}</option>`;
+                    const cols = row.split(',').map(s => s.trim());
+                    if (cols[0]) {
+                        stockMaster[cols[0].toUpperCase()] = { desc: cols[1], price: parseFloat(cols[2]) || 0 };
+                        masterList.innerHTML += `<option value="${cols[0].toUpperCase()}">${cols[1]}</option>`;
                     }
                 });
-            } catch (err) { console.warn("Google Sheet belum ter-publish atau link salah."); }
+            } catch (err) {}
         }
 
         window.applySetup = () => {
-            const raw = document.getElementById('config-input').value.trim();
+            let raw = document.getElementById('config-input').value.trim();
             try {
+                // Smart Parser: Jika user paste script lengkap, ambil objek JSON-nya saja
+                if (raw.includes('const firebaseConfig =')) {
+                    raw = raw.split('const firebaseConfig =')[1].split(';')[0].trim();
+                }
                 JSON.parse(raw);
-                localStorage.setItem('wetar_sync_config', raw);
+                localStorage.setItem('wetar_sync_v61_config', raw);
                 location.reload();
-            } catch(e) { alert("Format salah. Pastikan format JSON Firebase benar."); }
+            } catch(e) { alert("Format salah. Pastikan Anda hanya menyalin bagian di dalam kurung kurawal { ... }"); }
         };
 
-        window.resetAppConfig = () => { if(confirm("Reset database config? Data aman di cloud, hanya kunci akses browser ini yang dihapus.")) { localStorage.removeItem('wetar_sync_config'); location.reload(); } };
+        window.resetAppConfig = () => { if(confirm("Reset config database?")) { localStorage.removeItem('wetar_sync_v61_config'); location.reload(); } };
 
         function listenToData() {
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'nfm_entries'), (snapshot) => {
@@ -295,9 +289,8 @@
         }
 
         function updateRequestorDatalist() {
-            const datalist = document.getElementById('requestor-list');
-            const uniqueRequestors = [...new Set(allData.map(item => item.requestor))].filter(Boolean).sort();
-            datalist.innerHTML = uniqueRequestors.map(name => `<option value="${name}">`).join('');
+            const unique = [...new Set(allData.map(item => item.requestor))].filter(Boolean).sort();
+            document.getElementById('requestor-list').innerHTML = unique.map(n => `<option value="${n}">`).join('');
         }
 
         function calculateAging(inputDate) {
@@ -307,69 +300,40 @@
 
         window.addItemRow = () => {
             const container = document.getElementById('itemListContainer');
-            const rowId = 'row-' + Date.now();
-            const newRow = document.createElement('div');
-            newRow.id = rowId;
-            newRow.className = 'item-row grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 border-t pt-8 animate-fade-in';
-            newRow.innerHTML = `
-                <div><label>Nomor PO</label><input type="text" class="input-field item-po" placeholder="PO#" required></div>
-                <div><label>Stock Code</label><input type="text" list="stock-master-list" class="input-field item-sc" oninput="handleAutoFill('${rowId}')" placeholder="Ketik SC..." required></div>
-                <div><label>QTY Order</label><input type="number" class="input-field item-qty" placeholder="0" required></div>
-                <div><label>Price (Rp)</label><input type="number" class="input-field item-price" placeholder="Harga Unit" required></div>
-                <div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" placeholder="Keterangan barang..." required></textarea></div>
-                <button type="button" onclick="this.parentElement.remove()" class="absolute top-4 right-4 text-red-500 font-black text-[9px] uppercase hover:text-red-700 transition">Hapus</button>
-            `;
-            container.appendChild(newRow);
+            const rid = 'row-' + Date.now();
+            const row = document.createElement('div');
+            row.id = rid;
+            row.className = 'item-row grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 border-t pt-8 animate-fade-in';
+            row.innerHTML = `<div><label>Nomor PO</label><input type="text" class="input-field item-po" required></div><div><label>Stock Code</label><input type="text" list="stock-master-list" class="input-field item-sc" oninput="handleAutoFill('${rid}')" required></div><div><label>QTY Order</label><input type="number" class="input-field item-qty" required></div><div><label>Price (Rp)</label><input type="number" class="input-field item-price" required></div><div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" required></textarea></div><button type="button" onclick="this.parentElement.remove()" class="absolute top-4 right-4 text-red-500 font-black text-[9px] uppercase">Hapus</button>`;
+            container.appendChild(row);
         };
 
-        // LOGIKA AUTO-FILL DARI GOOGLE SHEET
-        window.handleAutoFill = (rowId) => {
-            const row = document.getElementById(rowId);
+        window.handleAutoFill = (rid) => {
+            const row = document.getElementById(rid);
             const sc = row.querySelector('.item-sc').value.trim().toUpperCase();
             if (stockMaster[sc]) {
                 row.querySelector('.item-desc').value = stockMaster[sc].desc;
                 row.querySelector('.item-price').value = stockMaster[sc].price;
-                
-                // Efek visual Berhasil Auto-Fill
                 row.classList.add('highlight');
-                setTimeout(() => row.classList.remove('highlight'), 1500);
+                setTimeout(() => row.classList.remove('highlight'), 1000);
             }
         };
 
         window.saveNFMData = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn'); btn.disabled = true;
-            const rows = document.querySelectorAll('.item-row');
-            let totalValue = 0;
-            const items = Array.from(rows).map(row => {
+            const items = Array.from(document.querySelectorAll('.item-row')).map(row => {
                 const q = parseFloat(row.querySelector('.item-qty').value) || 0;
                 const p = parseFloat(row.querySelector('.item-price').value) || 0;
-                totalValue += (q * p);
-                return { 
-                    po: row.querySelector('.item-po').value.trim(), 
-                    sc: row.querySelector('.item-sc').value.trim().toUpperCase(), 
-                    qtyOrder: q, qtyArrived: 0, qtyIssued: 0, price: p, 
-                    desc: row.querySelector('.item-desc').value.trim(), 
-                    itemStatus: document.getElementById('input_status').value 
-                };
+                return { po: row.querySelector('.item-po').value.trim(), sc: row.querySelector('.item-sc').value.trim().toUpperCase(), qtyOrder: q, qtyArrived: 0, qtyIssued: 0, price: p, desc: row.querySelector('.item-desc').value.trim(), itemStatus: document.getElementById('input_status').value };
             });
-
+            const total = items.reduce((acc, i) => acc + (i.qtyOrder * i.price), 0);
             try {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'nfm_entries'), {
-                    dept: document.getElementById('input_dept').value,
-                    whrs: document.getElementById('input_whrs').value,
-                    requestor: document.getElementById('input_requestor').value.trim().toUpperCase(),
-                    noNFM: document.getElementById('input_noNFM').value.trim(),
-                    formId: document.getElementById('input_formId').value.trim(),
-                    items: items,
-                    tanggalInput: document.getElementById('input_date').value,
-                    tanggalUpdate: new Date().toISOString().split('T')[0],
-                    value: totalValue,
-                    timestamp: Date.now()
+                    dept: document.getElementById('input_dept').value, whrs: document.getElementById('input_whrs').value, requestor: document.getElementById('input_requestor').value.trim().toUpperCase(), noNFM: document.getElementById('input_noNFM').value.trim(), formId: document.getElementById('input_formId').value.trim(), items, tanggalInput: document.getElementById('input_date').value, tanggalUpdate: new Date().toISOString().split('T')[0], value: total, timestamp: Date.now()
                 });
-                document.getElementById('nfmForm').reset();
-                switchView('report');
-            } catch (err) { alert("Error database cloud."); } finally { btn.disabled = false; }
+                document.getElementById('nfmForm').reset(); switchView('report');
+            } catch (err) { alert("Gagal Simpan."); } finally { btn.disabled = false; }
         };
 
         window.trackNFM = () => {
@@ -378,40 +342,11 @@
             if (!input) return;
             const found = allData.find(item => item.noNFM === input || item.formId.includes(input));
             if (found) { resultDiv.innerHTML = renderTrackingDetail(found); } 
-            else { resultDiv.innerHTML = `<div class="p-12 text-center bg-red-50 text-red-600 rounded-[40px] font-black uppercase text-sm italic tracking-widest">Nomor NFM tidak ditemukan.</div>`; }
+            else { resultDiv.innerHTML = `<div class="p-12 text-center bg-red-50 text-red-600 rounded-[40px] font-black uppercase text-sm italic tracking-widest">Data NFM tidak ditemukan.</div>`; }
         };
 
         function renderTrackingDetail(found) {
-            return `
-            <div class="glass-card p-10 border-t-8 border-blue-600 animate-fade-in shadow-2xl relative mb-12">
-                <div class="flex justify-between items-start mb-10">
-                    <div><span class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded uppercase tracking-widest">Sync Real-Time</span><h3 class="text-4xl font-black text-slate-900 mt-4 italic uppercase tracking-tighter">NFM #${found.noNFM}</h3><p class="text-slate-400 font-bold text-xs uppercase italic">${found.formId} (${found.whrs})</p></div>
-                    <div class="text-right"><p class="text-[10px] font-black text-slate-400 uppercase italic">Req By: ${found.requestor}</p></div>
-                </div>
-                <div class="overflow-x-auto mb-10">
-                    <table class="w-full nfm-table bg-slate-50/50 rounded-3xl overflow-hidden">
-                        <thead><tr><th>Item Detail</th><th>Order</th><th>Arrival</th><th>Issued</th><th>Status</th></tr></thead>
-                        <tbody>
-                            ${(found.items || []).map((item, idx) => `
-                                <tr>
-                                    <td><p class="font-black text-blue-600 text-[13px]">PO: ${item.po}</p><p class="text-[10px] font-black text-slate-400 uppercase">SC: ${item.sc}</p><p class="text-[10px] italic mt-1 leading-relaxed">${item.desc}</p></td>
-                                    <td class="text-center font-black">${item.qtyOrder}</td>
-                                    <td><input type="number" id="arr_${found.id}_${idx}" value="${item.qtyArrived || 0}" class="input-field w-16 bg-blue-100 font-black text-center text-xs border-none"></td>
-                                    <td><input type="number" id="iss_${found.id}_${idx}" value="${item.qtyIssued || 0}" class="input-field w-16 bg-emerald-100 font-black text-center text-xs border-none"></td>
-                                    <td><select id="stat_${found.id}_${idx}" class="input-field text-[10px] font-black uppercase border-none"><option value="PR" ${item.itemStatus === 'PR' ? 'selected' : ''}>PR</option><option value="On Order" ${item.itemStatus === 'On Order' ? 'selected' : ''}>Order</option><option value="IN Transit" ${item.itemStatus === 'IN Transit' ? 'selected' : ''}>Transit</option><option value="On Site" ${item.itemStatus === 'On Site' ? 'selected' : ''}>Site</option><option value="Issued" ${item.itemStatus === 'Issued' ? 'selected' : ''}>Issued</option></select></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div id="confirm_delete_${found.id}" class="hidden p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-4 animate-fade-in"><span class="text-[10px] font-black text-red-600 uppercase tracking-widest">Hapus permanen?</span><button onclick="deleteNFMRecord('${found.id}')" class="bg-red-600 text-white text-[9px] font-black px-4 py-1.5 rounded-lg shadow-sm">YA, HAPUS</button><button onclick="toggleDeleteConfirm('${found.id}', false)" class="text-[9px] font-black text-slate-400 uppercase">Batal</button></div>
-                    <div class="flex gap-4">
-                        <button onclick="toggleDeleteConfirm('${found.id}', true)" class="text-red-500 font-black text-[10px] px-6 py-4 rounded-xl hover:bg-red-50 transition">Hapus NFM</button>
-                        <button onclick="updateNFMActual('${found.id}')" class="bg-blue-600 text-white font-black px-10 py-4 rounded-xl shadow-lg active:scale-95 transition uppercase text-[11px] tracking-widest">Update Cloud</button>
-                    </div>
-                </div>
-            </div>`;
+            return `<div class="glass-card p-10 border-t-8 border-blue-600 animate-fade-in shadow-2xl relative mb-12 text-left"><div class="flex justify-between items-start mb-10 text-left"><div><span class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded uppercase tracking-widest">Detail Info</span><h3 class="text-4xl font-black text-slate-900 mt-4 italic uppercase">NFM #${found.noNFM}</h3><p class="text-slate-400 font-bold text-xs uppercase italic">${found.formId} (${found.whrs})</p></div><div class="text-right"><p class="text-[10px] font-black text-slate-400 uppercase italic">Req By: ${found.requestor}</p></div></div><div class="overflow-x-auto mb-10"><table class="w-full nfm-table bg-slate-50/50 rounded-3xl overflow-hidden"><thead><tr><th>Item Detail</th><th>Order</th><th>Arrival</th><th>Issued</th><th>Status</th></tr></thead><tbody>${(found.items || []).map((item, idx) => `<tr><td><p class="font-black text-blue-600 text-[13px]">PO: ${item.po}</p><p class="text-[10px] font-black text-slate-400 uppercase">SC: ${item.sc}</p></td><td class="text-center font-black">${item.qtyOrder}</td><td><input type="number" id="arr_${found.id}_${idx}" value="${item.qtyArrived || 0}" class="input-field w-16 bg-blue-100 font-black text-center text-xs border-none"></td><td><input type="number" id="iss_${found.id}_${idx}" value="${item.qtyIssued || 0}" class="input-field w-16 bg-emerald-100 font-black text-center text-xs border-none"></td><td><select id="stat_${found.id}_${idx}" class="input-field text-[10px] font-black uppercase border-none"><option value="PR" ${item.itemStatus === 'PR' ? 'selected' : ''}>PR</option><option value="On Order" ${item.itemStatus === 'On Order' ? 'selected' : ''}>Order</option><option value="IN Transit" ${item.itemStatus === 'IN Transit' ? 'selected' : ''}>Transit</option><option value="On Site" ${item.itemStatus === 'On Site' ? 'selected' : ''}>Site</option><option value="Issued" ${item.itemStatus === 'Issued' ? 'selected' : ''}>Issued</option></select></td></tr>`).join('')}</tbody></table></div><div class="flex flex-col md:flex-row justify-between items-center gap-4"><div id="confirm_delete_${found.id}" class="hidden p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-4 animate-fade-in"><span class="text-[10px] font-black text-red-600 uppercase tracking-widest">Hapus permanen?</span><button onclick="deleteNFMRecord('${found.id}')" class="bg-red-600 text-white text-[9px] font-black px-4 py-1.5 rounded-lg shadow-sm">Hapus</button><button onclick="toggleDeleteConfirm('${found.id}', false)" class="text-[9px] font-black text-slate-400 uppercase">Batal</button></div><div class="flex gap-4"><button onclick="toggleDeleteConfirm('${found.id}', true)" class="text-red-500 font-black text-[10px] px-6 py-4 rounded-xl hover:bg-red-50 transition">Hapus NFM</button><button onclick="updateNFMActual('${found.id}')" class="bg-blue-600 text-white font-black px-10 py-4 rounded-xl shadow-lg active:scale-95 transition uppercase text-[11px] tracking-widest">Update Cloud</button></div></div></div>`;
         }
 
         function renderTrackingList() {
@@ -420,18 +355,18 @@
             if (inProgress.length === 0) { listDiv.innerHTML = '<p class="col-span-3 text-center text-slate-400 py-20 font-bold uppercase text-[10px] tracking-widest">Semua barang sudah di-Issued</p>'; return; }
             listDiv.innerHTML = inProgress.sort((a,b) => b.timestamp - a.timestamp).map(nfm => {
                 const statusCounts = nfm.items.reduce((acc, i) => { acc[i.itemStatus] = (acc[i.itemStatus] || 0) + 1; return acc; }, {});
-                const statusStr = Object.entries(statusCounts).map(([st, count]) => `<span class="status-pill font-black bg-blue-50 text-blue-600">${count}x ${st}</span>`).join(' ');
-                return `<div class="glass-card p-6 hover:border-blue-300 transition-all cursor-pointer group" onclick="document.getElementById('nfmSearchInput').value='${nfm.noNFM}'; trackNFM()"><div class="flex justify-between items-start mb-4"><h4 class="font-black text-xl text-slate-900 group-hover:text-blue-600 transition-colors">#${nfm.noNFM}</h4><span class="text-[9px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded uppercase">${nfm.whrs}</span></div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-4">${nfm.formId}</p><div class="flex flex-wrap gap-1 mb-6">${statusStr}</div><div class="flex justify-between items-center border-t border-slate-50 pt-4"><span class="text-[9px] font-black text-slate-400 uppercase">${nfm.dept}</span><span class="text-[9px] font-black text-amber-600 uppercase italic">${nfm.aging} Days</span></div></div>`;
+                const statusStr = Object.entries(statusCounts).map(([st, count]) => `<span class="status-pill font-black bg-blue-50 text-blue-600 mr-1">${count}x ${st}</span>`).join(' ');
+                return `<div class="glass-card p-6 hover:border-blue-300 transition-all cursor-pointer group text-left" onclick="document.getElementById('nfmSearchInput').value='${nfm.noNFM}'; trackNFM()"><div class="flex justify-between items-start mb-4"><h4 class="font-black text-xl text-slate-900 group-hover:text-blue-600 transition-colors">#${nfm.noNFM}</h4><span class="text-[9px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded uppercase">${nfm.whrs}</span></div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-4">${nfm.formId}</p><div class="flex flex-wrap gap-1 mb-6">${statusStr}</div><div class="flex justify-between items-center border-t border-slate-50 pt-4"><span class="text-[9px] font-black text-slate-400 uppercase">${nfm.dept}</span><span class="text-[9px] font-black text-amber-600 uppercase italic">${nfm.aging} Days</span></div></div>`;
             }).join('');
         }
 
         window.toggleDeleteConfirm = (id, show) => { const el = document.getElementById(`confirm_delete_${id}`); if(show) el.classList.remove('hidden'); else el.classList.add('hidden'); };
-        window.deleteNFMRecord = async (docId) => { try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId)); document.getElementById('nfmResult').innerHTML = ''; alert("Data dihapus."); } catch (e) { alert("Gagal."); } };
+        window.deleteNFMRecord = async (docId) => { try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId)); document.getElementById('nfmResult').innerHTML = ''; alert("Dihapus."); } catch (e) { alert("Gagal."); } };
         window.updateNFMActual = async (docId) => {
             const found = allData.find(d => d.id === docId);
             const updatedItems = (found.items || []).map((item, idx) => ({ ...item, qtyArrived: parseFloat(document.getElementById(`arr_${docId}_${idx}`).value) || 0, qtyIssued: parseFloat(document.getElementById(`iss_${docId}_${idx}`).value) || 0, itemStatus: document.getElementById(`stat_${docId}_${idx}`).value }));
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId), { items: updatedItems, tanggalUpdate: new Date().toISOString().split('T')[0] });
-            alert("Berhasil diupdate ke cloud!"); trackNFM();
+            alert("Update Sukses!"); trackNFM();
         };
 
         window.updateUI = () => {
