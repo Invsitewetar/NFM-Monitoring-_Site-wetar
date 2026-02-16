@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive Dashboard v37.0</title>
+    <title>Wetar Intelligence Sync - Executive Dashboard v40.0</title>
     
     <!-- Library Eksternal -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Plugin untuk angka di atas grafik -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root { --primary: #0061ff; --bg: #f8fafc; --sidebar: #0f172a; }
         body { background-color: var(--bg); color: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em; overflow-x: hidden; }
 
-        /* --- SIDEBAR STYLING --- */
+        /* --- SIDEBAR --- */
         .sidebar { 
             width: 80px; height: 100vh; position: fixed; left: 0; top: 0; 
             background: var(--sidebar); z-index: 50; display: flex; 
@@ -38,14 +38,13 @@
         .glass-card { background: white; border: 1px solid #f1f5f9; border-radius: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); }
         
         .force-black { color: #000000 !important; font-weight: 900 !important; }
-        
         .input-field {
             width: 100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 14px; 
             outline: none; transition: all 0.2s; font-weight: 800; color: #000; font-size: 13px;
         }
         .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,97,255,0.1); }
 
-        /* TABLE STYLING */
+        /* TABLE */
         .nfm-table th { font-size: 10px; font-weight: 900; color: #000; text-transform: uppercase; padding: 12px; border-bottom: 2px solid #000; background: #f8fafc; }
         .nfm-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 800; color: #000; }
         
@@ -61,13 +60,9 @@
         
         .btn-primary { background: var(--primary); color: white; font-weight: 900; padding: 16px; border-radius: 16px; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; box-shadow: 0 10px 20px -5px rgba(0,97,255,0.3); width: 100%; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(0,97,255,0.4); }
-
-        #error-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ef4444; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 800; z-index: 1000; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
-
-    <div id="error-toast">Kesalahan! Periksa kembali inputan.</div>
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
@@ -79,17 +74,19 @@
     </aside>
 
     <main class="main-content">
+        <!-- HEADER -->
         <header class="bg-white/80 backdrop-blur-md px-10 py-6 flex items-center justify-between sticky top-0 z-40 border-b border-slate-100 shadow-sm">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">Wetar Intelligence <span class="text-blue-600">Sync</span></h1>
                 <div class="flex items-center mt-1">
                     <span id="cloud-status" class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 animate-pulse"></span>
-                    <p id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic uppercase">Sinkronisasi Memori...</p>
+                    <p id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic uppercase">Sync Ready...</p>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="document.getElementById('setup-screen').classList.remove('hidden')" class="bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-slate-200 transition">☁️ Cloud Config</button>
-                <button onclick="updateDashboard()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-blue-700 transition shadow-lg">🔄 Refresh Data</button>
+                <button onclick="downloadExcel()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-emerald-700 transition shadow-lg">📊 Download Excel</button>
+                <button onclick="document.getElementById('setup-screen').classList.remove('hidden')" class="bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-slate-200 transition">☁️ Config</button>
+                <button onclick="updateDashboard()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-blue-700 transition shadow-lg">🔄 Refresh</button>
             </div>
         </header>
 
@@ -112,7 +109,7 @@
                     <div id="statTotal" class="text-2xl font-black text-blue-600 mt-2">Rp 0</div>
                 </div>
                 <div class="glass-card p-8 border-b-8 border-emerald-600 shadow-md">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" title="Total Pesanan Keseluruhan">Total Monitor Value</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" title="Total Seluruh Pesanan (Budget)">Total Monitor Value</p>
                     <div id="statMonitor" class="text-2xl font-black text-emerald-600 mt-2">Rp 0</div>
                 </div>
                 <div class="glass-card p-8 border-b-8 border-indigo-600 shadow-md">
@@ -126,10 +123,10 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div class="lg:col-span-2 glass-card p-10 h-[480px] flex items-center justify-center">
+                <div class="lg:col-span-2 glass-card p-10 h-[500px] flex items-center justify-center">
                     <canvas id="mainChart"></canvas>
                 </div>
-                <div class="glass-card p-10 h-[480px] flex flex-col items-center justify-center">
+                <div class="glass-card p-10 h-[500px] flex flex-col items-center justify-center">
                     <h3 class="text-slate-900 font-black text-sm uppercase mb-10 text-center tracking-widest force-black">Distribusi Stok Dept</h3>
                     <div class="flex-1 w-full"><canvas id="pieChart"></canvas></div>
                 </div>
@@ -137,7 +134,7 @@
 
             <div class="glass-card overflow-hidden shadow-sm">
                 <table class="w-full text-left nfm-table">
-                    <thead><tr><th class="force-black">Departemen</th><th class="force-black text-center">Avg Site Aging</th><th class="force-black text-center">Outstanding Value</th><th class="text-right force-black">Total Issued</th></tr></thead>
+                    <thead><tr><th class="force-black">Departemen</th><th class="force-black text-center">Avg Site Aging</th><th class="force-black text-center">Sisa Outstanding</th><th class="text-right force-black">Total Issued</th></tr></thead>
                     <tbody id="summaryTable" class="divide-y divide-slate-100"></tbody>
                 </table>
             </div>
@@ -148,10 +145,11 @@
             <div class="glass-card p-12 border-t-[10px] border-blue-600 shadow-2xl">
                 <h2 class="text-3xl font-black text-slate-900 tracking-tighter uppercase italic text-center mb-10">Input NFM Baru</h2>
                 <form id="nfmForm" onsubmit="saveData(event)" class="space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                         <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Departemen</label><select id="in_dept" class="input-field" required><option value="MAINTENANCE FIXED">MAINTENANCE FIXED</option><option value="MAINTENANCE MOBILE">MAINTENANCE MOBILE</option><option value="PROCESSING">PROCESSING</option><option value="MINING">MINING</option><option value="SCM">SCM</option></select></div>
-                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Requestor</label><input type="text" id="in_req" class="input-field" required placeholder="Nama Anda..."></div>
-                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Nomor NFM</label><input type="text" id="in_nfm" class="input-field" required placeholder="Contoh: 012/BTR-SCM/2024"></div>
+                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">WHRS (Gudang)</label><select id="in_whrs" class="input-field" required><option value="MAIN">MAIN</option><option value="RTBL">RTBL</option><option value="WWBJ">WWBJ</option></select></div>
+                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Requestor</label><input type="text" id="in_req" class="input-field" required placeholder="Nama..."></div>
+                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Nomor NFM</label><input type="text" id="in_nfm" class="input-field" required placeholder="Ex: 012/BTR-SCM/2024"></div>
                         <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Tanggal Input</label><input type="date" id="in_date" class="input-field" required></div>
                     </div>
                     <div class="p-8 bg-slate-50 rounded-3xl border border-slate-200">
@@ -179,7 +177,7 @@
         <div id="view-manage" class="hidden p-10 max-w-7xl mx-auto animate-fade-in text-center">
             <div class="bg-white border-2 border-blue-600 rounded-[40px] p-12 shadow-2xl mb-12 text-left">
                 <h2 class="text-4xl font-black mb-10 uppercase tracking-tighter italic force-black text-center">Admin <span class="text-blue-600">Stock Update</span></h2>
-                <div class="flex gap-4 p-3 bg-slate-50 rounded-3xl border-2 border-blue-200 shadow-inner">
+                <div class="flex gap-4 p-3 bg-slate-50 rounded-3xl border-2 border-slate-200 shadow-inner">
                     <input type="text" id="manageSearch" class="flex-1 bg-transparent border-none px-6 py-4 text-2xl font-black outline-none force-black" placeholder="Cari NFM untuk update..." oninput="runSearch('edit')">
                 </div>
             </div>
@@ -194,16 +192,16 @@
 
         const BAKED_CONFIG = { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
 
-        let db, auth, appId = 'wetar-sync-v37-final'; 
+        let db, auth, appId = 'wetar-sync-final-v40'; 
         let allData = [];
         let mainChart, pieChart;
 
         Chart.register(ChartDataLabels);
 
         window.onload = () => {
-            const localBackup = localStorage.getItem('wetar_db_v37');
+            const localBackup = localStorage.getItem('wetar_db_v40');
             if(localBackup) { allData = JSON.parse(localBackup); updateDashboard(); }
-            const savedConfig = localStorage.getItem('wetar_v37_config');
+            const savedConfig = localStorage.getItem('wetar_v40_config');
             if(BAKED_CONFIG.apiKey) connectCloud(BAKED_CONFIG);
             else if(savedConfig) connectCloud(JSON.parse(savedConfig));
             if(document.getElementById('itemsContainer').children.length === 0) addItemRow();
@@ -229,7 +227,7 @@
         function listenCloudData() {
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), (snap) => {
                 allData = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-                localStorage.setItem('wetar_db_v37', JSON.stringify(allData));
+                localStorage.setItem('wetar_db_v40', JSON.stringify(allData));
                 updateDashboard();
                 syncCurrentSearch();
             });
@@ -249,7 +247,6 @@
 
         window.saveData = async (e) => {
             e.preventDefault();
-            const tgl = document.getElementById('in_date').value;
             const btn = document.getElementById('saveBtn'); btn.disabled = true;
             const items = Array.from(document.querySelectorAll('#itemsContainer > div')).map(r => ({
                 po: r.querySelector('.po').value.toUpperCase(),
@@ -259,9 +256,17 @@
                 dsc: r.querySelector('.dsc').value,
                 status: 'PR', qtyArrived: 0, qtyIssued: 0, tglOnsite: ''
             }));
-            const payload = { dept: document.getElementById('in_dept').value, req: document.getElementById('in_req').value.toUpperCase(), nfm: document.getElementById('in_nfm').value, tglInput: tgl, items, tglUpdate: new Date().toISOString().split('T')[0] };
+            const payload = { 
+                dept: document.getElementById('in_dept').value, 
+                whrs: document.getElementById('in_whrs').value,
+                req: document.getElementById('in_req').value.toUpperCase(), 
+                nfm: document.getElementById('in_nfm').value, 
+                tglInput: document.getElementById('in_date').value, 
+                items, 
+                tglUpdate: new Date().toISOString().split('T')[0] 
+            };
             if(db) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), payload);
-            else { allData.push({...payload, id: Date.now().toString()}); localStorage.setItem('wetar_db_v37', JSON.stringify(allData)); updateDashboard(); }
+            else { allData.push({...payload, id: Date.now().toString()}); localStorage.setItem('wetar_db_v40', JSON.stringify(allData)); updateDashboard(); }
             alert("Data Berhasil Disimpan!"); btn.disabled = false; document.getElementById('nfmForm').reset(); switchView('report');
         };
 
@@ -276,14 +281,14 @@
                 const sCls = i.status === 'PR' ? 'st-pr' : i.status === 'ON ORDER' ? 'st-order' : i.status === 'IN TRANSIT' ? 'st-transit' : i.status === 'ON SITE' ? 'st-site' : 'st-issued';
                 let siteAging = i.tglOnsite ? Math.floor(Math.abs(new Date() - new Date(i.tglOnsite)) / (1000 * 60 * 60 * 24)) : 0;
                 if(mode === 'edit') {
-                    return `<tr><td class="force-black text-blue-600">${i.po}</td><td class="force-black">${i.sc}</td><td class="text-center font-black">${i.qty}</td><td><input type="number" id="arr_${f.id}_${idx}" value="${i.qtyArrived || 0}" class="w-16 border-2 border-blue-100 rounded text-center font-black force-black p-1"></td><td><input type="number" id="iss_${f.id}_${idx}" value="${i.qtyIssued || 0}" class="w-16 border-2 border-indigo-100 rounded text-center font-black force-black p-1"></td><td><input type="date" id="onsite_${f.id}_${idx}" value="${i.tglOnsite || ''}" class="text-[10px] border-2 border-emerald-100 p-1 rounded font-black"></td><td><select id="st_${f.id}_${idx}" class="text-[10px] font-black border-2 border-slate-200 p-1 bg-white force-black uppercase rounded-lg"><option value="PR" ${i.status==='PR'?'selected':''}>PR</option><option value="ON ORDER" ${i.status==='ON ORDER'?'selected':''}>ORDER</option><option value="IN TRANSIT" ${i.status==='IN TRANSIT'?'selected':''}>TRANSIT</option><option value="ON SITE" ${i.status==='ON SITE'?'selected':''}>SITE</option><option value="ISSUED" ${i.status==='ISSUED'?'selected':''}>ISSUED</option></select></td></tr>`;
+                    return `<tr><td class="force-black text-blue-600 font-bold">${i.po}</td><td class="force-black">${i.sc}</td><td class="text-center font-black">${i.qty}</td><td><input type="number" id="arr_${f.id}_${idx}" value="${i.qtyArrived || 0}" class="w-16 border-2 border-blue-100 rounded text-center font-black force-black p-1"></td><td><input type="number" id="iss_${f.id}_${idx}" value="${i.qtyIssued || 0}" class="w-16 border-2 border-indigo-100 rounded text-center font-black force-black p-1"></td><td><input type="date" id="onsite_${f.id}_${idx}" value="${i.tglOnsite || ''}" class="text-[10px] border-2 border-emerald-100 p-1 rounded font-black"></td><td><select id="st_${f.id}_${idx}" class="text-[10px] font-black border-2 border-slate-200 p-1 bg-white force-black uppercase rounded-lg"><option value="PR" ${i.status==='PR'?'selected':''}>PR</option><option value="ON ORDER" ${i.status==='ON ORDER'?'selected':''}>ORDER</option><option value="IN TRANSIT" ${i.status==='IN TRANSIT'?'selected':''}>TRANSIT</option><option value="ON SITE" ${i.status==='ON SITE'?'selected':''}>SITE</option><option value="ISSUED" ${i.status==='ISSUED'?'selected':''}>ISSUED</option></select></td></tr>`;
                 } else {
-                    return `<tr><td class="force-black text-blue-600">${i.po}</td><td class="force-black">${i.sc} - ${i.dsc}</td><td class="text-center font-black text-black">${i.qty}</td><td class="text-center font-black text-black">${i.qtyArrived || 0}</td><td class="text-center font-black text-black underline">${i.qtyIssued || 0}</td><td class="text-center force-black text-emerald-600">${siteAging} Hari</td><td><span class="status-badge ${sCls}">${i.status}</span></td></tr>`;
+                    return `<tr><td class="force-black text-blue-600 font-bold">${i.po}</td><td class="force-black">${i.sc} - ${i.dsc}</td><td class="text-center font-black text-black font-bold">${i.qty}</td><td class="text-center font-black text-black">${i.qtyArrived || 0}</td><td class="text-center font-black text-black underline font-bold">${i.qtyIssued || 0}</td><td class="text-center force-black text-emerald-600">${siteAging} H</td><td><span class="status-badge ${sCls}">${i.status}</span></td></tr>`;
                 }
             }).join('');
 
-            const headerExtra = mode === 'edit' ? '<th class="force-black">Tgl Onsite</th>' : '<th class="force-black text-center">Site Aging</th>';
-            res.innerHTML = `<div class="glass-card p-10 border-t-8 ${mode==='edit'?'border-blue-600':'border-slate-900'} animate-fade-in shadow-2xl relative"><div class="flex justify-between items-start mb-6"><h3 class="text-3xl font-black force-black italic uppercase tracking-tighter">NFM #${f.nfm}</h3><div class="text-right"><p class="text-[11px] font-black text-slate-500 uppercase italic">Dept: ${f.dept}</p><p class="text-[11px] font-black text-slate-400 uppercase italic">Req: ${f.req}</p></div></div><div class="mt-8 overflow-x-auto"><table class="w-full nfm-table"><thead><tr><th class="force-black">PO</th><th class="force-black">Barang</th><th class="text-center force-black">Plan</th><th class="text-center force-black">Arrived</th><th class="text-center force-black">Issued</th>${headerExtra}<th class="force-black">Status</th></tr></thead><tbody>${tableRows}</tbody></table></div>${mode==='edit' ? `<div class="flex gap-4 mt-8"><button onclick="commitStockUpdate('${f.id}')" class="flex-1 bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase text-sm tracking-widest hover:bg-blue-700 transition">SINKRONKAN DATA</button><button onclick="deleteEntry('${f.id}')" class="px-8 text-red-500 font-black text-[10px] uppercase hover:bg-red-50 rounded-xl transition">Hapus</button></div>` : ''}</div>`;
+            const headerExtra = mode === 'edit' ? '<th class="force-black">Tgl Onsite</th>' : '<th class="force-black text-center">Site Age</th>';
+            res.innerHTML = `<div class="glass-card p-10 border-t-8 ${mode==='edit'?'border-blue-600':'border-slate-900'} animate-fade-in shadow-2xl relative"><div class="flex justify-between items-start mb-6"><h3 class="text-3xl font-black force-black italic uppercase tracking-tighter">NFM #${f.nfm}</h3><div class="text-right"><p class="text-[11px] font-black text-slate-500 uppercase italic">Dept: ${f.dept} | WHRS: ${f.whrs || 'N/A'}</p><p class="text-[11px] font-black text-slate-400 uppercase italic">Req: ${f.req}</p></div></div><div class="mt-8 overflow-x-auto"><table class="w-full nfm-table"><thead><tr><th class="force-black">PO</th><th class="force-black">Barang</th><th class="text-center force-black">Plan</th><th class="text-center force-black">Arrived</th><th class="text-center force-black">Issued</th>${headerExtra}<th class="force-black">Status</th></tr></thead><tbody>${tableRows}</tbody></table></div>${mode==='edit' ? `<div class="flex gap-4 mt-8"><button onclick="commitStockUpdate('${f.id}')" class="flex-1 bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase text-sm tracking-widest hover:bg-blue-700 transition">SINKRONKAN DATA</button><button onclick="deleteEntry('${f.id}')" class="px-8 text-red-500 font-black text-[10px] uppercase hover:bg-red-50 rounded-xl transition">Hapus</button></div>` : ''}</div>`;
         };
 
         window.commitStockUpdate = async (did) => {
@@ -298,14 +303,14 @@
                 return { ...i, qtyArrived: arr, qtyIssued: iss, tglOnsite: ons, status: st };
             });
             if(db) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items, tglUpdate: new Date().toISOString().split('T')[0] });
-            else { f.items = items; localStorage.setItem('wetar_db_v37', JSON.stringify(allData)); updateDashboard(); runSearch('edit'); }
+            else { f.items = items; localStorage.setItem('wetar_db_v40', JSON.stringify(allData)); updateDashboard(); runSearch('edit'); }
             alert("Database Diperbarui!");
         };
 
         window.deleteEntry = async (did) => { 
-            if(confirm("Hapus data selamanya?")) { 
+            if(confirm("Hapus selamanya?")) { 
                 if(db) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did)); 
-                else { allData = allData.filter(d => d.id !== did); localStorage.setItem('wetar_db_v37', JSON.stringify(allData)); updateDashboard(); document.getElementById('manageResult').innerHTML = ''; }
+                else { allData = allData.filter(d => d.id !== did); localStorage.setItem('wetar_db_v40', JSON.stringify(allData)); updateDashboard(); document.getElementById('manageResult').innerHTML = ''; }
             } 
         };
 
@@ -327,10 +332,10 @@
             document.getElementById('statIssued').innerText = `Rp ${totalIssuedVal.toLocaleString('id-ID')}`;
             document.getElementById('statMonitor').innerText = `Rp ${totalMonitorVal.toLocaleString('id-ID')}`;
             document.getElementById('statAge').innerText = `${siteItemCount > 0 ? Math.round(sumSiteAge/siteItemCount) : 0} Hari`;
-            renderFinalDashboard();
+            renderSummaryDashboard();
         };
 
-        function renderFinalDashboard() {
+        function renderSummaryDashboard() {
             const s = allData.reduce((acc, entry) => {
                 if(!acc[entry.dept]) acc[entry.dept]={out:0, iss:0, ageSum:0, ageCount:0};
                 entry.items.forEach(i => {
@@ -341,17 +346,17 @@
                 return acc;
             }, {});
 
-            document.getElementById('summaryTable').innerHTML = Object.entries(s).sort((a,b)=>b[1].out-a[1].out).map(([n,v]) => `<tr class="hover:bg-slate-50 transition"><td class="force-black uppercase">${n}</td><td class="force-black text-center">${v.ageCount > 0 ? Math.round(v.ageSum/v.ageCount) : 0} Hari</td><td class="force-black text-center font-black text-blue-600">Rp ${v.out.toLocaleString('id-ID')}</td><td class="text-right force-black text-indigo-600">Rp ${v.iss.toLocaleString('id-ID')}</td></tr>`).join('');
+            document.getElementById('summaryTable').innerHTML = Object.entries(s).sort((a,b)=>b[1].out-a[1].out).map(([n,v]) => `<tr class="hover:bg-slate-50 transition"><td class="force-black uppercase font-bold">${n}</td><td class="force-black text-center">${v.ageCount > 0 ? Math.round(v.ageSum/v.ageCount) : 0} H</td><td class="force-black text-center font-black text-blue-600">Rp ${v.out.toLocaleString('id-ID')}</td><td class="text-right force-black text-indigo-600 font-bold">Rp ${v.iss.toLocaleString('id-ID')}</td></tr>`).join('');
             
             const labels = Object.keys(s); const data = labels.map(l => s[l].out);
             if(mainChart) mainChart.destroy();
             mainChart = new Chart(document.getElementById('mainChart'), { 
-                type: 'bar', data: { labels, datasets: [{ label: 'Outstanding (Rp)', data, backgroundColor: '#0061ff', borderRadius: 10 }] }, 
+                type: 'bar', data: { labels, datasets: [{ label: 'Sisa Outstanding (Rp)', data, backgroundColor: '#0061ff', borderRadius: 12 }] }, 
                 options: { 
                     plugins: { 
                         legend: false,
-                        datalabels: { // MENAMPILKAN ANGKA DI ATAS GRAFIK
-                            anchor: 'end', align: 'top', font: { weight: 'bold', size: 10 }, color: '#000',
+                        datalabels: { 
+                            anchor: 'end', align: 'top', font: { weight: '900', size: 11 }, color: '#000',
                             formatter: (v) => v > 0 ? 'Rp ' + v.toLocaleString('id-ID') : ''
                         }
                     },
@@ -361,6 +366,16 @@
             if(pieChart) pieChart.destroy();
             pieChart = new Chart(document.getElementById('pieChart'), { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: ['#0061ff', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] }] }, options: { cutout: '75%', plugins: { legend: false } } });
         }
+
+        window.downloadExcel = () => {
+            if(allData.length === 0) { alert("Tidak ada data!"); return; }
+            const report = [];
+            allData.forEach(e => { e.items.forEach(i => {
+                report.push({ "No NFM": e.nfm, "WHRS": e.whrs || '-', "Dept": e.dept, "Requestor": e.req, "Tgl Input": e.tglInput, "PO": i.po, "SC": i.sc, "Desc": i.dsc, "Qty Plan": i.qty, "Harga": i.prc, "Arrived": i.qtyArrived, "Issued": i.qtyIssued, "Tgl Onsite": i.tglOnsite || '-', "Status": i.status, "Sisa Outstanding": (i.qty - i.qtyIssued) * i.prc, "Nilai Issued": i.qtyIssued * i.prc, "Total Monitor Value": i.qty * i.prc });
+            }); });
+            const ws = XLSX.utils.json_to_sheet(report); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+            XLSX.writeFile(wb, `Laporan_Wetar_v40_${new Date().toISOString().split('T')[0]}.xlsx`);
+        };
 
         window.switchView = (v) => {
             document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
@@ -372,15 +387,15 @@
 
         window.applySetup = () => {
             const raw = document.getElementById('config-input').value.trim();
-            try { JSON.parse(raw); localStorage.setItem('wetar_v37_config', raw); location.reload(); } catch(e) { alert("Format salah!"); }
+            try { JSON.parse(raw); localStorage.setItem('wetar_v40_config', raw); location.reload(); } catch(e) { alert("Format salah!"); }
         };
 
-        window.askGeminiAI = async () => { alert("✨ Dashboard Analisis: Total Monitor mencapai Rp " + document.getElementById('statMonitor').innerText + "."); };
+        window.askGeminiAI = async () => { alert("✨ Dashboard Sinkron: Monitor Value Rp " + document.getElementById('statMonitor').innerText); };
     </script>
 
     <div class="fixed bottom-4 right-10 flex gap-4 text-[8px] font-black text-slate-400 uppercase tracking-widest z-50">
         <div>FIREBASE: <span id="diag-fb" class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span></div>
-        <div>v37.0 CHART LABELS & LOGIC FIX</div>
+        <div>v40.0 WHRS INCLUDED</div>
     </div>
 </body>
 </html>
