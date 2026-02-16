@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive Dashboard v46.0</title>
+    <title>Wetar Intelligence Sync - Executive Dashboard v47.0</title>
     
     <!-- Library Eksternal -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -130,7 +130,6 @@
                 <div class="lg:col-span-2 glass-card p-8 h-[420px] flex items-center justify-center">
                     <canvas id="mainChart"></canvas>
                 </div>
-                <!-- BAGIAN LINGKARAN YANG DIKECILKAN -->
                 <div class="glass-card p-8 h-[420px] flex flex-col items-center justify-center relative">
                     <h3 class="text-slate-900 font-black text-sm uppercase mb-6 text-center tracking-widest force-black">Distribusi Stok Dept</h3>
                     <div class="flex-1 w-full max-h-[280px] flex items-center justify-center">
@@ -187,7 +186,7 @@
                     <input type="text" id="trackingSearch" class="flex-1 bg-transparent border-none px-6 py-4 text-2xl font-black outline-none force-black" placeholder="Ketik nomor NFM (misal: 012)..." oninput="runSearch('view')">
                 </div>
             </div>
-            <div id="trackingResult" class="text-left animate-fade-in"></div>
+            <div id="trackingResult" class="text-left animate-fade-in space-y-6"></div>
         </div>
 
         <!-- VIEW: UPDATE STOK -->
@@ -198,7 +197,7 @@
                     <input type="text" id="manageSearch" class="flex-1 bg-transparent border-none px-6 py-4 text-2xl font-black outline-none force-black" placeholder="Cari NFM untuk update..." oninput="runSearch('edit')">
                 </div>
             </div>
-            <div id="manageResult" class="text-left animate-fade-in"></div>
+            <div id="manageResult" class="text-left animate-fade-in space-y-6"></div>
         </div>
     </main>
 
@@ -209,16 +208,16 @@
 
         const BAKED_CONFIG = { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
 
-        let db, auth, appId = 'wetar-sync-final-v46'; 
+        let db, auth, appId = 'wetar-sync-final-v47'; 
         let allData = [];
         let mainChart, pieChart;
 
         Chart.register(ChartDataLabels);
 
         window.onload = () => {
-            const localBackup = localStorage.getItem('wetar_db_v46');
+            const localBackup = localStorage.getItem('wetar_db_v47');
             if(localBackup) { allData = JSON.parse(localBackup); updateDashboard(); }
-            const savedConfig = localStorage.getItem('wetar_v46_config');
+            const savedConfig = localStorage.getItem('wetar_v47_config');
             if(BAKED_CONFIG.apiKey) connectCloud(BAKED_CONFIG);
             else if(savedConfig) connectCloud(JSON.parse(savedConfig));
             if(document.getElementById('itemsContainer').children.length === 0) addItemRow();
@@ -244,7 +243,7 @@
         function listenCloudData() {
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), (snap) => {
                 allData = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-                localStorage.setItem('wetar_db_v46', JSON.stringify(allData));
+                localStorage.setItem('wetar_db_v47', JSON.stringify(allData));
                 updateDashboard();
                 syncCurrentSearch();
             });
@@ -281,7 +280,7 @@
             }));
             const payload = { dept: document.getElementById('in_dept').value, whrs: document.getElementById('in_whrs').value, req: document.getElementById('in_req').value.toUpperCase(), nfm: document.getElementById('in_nfm').value, tglInput: document.getElementById('in_date').value, items, tglUpdate: new Date().toISOString().split('T')[0] };
             if(db) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), payload);
-            else { allData.push({...payload, id: Date.now().toString()}); localStorage.setItem('wetar_db_v46', JSON.stringify(allData)); updateDashboard(); }
+            else { allData.push({...payload, id: Date.now().toString()}); localStorage.setItem('wetar_db_v47', JSON.stringify(allData)); updateDashboard(); }
             alert("Data Berhasil Disimpan!"); btn.disabled = false; document.getElementById('nfmForm').reset(); switchView('report');
         };
 
@@ -289,28 +288,39 @@
             const v = document.getElementById(mode === 'view' ? 'trackingSearch' : 'manageSearch').value.toUpperCase();
             const res = document.getElementById(mode === 'view' ? 'trackingResult' : 'manageResult');
             if(!v) { res.innerHTML = ''; return; }
-            const f = allData.find(d => d.nfm && d.nfm.toUpperCase().includes(v));
-            if(!f) { res.innerHTML = `<div class="p-12 glass-card text-center font-black force-black bg-red-50 text-red-600 italic">NFM "${v}" tidak ditemukan.</div>`; return; }
             
-            let tableRows = f.items.map((i, idx) => {
-                const sCls = i.status === 'PR' ? 'st-pr' : i.status === 'ON ORDER' ? 'st-order' : i.status === 'IN TRANSIT' ? 'st-transit' : i.status === 'ON SITE' ? 'st-site' : 'st-issued';
-                let siteAging = i.tglOnsite ? Math.floor(Math.abs(new Date() - new Date(i.tglOnsite)) / (1000 * 60 * 60 * 24)) : 0;
-                if(mode === 'edit') {
-                    return `<tr><td class="force-black text-blue-600 font-bold">${i.po}</td><td class="force-black">${i.sc}</td><td class="text-center font-black text-black font-bold">${i.qty}</td><td><input type="number" id="arr_${f.id}_${idx}" value="${i.qtyArrived || 0}" class="w-16 border-2 border-blue-100 rounded text-center font-black force-black p-1"></td><td><input type="number" id="iss_${f.id}_${idx}" value="${i.qtyIssued || 0}" class="w-16 border-2 border-indigo-100 rounded text-center font-black force-black p-1"></td><td><input type="date" id="onsite_${f.id}_${idx}" value="${i.tglOnsite || ''}" class="text-[10px] border-2 border-emerald-100 p-1 rounded font-black"></td><td><select id="st_${f.id}_${idx}" class="text-[10px] font-black border-2 border-slate-200 p-1 bg-white force-black uppercase rounded-lg"><option value="PR" ${i.status==='PR'?'selected':''}>PR</option><option value="ON ORDER" ${i.status==='ON ORDER'?'selected':''}>ORDER</option><option value="IN TRANSIT" ${i.status==='IN TRANSIT'?'selected':''}>TRANSIT</option><option value="ON SITE" ${i.status==='ON SITE'?'selected':''}>SITE</option><option value="ISSUED" ${i.status==='ISSUED'?'selected':''}>ISSUED</option></select></td></tr>`;
-                } else {
-                    return `<tr><td class="force-black text-blue-600 font-bold">${i.po}</td><td class="force-black">${i.sc} - ${i.dsc}</td><td class="text-center font-black text-black font-bold">${i.qty}</td><td class="text-center font-black text-black">${i.qtyArrived || 0}</td><td class="text-center font-black text-black underline font-bold">${i.qtyIssued || 0}</td><td class="text-center force-black text-emerald-600">${siteAging} H</td><td><span class="status-badge ${sCls}">${i.status}</span></td></tr>`;
-                }
-            }).join('');
+            // MENGGUNAKAN FILTER UNTUK MULTI-SEARCH
+            const results = allData.filter(d => d.nfm && d.nfm.toUpperCase().includes(v));
+            if(results.length === 0) { res.innerHTML = `<div class="p-12 glass-card text-center font-black force-black bg-red-50 text-red-600 italic">NFM "${v}" tidak ditemukan.</div>`; return; }
+            
+            res.innerHTML = results.map(f => {
+                let tableRows = f.items.map((i, idx) => {
+                    const sCls = i.status === 'PR' ? 'st-pr' : i.status === 'ON ORDER' ? 'st-order' : i.status === 'IN TRANSIT' ? 'st-transit' : i.status === 'ON SITE' ? 'st-site' : 'st-issued';
+                    let siteAging = i.tglOnsite ? Math.floor(Math.abs(new Date() - new Date(i.tglOnsite)) / (1000 * 60 * 60 * 24)) : 0;
+                    if(mode === 'edit') {
+                        return `<tr><td class="force-black text-blue-600 font-bold">${i.po}</td><td class="force-black">${i.sc}</td><td class="text-center font-black text-black font-bold">${i.qty}</td><td><input type="number" id="arr_${f.id}_${idx}" value="${i.qtyArrived || 0}" class="w-16 border-2 border-blue-100 rounded text-center font-black force-black p-1"></td><td><input type="number" id="iss_${f.id}_${idx}" value="${i.qtyIssued || 0}" class="w-16 border-2 border-indigo-100 rounded text-center font-black force-black p-1"></td><td><input type="date" id="onsite_${f.id}_${idx}" value="${i.tglOnsite || ''}" class="text-[10px] border-2 border-emerald-100 p-1 rounded font-black"></td><td><select id="st_${f.id}_${idx}" class="text-[10px] font-black border-2 border-slate-200 p-1 bg-white force-black uppercase rounded-lg"><option value="PR" ${i.status==='PR'?'selected':''}>PR</option><option value="ON ORDER" ${i.status==='ON ORDER'?'selected':''}>ORDER</option><option value="IN TRANSIT" ${i.status==='IN TRANSIT'?'selected':''}>TRANSIT</option><option value="ON SITE" ${i.status==='ON SITE'?'selected':''}>SITE</option><option value="ISSUED" ${i.status==='ISSUED'?'selected':''}>ISSUED</option></select></td></tr>`;
+                    } else {
+                        return `<tr><td class="force-black text-blue-600 font-bold">${i.po}</td><td class="force-black">${i.sc} - ${i.dsc}</td><td class="text-center font-black text-black font-bold">${i.qty}</td><td class="text-center font-black text-black">${i.qtyArrived || 0}</td><td class="text-center font-black text-black underline font-bold">${i.qtyIssued || 0}</td><td class="text-center force-black text-emerald-600">${siteAging} H</td><td><span class="status-badge ${sCls}">${i.status}</span></td></tr>`;
+                    }
+                }).join('');
 
-            const headerExtra = mode === 'edit' ? '<th class="force-black">Tgl Onsite</th>' : '<th class="force-black text-center">Site Age</th>';
-            res.innerHTML = `<div class="glass-card p-10 border-t-8 ${mode==='edit'?'border-blue-600':'border-slate-900'} animate-fade-in shadow-2xl relative"><div class="flex justify-between items-start mb-6"><h3 class="text-3xl font-black force-black italic uppercase tracking-tighter">NFM #${f.nfm}</h3><div class="text-right"><p class="text-[11px] font-black text-slate-500 uppercase italic">Dept: ${f.dept} | WHRS: ${f.whrs || '-'}</p><p class="text-[11px] font-black text-slate-400 uppercase italic">Req: ${f.req}</p></div></div><div class="mt-8 overflow-x-auto"><table class="w-full nfm-table"><thead><tr><th class="force-black">PO</th><th class="force-black">Barang</th><th class="text-center force-black">Plan</th><th class="text-center force-black">Arrived</th><th class="text-center force-black">Issued</th>${headerExtra}<th class="force-black">Status</th></tr></thead><tbody>${tableRows}</tbody></table></div>${mode==='edit' ? `<div class="flex gap-4 mt-8"><button onclick="commitStockUpdate('${f.id}')" class="flex-1 bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase text-sm tracking-widest hover:bg-blue-700 transition">SINKRONKAN DATA</button><button onclick="deleteEntry('${f.id}')" class="px-8 text-red-500 font-black text-[10px] uppercase hover:bg-red-50 rounded-xl transition">Hapus</button></div>` : ''}</div>`;
+                const headerExtra = mode === 'edit' ? '<th class="force-black">Tgl Onsite</th>' : '<th class="force-black text-center">Site Age</th>';
+                return `<div class="glass-card p-10 border-t-8 ${mode==='edit'?'border-blue-600':'border-slate-900'} animate-fade-in shadow-2xl relative mb-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <h3 class="text-3xl font-black force-black italic uppercase tracking-tighter">NFM #${f.nfm}</h3>
+                        <div class="text-right"><p class="text-[11px] font-black text-slate-500 uppercase italic">Dept: ${f.dept} | WHRS: ${f.whrs || '-'}</p><p class="text-[11px] font-black text-slate-400 uppercase italic">Req: ${f.req}</p></div>
+                    </div>
+                    <div class="mt-8 overflow-x-auto"><table class="w-full nfm-table"><thead><tr><th class="force-black">PO</th><th class="force-black">Barang</th><th class="text-center force-black">Plan</th><th class="text-center force-black">Arrived</th><th class="text-center force-black">Issued</th>${headerExtra}<th class="force-black">Status</th></tr></thead><tbody>${tableRows}</tbody></table></div>
+                    ${mode==='edit' ? `<div class="flex gap-4 mt-8"><button onclick="commitStockUpdate('${f.id}')" class="flex-1 bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase text-sm tracking-widest hover:bg-blue-700 transition">SINKRONKAN DATA</button><button onclick="deleteEntry('${f.id}')" class="px-8 text-red-500 font-black text-[10px] uppercase hover:bg-red-50 rounded-xl transition">Hapus</button></div>` : ''}
+                </div>`;
+            }).join('');
         };
 
         window.commitStockUpdate = async (did) => {
             const f = allData.find(d => d.id === did);
             const items = f.items.map((i, idx) => {
-                const arr = parseFloat(document.getElementById(`arr_${did}_${idx}`).value);
-                const iss = parseFloat(document.getElementById(`iss_${did}_${idx}`).value);
+                const arr = Math.abs(parseFloat(document.getElementById(`arr_${did}_${idx}`).value)) || 0;
+                const iss = Math.abs(parseFloat(document.getElementById(`iss_${did}_${idx}`).value)) || 0;
                 const ons = document.getElementById(`onsite_${did}_${idx}`).value;
                 let st = document.getElementById(`st_${did}_${idx}`).value;
                 if(iss >= i.qty) st = 'ISSUED';
@@ -318,14 +328,14 @@
                 return { ...i, qtyArrived: arr, qtyIssued: iss, tglOnsite: ons, status: st };
             });
             if(db) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items, tglUpdate: new Date().toISOString().split('T')[0] });
-            else { f.items = items; localStorage.setItem('wetar_db_v46', JSON.stringify(allData)); updateDashboard(); runSearch('edit'); }
+            else { f.items = items; localStorage.setItem('wetar_db_v47', JSON.stringify(allData)); updateDashboard(); runSearch('edit'); }
             alert("Database Diperbarui!");
         };
 
         window.deleteEntry = async (did) => { 
             if(confirm("Hapus selamanya?")) { 
                 if(db) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did)); 
-                else { allData = allData.filter(d => d.id !== did); localStorage.setItem('wetar_db_v46', JSON.stringify(allData)); updateDashboard(); document.getElementById('manageResult').innerHTML = ''; }
+                else { allData = allData.filter(d => d.id !== did); localStorage.setItem('wetar_db_v47', JSON.stringify(allData)); updateDashboard(); document.getElementById('manageResult').innerHTML = ''; }
             } 
         };
 
@@ -335,7 +345,7 @@
                 entry.items.forEach(item => {
                     const prc = item.prc || 0;
                     const itemMonitor = item.qty * prc;
-                    const itemIssued = item.qtyIssued * prc;
+                    const itemIssued = Math.abs(item.qtyIssued || 0) * prc;
                     const itemOut = Math.max(0, itemMonitor - itemIssued);
 
                     totalMonitorVal += itemMonitor;
@@ -355,9 +365,9 @@
                 if(!acc[entry.dept]) acc[entry.dept]={out:0, iss:0, ageSum:0, ageCount:0};
                 entry.items.forEach(i => {
                     const prc = i.prc || 0;
-                    const valOut = Math.max(0, (i.qty - i.qtyIssued) * prc);
+                    const valOut = Math.max(0, (i.qty - (Math.abs(i.qtyIssued) || 0)) * prc);
                     acc[entry.dept].out += valOut;
-                    acc[entry.dept].iss += (i.qtyIssued * prc);
+                    acc[entry.dept].iss += (Math.abs(i.qtyIssued) || 0) * prc;
                     if(i.tglOnsite) { acc[entry.dept].ageSum += Math.floor(Math.abs(new Date() - new Date(i.tglOnsite)) / (1000*60*60*24)); acc[entry.dept].ageCount++; }
                 });
                 return acc;
@@ -391,7 +401,7 @@
                     cutout: '70%', 
                     plugins: { 
                         legend: false,
-                        datalabels: { display: false } // Sembunyikan label di lingkaran agar tidak berantakan
+                        datalabels: { display: false }
                     } 
                 } 
             });
@@ -402,11 +412,11 @@
             const report = [];
             allData.forEach(e => { e.items.forEach(i => {
                 const itemMonitor = i.qty * i.prc;
-                const itemIssued = i.qtyIssued * i.prc;
+                const itemIssued = Math.abs(i.qtyIssued || 0) * i.prc;
                 report.push({ "No NFM": e.nfm, "WHRS": e.whrs || '-', "Dept": e.dept, "Requestor": e.req, "Tgl Input": e.tglInput, "PO": i.po, "SC": i.sc, "Desc": i.dsc, "Qty Plan": i.qty, "Harga": i.prc, "Arrived": i.qtyArrived, "Issued": i.qtyIssued, "Tgl Onsite": i.tglOnsite || '-', "Status": i.status, "Sisa Outstanding": Math.max(0, itemMonitor - itemIssued), "Nilai Issued": itemIssued, "Total Monitor Value": itemMonitor });
             }); });
             const ws = XLSX.utils.json_to_sheet(report); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-            XLSX.writeFile(wb, `Laporan_Wetar_NFM_v46_${new Date().toISOString().split('T')[0]}.xlsx`);
+            XLSX.writeFile(wb, `Laporan_Wetar_NFM_v47_${new Date().toISOString().split('T')[0]}.xlsx`);
         };
 
         window.switchView = (v) => {
@@ -419,13 +429,13 @@
 
         window.applySetup = () => {
             const raw = document.getElementById('config-input').value.trim();
-            try { JSON.parse(raw); localStorage.setItem('wetar_v46_config', raw); location.reload(); } catch(e) { alert("Format salah!"); }
+            try { JSON.parse(raw); localStorage.setItem('wetar_v47_config', raw); location.reload(); } catch(e) { alert("Format salah!"); }
         };
     </script>
 
     <div class="fixed bottom-4 right-10 flex gap-4 text-[8px] font-black text-slate-400 uppercase tracking-widest z-50">
         <div>FIREBASE: <span id="diag-fb" class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span></div>
-        <div>v46.0 COMPACT VISUAL</div>
+        <div>v47.0 MULTI-SEARCH FIX</div>
     </div>
 </body>
 </html>
