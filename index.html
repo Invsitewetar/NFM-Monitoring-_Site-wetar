@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Dashboard v27.0</title>
+    <title>Wetar Intelligence Sync - Executive Dashboard v30.0</title>
     
     <!-- Library Eksternal -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +14,7 @@
         :root { --primary: #0061ff; --bg: #f8fafc; --sidebar: #0f172a; }
         body { background-color: var(--bg); color: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em; overflow-x: hidden; }
 
-        /* Sidebar Modern */
+        /* --- SIDEBAR STYLING --- */
         .sidebar { 
             width: 80px; height: 100vh; position: fixed; left: 0; top: 0; 
             background: var(--sidebar); z-index: 50; display: flex; 
@@ -35,75 +35,105 @@
         .main-content { margin-left: 80px; min-height: 100vh; transition: margin-left 0.3s ease; }
         .glass-card { background: white; border: 1px solid #f1f5f9; border-radius: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); }
         
-        /* High Contrast Black - TEKS HITAM PEKAT */
+        /* HIGH CONTRAST BLACK (Teks Hitam Pekat untuk Kemudahan Baca) */
         .force-black { color: #000000 !important; font-weight: 900 !important; }
+        
         .input-field {
             width: 100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 14px; 
             outline: none; transition: all 0.2s; font-weight: 800; color: #000; font-size: 14px;
         }
         .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,97,255,0.1); }
 
+        /* TABLE STYLING */
         .nfm-table th { font-size: 11px; font-weight: 900; color: #000; text-transform: uppercase; padding: 16px; border-bottom: 2px solid #000; background: #f8fafc; }
         .nfm-table td { padding: 16px; border-bottom: 1px solid #e2e8f0; font-size: 14px; font-weight: 800; color: #000; }
         
-        .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; border: 1px solid currentColor; display: inline-block; }
-        .st-pr { color: #64748b; background: #f1f5f9; }
+        /* STATUS BADGE COLORS */
+        .status-badge { padding: 5px 12px; border-radius: 10px; font-size: 11px; font-weight: 900; text-transform: uppercase; border: 1.5px solid currentColor; display: inline-block; }
+        .st-pr { color: #64748b; background: #f8fafc; }
         .st-order { color: #ea580c; background: #fff7ed; }
         .st-transit { color: #2563eb; background: #eff6ff; }
         .st-site { color: #059669; background: #ecfdf5; }
-        .st-issued { color: #000000; background: #ffffff; border: 2.5px solid #000000; }
+        .st-issued { color: #000000; background: #ffffff; border: 3px solid #000000; }
 
         .animate-fade-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .btn-primary { background: var(--primary); color: white; font-weight: 900; padding: 16px; border-radius: 16px; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; box-shadow: 0 10px 20px -5px rgba(0,97,255,0.3); width: 100%; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(0,97,255,0.4); }
     </style>
 </head>
 <body>
 
-    <!-- Setup Overlay -->
+    <!-- CLOUD CONFIG OVERLAY -->
     <div id="setup-screen" class="fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-6 hidden">
         <div class="glass-card max-w-lg w-full p-10 text-center shadow-2xl animate-fade-in">
             <h2 class="text-2xl font-black text-slate-900 uppercase mb-4">Aktivasi Database Cloud</h2>
-            <p class="text-xs text-slate-500 mb-6 font-bold uppercase italic text-red-600">Tanpa Cloud, data antar perangkat tidak akan sinkron!</p>
+            <p class="text-xs text-slate-500 mb-6 font-bold leading-relaxed">Masukkan objek <b>firebaseConfig</b> Anda di bawah ini agar data sinkron antar HP.</p>
             <textarea id="config-input" class="input-field h-40 font-mono text-[10px] mb-6 border-slate-300" placeholder='{ "apiKey": "...", ... }'></textarea>
             <div class="flex gap-4">
-                <button onclick="document.getElementById('setup-screen').classList.add('hidden')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-4 rounded-xl uppercase text-[10px]">Lanjutkan Lokal</button>
+                <button onclick="document.getElementById('setup-screen').classList.add('hidden')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-4 rounded-xl uppercase text-[10px]">Tutup</button>
                 <button onclick="applySetup()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg hover:bg-blue-700 transition uppercase text-[10px]">Aktifkan Cloud</button>
             </div>
         </div>
     </div>
 
-    <!-- Sidebar -->
+    <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center font-black text-white mb-12 border border-white/20 shadow-inner">W</div>
-        <div onclick="switchView('report')" id="nav-report" class="sidebar-item active" title="Dashboard"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span class="ml-4 font-black text-sm text-white">Dashboard</span></div>
-        <div onclick="switchView('add-data')" id="nav-add-data" class="sidebar-item" title="Input NFM Baru"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg><span class="ml-4 font-black text-sm text-white">Input Baru</span></div>
-        <div onclick="switchView('tracking')" id="nav-tracking" class="sidebar-item" title="Tracking User"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><span class="ml-4 font-black text-sm text-white">Tracking</span></div>
-        <div onclick="switchView('manage')" id="nav-manage" class="sidebar-item" title="Admin Update"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg><span class="ml-4 font-black text-sm text-white">Update Stok</span></div>
+        <div onclick="switchView('report')" id="nav-report" class="sidebar-item active" title="Dashboard Utama">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span class="ml-4 font-black text-sm text-white">Dashboard</span>
+        </div>
+        <div onclick="switchView('add-data')" id="nav-add-data" class="sidebar-item" title="Input NFM Baru">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
+            <span class="ml-4 font-black text-sm text-white">Input Baru</span>
+        </div>
+        <div onclick="switchView('tracking')" id="nav-tracking" class="sidebar-item" title="Tracking User">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <span class="ml-4 font-black text-sm text-white">Tracking</span>
+        </div>
+        <div onclick="switchView('manage')" id="nav-manage" class="sidebar-item" title="Admin Update Stok">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <span class="ml-4 font-black text-sm text-white">Update Stok</span>
+        </div>
     </aside>
 
     <main class="main-content">
-        <!-- Header -->
+        <!-- HEADER -->
         <header class="bg-white/80 backdrop-blur-md px-10 py-6 flex items-center justify-between sticky top-0 z-40 border-b border-slate-100 shadow-sm">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">Wetar Intelligence <span class="text-blue-600">Sync</span></h1>
                 <div class="flex items-center mt-1">
-                    <span id="cloud-status" class="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 animate-pulse"></span>
-                    <p id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">MODE LOKAL (TIDAK SINKRON)</p>
+                    <span id="cloud-status" class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 animate-pulse"></span>
+                    <p id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic uppercase">Sinkronisasi Cloud...</p>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="document.getElementById('setup-screen').classList.remove('hidden')" class="bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-slate-200 transition">☁️ KONFIGURASI CLOUD</button>
-                <button onclick="askGeminiAI()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-blue-700 transition shadow-lg">✨ ANALISIS AI</button>
+                <button onclick="document.getElementById('setup-screen').classList.remove('hidden')" class="bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-slate-200 transition">☁️ Config</button>
+                <button onclick="askGeminiAI()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-blue-700 transition shadow-lg">✨ Analisis AI</button>
             </div>
         </header>
 
-        <!-- VIEW: DASHBOARD (TOTAL SYNC FIX) -->
+        <!-- VIEW: DASHBOARD -->
         <div id="view-report" class="p-10 space-y-10 animate-fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center text-black">
-                <div class="glass-card p-8 border-b-8 border-blue-600"><p class="text-[10px] font-black text-slate-400 uppercase">Outstanding (Sisa)</p><div id="statTotal" class="text-2xl font-black text-blue-600 mt-2">Rp 0</div></div>
-                <div class="glass-card p-8 border-b-8 border-emerald-600"><p class="text-[10px] font-black text-slate-400 uppercase">Barang On Site</p><div id="statSite" class="text-2xl font-black text-emerald-600 mt-2">Rp 0</div></div>
-                <div class="glass-card p-8 border-b-8 border-indigo-600"><p class="text-[10px] font-black text-slate-400 uppercase">Total Issued</p><div id="statIssued" class="text-2xl font-black text-indigo-600 mt-2">Rp 0</div></div>
-                <div class="glass-card p-8 border-b-8 border-amber-600"><p class="text-[10px] font-black text-slate-400 uppercase">Avg Aging</p><div id="statAge" class="text-2xl font-black text-amber-600 mt-2">0 Hari</div></div>
+                <div class="glass-card p-8 border-b-8 border-blue-600 shadow-md">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Outstanding (Sisa)</p>
+                    <div id="statTotal" class="text-2xl font-black text-blue-600 mt-2">Rp 0</div>
+                </div>
+                <div class="glass-card p-8 border-b-8 border-emerald-600 shadow-md">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Value On Site</p>
+                    <div id="statSite" class="text-2xl font-black text-emerald-600 mt-2">Rp 0</div>
+                </div>
+                <div class="glass-card p-8 border-b-8 border-indigo-600 shadow-md">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Total Issued</p>
+                    <div id="statIssued" class="text-2xl font-black text-indigo-600 mt-2">Rp 0</div>
+                </div>
+                <div class="glass-card p-8 border-b-8 border-amber-600 shadow-md">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Avg Aging</p>
+                    <div id="statAge" class="text-2xl font-black text-amber-600 mt-2">0 Hari</div>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -114,7 +144,7 @@
                 </div>
             </div>
 
-            <div class="glass-card overflow-hidden">
+            <div class="glass-card overflow-hidden shadow-sm">
                 <table class="w-full text-left nfm-table">
                     <thead><tr><th class="force-black">Departemen</th><th class="force-black text-center">Avg Aging</th><th class="force-black text-center">Outstanding Value</th><th class="text-right force-black">Total Issued</th></tr></thead>
                     <tbody id="summaryTable" class="divide-y divide-slate-100"></tbody>
@@ -129,20 +159,21 @@
                 <form id="nfmForm" onsubmit="saveData(event)" class="space-y-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Departemen</label><select id="in_dept" class="input-field" required><option value="MAINTENANCE FIXED">MAINTENANCE FIXED</option><option value="MAINTENANCE MOBILE">MAINTENANCE MOBILE</option><option value="PROCESSING">PROCESSING</option><option value="MINING">MINING</option><option value="SCM">SCM</option></select></div>
-                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Requestor</label><input type="text" id="in_req" class="input-field" required placeholder="Nama Anda..."></div>
+                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Requestor</label><input type="text" id="in_req" class="input-field" required placeholder="Nama..."></div>
                         <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Nomor NFM</label><input type="text" id="in_nfm" class="input-field" required placeholder="Ex: 012/BTR-SCM/2024"></div>
                         <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Tanggal Planning</label><input type="date" id="in_date" class="input-field" required></div>
                     </div>
                     <div class="p-8 bg-slate-50 rounded-3xl border border-slate-200">
+                        <h4 class="text-[11px] font-black uppercase mb-6 text-black tracking-widest">Detail Item List</h4>
                         <div id="itemsContainer" class="space-y-4"></div>
-                        <button type="button" onclick="addItem()" class="text-[10px] font-black text-blue-600 uppercase mt-6 tracking-widest">+ TAMBAH BARANG</button>
+                        <button type="button" onclick="addItem()" class="text-[10px] font-black text-blue-600 uppercase mt-6 hover:underline tracking-widest">+ TAMBAH BARANG</button>
                     </div>
-                    <button type="submit" id="saveBtn" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase tracking-widest hover:bg-blue-700 transition active:scale-95">SIMPAN & SINKRONKAN SEMUA</button>
+                    <button type="submit" id="saveBtn" class="btn-primary">SIMPAN & SINKRONKAN SEMUA</button>
                 </form>
             </div>
         </div>
 
-        <!-- VIEW: TRACKING USER (LIVE SEARCH FIX) -->
+        <!-- VIEW: TRACKING -->
         <div id="view-tracking" class="hidden p-10 max-w-6xl mx-auto animate-fade-in text-center">
             <div class="bg-white border border-slate-100 rounded-[40px] p-12 shadow-2xl mb-12">
                 <h2 class="text-4xl font-black mb-10 uppercase tracking-tighter italic force-black">Smart <span class="text-blue-600">NFM Tracking</span></h2>
@@ -153,12 +184,12 @@
             <div id="trackingResult" class="text-left animate-fade-in"></div>
         </div>
 
-        <!-- VIEW: MANAGE (ADMIN EDIT FIX) -->
+        <!-- VIEW: MANAGE -->
         <div id="view-manage" class="hidden p-10 max-w-6xl mx-auto animate-fade-in text-center">
             <div class="bg-white border-2 border-blue-600 rounded-[40px] p-12 shadow-2xl mb-12 text-left">
                 <h2 class="text-4xl font-black mb-10 uppercase tracking-tighter italic force-black text-center">Admin <span class="text-blue-600">Stock Update</span></h2>
-                <div class="flex gap-4 p-3 bg-slate-50 rounded-3xl border-2 border-blue-200">
-                    <input type="text" id="manageSearch" class="flex-1 bg-transparent border-none px-6 py-4 text-2xl font-black outline-none force-black" placeholder="Input Stok (Misal: 012)..." oninput="searchNFM('edit')">
+                <div class="flex gap-4 p-3 bg-slate-50 rounded-3xl border-2 border-blue-200 shadow-inner">
+                    <input type="text" id="manageSearch" class="flex-1 bg-transparent border-none px-6 py-4 text-2xl font-black outline-none force-black" placeholder="Cari nomor NFM..." oninput="searchNFM('edit')">
                 </div>
             </div>
             <div id="manageResult" class="text-left animate-fade-in"></div>
@@ -167,7 +198,8 @@
 
     <div class="fixed bottom-4 right-10 flex gap-4 text-[8px] font-black text-slate-400 uppercase tracking-widest z-50">
         <div>FIREBASE: <span id="diag-fb" class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span></div>
-        <div>v27.0 FINAL FIX</div>
+        <div>CLOUD SYNC: <span id="diag-sync" class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block animate-pulse"></span></div>
+        <div>v30.0 FINAL FIX</div>
     </div>
 
     <script type="module">
@@ -176,20 +208,20 @@
         import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
-        // CONFIG FIREBASE (TEMPEL DI SINI)
+        // CONFIG FIREBASE (WAJIB TEMPEL DI SINI)
         // ==========================================
         const BAKED_CONFIG = { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
 
-        let db, auth, appId = 'wetar-sync-v27';
+        let db, auth, appId = 'wetar-sync-permanent-v1'; 
         let allData = [];
         let mainChart, pieChart;
 
         window.onload = () => {
-            // Ambil data dari LocalStorage jika ada (Agar tidak hilang saat refresh)
-            const localSavedData = localStorage.getItem('wetar_local_db');
-            if(localSavedData) allData = JSON.parse(localSavedData);
+            // BACKUP MEMORY: Mengambil data yang tersimpan di laptop ini
+            const localBackup = localStorage.getItem('wetar_permanent_data');
+            if(localBackup) allData = JSON.parse(localBackup);
 
-            const savedConfig = localStorage.getItem('wetar_v27_config');
+            const savedConfig = localStorage.getItem('wetar_v30_config');
             if(BAKED_CONFIG.apiKey) connectCloud(BAKED_CONFIG);
             else if(savedConfig) connectCloud(JSON.parse(savedConfig));
             
@@ -211,7 +243,7 @@
                         listenCloudData();
                     }
                 });
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Koneksi gagal."); }
         }
 
         function listenCloudData() {
@@ -219,16 +251,16 @@
                 allData = snap.docs.map(d => ({ 
                     ...d.data(), 
                     id: d.id, 
-                    aging: Math.max(0, Math.floor((new Date() - new Date(d.data().tglInput))/(1000*60*60*24))) 
+                    aging: Math.max(0, Math.floor((new Date() - new Date(d.data().tglPlanning))/(1000*60*60*24))) 
                 }));
-                // Simpan ke local sebagai backup
-                localStorage.setItem('wetar_local_db', JSON.stringify(allData));
+                // Simpan ke local sebagai cadangan otomatis
+                localStorage.setItem('wetar_permanent_data', JSON.stringify(allData));
                 updateDashboard();
-                syncSearch();
+                syncSearchWindows();
             });
         }
 
-        function syncSearch() {
+        function syncSearchWindows() {
             if(document.getElementById('trackingSearch').value) searchNFM('view');
             if(document.getElementById('manageSearch').value) searchNFM('edit');
         }
@@ -257,19 +289,26 @@
                 dsc: r.querySelector('.dsc').value,
                 status: 'PR', qtyArrived: 0, qtyIssued: 0
             }));
+            
             const payload = {
-                dept: document.getElementById('in_dept').value, req: document.getElementById('in_req').value.toUpperCase(), nfm: document.getElementById('in_nfm').value, tglInput: document.getElementById('in_date').value, items, tglUpdate: new Date().toISOString().split('T')[0]
+                dept: document.getElementById('in_dept').value, 
+                req: document.getElementById('in_req').value.toUpperCase(), 
+                nfm: document.getElementById('in_nfm').value, 
+                tglPlanning: document.getElementById('in_date').value, 
+                tglInputSystem: new Date().toISOString().split('T')[0],
+                items, 
+                tglUpdate: new Date().toISOString().split('T')[0]
             };
 
             if(db) {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), payload);
             } else {
-                // Mode Lokal: Masukkan ke array dan simpan ke LocalStorage
                 allData.push({...payload, id: Date.now().toString(), aging: 0});
-                localStorage.setItem('wetar_local_db', JSON.stringify(allData));
+                localStorage.setItem('wetar_permanent_data', JSON.stringify(allData));
                 updateDashboard();
             }
-            alert("Berhasil! Data NFM Baru Telah Masuk."); 
+            
+            alert("Data Berhasil Masuk!"); 
             btn.disabled = false; document.getElementById('nfmForm').reset(); switchView('report');
         };
 
@@ -284,7 +323,7 @@
             let tableRows = f.items.map((i, idx) => {
                 const sCls = i.status === 'PR' ? 'st-pr' : i.status === 'ON ORDER' ? 'st-order' : i.status === 'IN TRANSIT' ? 'st-transit' : i.status === 'ON SITE' ? 'st-site' : 'st-issued';
                 if(mode === 'edit') {
-                    return `<tr><td class="force-black text-blue-600">${i.po}</td><td class="force-black">${i.sc} - ${i.dsc}</td><td class="text-center font-black">${i.qty}</td><td><input type="number" id="arr_${f.id}_${idx}" value="${i.qtyArrived || 0}" class="w-16 border-2 border-blue-100 rounded text-center font-black force-black"></td><td><input type="number" id="iss_${f.id}_${idx}" value="${i.qtyIssued || 0}" class="w-16 border-2 border-indigo-100 rounded text-center font-black force-black"></td><td><select id="st_${f.id}_${idx}" class="text-[10px] font-black border-2 border-slate-200 p-1 bg-white force-black uppercase"><option value="PR" ${i.status==='PR'?'selected':''}>PR</option><option value="ON ORDER" ${i.status==='ON ORDER'?'selected':''}>ON ORDER</option><option value="IN TRANSIT" ${i.status==='IN TRANSIT'?'selected':''}>IN TRANSIT</option><option value="ON SITE" ${i.status==='ON SITE'?'selected':''}>ON SITE</option><option value="ISSUED" ${i.status==='ISSUED'?'selected':''}>ISSUED</option></select></td></tr>`;
+                    return `<tr><td class="force-black text-blue-600">${i.po}</td><td class="force-black">${i.sc} - ${i.dsc}</td><td class="text-center font-black">${i.qty}</td><td><input type="number" id="arr_${f.id}_${idx}" value="${i.qtyArrived || 0}" class="w-16 border-2 border-blue-100 rounded text-center font-black force-black"></td><td><input type="number" id="iss_${f.id}_${idx}" value="${i.qtyIssued || 0}" class="w-16 border-2 border-indigo-100 rounded text-center font-black force-black"></td><td><select id="st_${f.id}_${idx}" class="text-[10px] font-black border-2 border-slate-200 p-1 bg-white force-black uppercase"><option value="PR" ${i.status==='PR'?'selected':''}>PR</option><option value="ON ORDER" ${i.status==='ON ORDER'?'selected':''}>ORDER</option><option value="IN TRANSIT" ${i.status==='IN TRANSIT'?'selected':''}>TRANSIT</option><option value="ON SITE" ${i.status==='ON SITE'?'selected':''}>SITE</option><option value="ISSUED" ${i.status==='ISSUED'?'selected':''}>ISSUED</option></select></td></tr>`;
                 } else {
                     return `<tr><td class="force-black text-blue-600">${i.po}</td><td class="force-black uppercase">${i.sc} - ${i.dsc}</td><td class="text-center font-black text-black">${i.qty}</td><td class="text-center font-black text-black">${i.qtyArrived || 0}</td><td class="text-center font-black text-black underline">${i.qtyIssued || 0}</td><td><span class="status-badge ${sCls}">${i.status}</span></td></tr>`;
                 }
@@ -294,10 +333,13 @@
                 <div class="glass-card p-10 border-t-8 ${mode==='edit'?'border-blue-600':'border-slate-900'} animate-fade-in shadow-2xl relative">
                     <div class="flex justify-between items-start mb-6">
                         <h3 class="text-3xl font-black force-black italic uppercase tracking-tighter">NFM #${f.nfm}</h3>
-                        <p class="text-[11px] font-black text-slate-500 mt-2 uppercase italic text-right">Dept: ${f.dept}<br>Req: ${f.req}</p>
+                        <div class="text-right">
+                           <p class="text-[11px] font-black text-slate-500 uppercase italic">Dept: ${f.dept}</p>
+                           <p class="text-[11px] font-black text-slate-400 uppercase italic">Req: ${f.req}</p>
+                        </div>
                     </div>
-                    <div class="mt-8 overflow-x-auto"><table class="w-full nfm-table"><thead><tr><th class="force-black">PO</th><th class="force-black">Detail Barang</th><th class="text-center force-black">Planning</th><th class="text-center force-black">Arrived</th><th class="text-center force-black">Issued</th><th class="force-black">Status</th></tr></thead><tbody>${tableRows}</tbody></table></div>
-                    ${mode==='edit' ? `<div class="flex gap-4 mt-8"><button onclick="updateActual('${f.id}')" class="flex-1 bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase text-sm tracking-widest">SINKRONKAN KE DATABASE</button><button onclick="deleteDocById('${f.id}')" class="px-8 text-red-500 font-black text-[10px] uppercase hover:bg-red-50 rounded-xl">Hapus</button></div>` : ''}
+                    <div class="mt-8 overflow-x-auto"><table class="w-full nfm-table"><thead><tr><th class="force-black">PO</th><th class="force-black">Barang</th><th class="text-center force-black">Planning</th><th class="text-center force-black">Arrived</th><th class="text-center force-black">Issued</th><th class="force-black">Status</th></tr></thead><tbody>${tableRows}</tbody></table></div>
+                    ${mode==='edit' ? `<div class="flex gap-4 mt-8"><button onclick="updateActual('${f.id}')" class="flex-1 bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase text-sm tracking-widest">SINKRONKAN KE DATABASE</button><button onclick="deleteDocById('${f.id}')" class="px-8 text-red-500 font-black text-[10px] uppercase hover:bg-red-50 rounded-xl transition">Hapus</button></div>` : ''}
                 </div>`;
         };
 
@@ -316,11 +358,11 @@
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items, tglUpdate: new Date().toISOString().split('T')[0] });
             } else {
                 f.items = items;
-                localStorage.setItem('wetar_local_db', JSON.stringify(allData));
+                localStorage.setItem('wetar_permanent_data', JSON.stringify(allData));
                 updateDashboard();
-                syncSearch();
+                syncSearchWindows();
             }
-            alert("Sinkronisasi Berhasil!");
+            alert("Berhasil Diupdate!");
         };
 
         window.deleteDocById = async (did) => { 
@@ -328,9 +370,9 @@
                 if(db) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did)); 
                 else {
                     allData = allData.filter(d => d.id !== did);
-                    localStorage.setItem('wetar_local_db', JSON.stringify(allData));
+                    localStorage.setItem('wetar_permanent_data', JSON.stringify(allData));
                     updateDashboard();
-                    syncSearch();
+                    syncSearchWindows();
                 }
             } 
         };
@@ -352,10 +394,10 @@
             document.getElementById('statIssued').innerText = `Rp ${totalIssuedVal.toLocaleString('id-ID')}`;
             document.getElementById('statAge').innerText = `${Math.round(sumAge/allData.length || 0)} Hari`;
             document.getElementById('statCount').innerText = allData.length;
-            renderSummaryTables();
+            renderFinalSummary();
         }
 
-        function renderSummaryTables() {
+        function renderFinalSummary() {
             const s = allData.reduce((acc, entry) => {
                 if(!acc[entry.dept]) acc[entry.dept]={out:0, iss:0, c:0, a:0};
                 acc[entry.dept].c++; acc[entry.dept].a+=entry.aging;
@@ -391,10 +433,10 @@
 
         window.applySetup = () => {
             const raw = document.getElementById('config-input').value.trim();
-            try { JSON.parse(raw); localStorage.setItem('wetar_v27_config', raw); location.reload(); } catch(e) { alert("Format config salah!"); }
+            try { JSON.parse(raw); localStorage.setItem('wetar_v30_config', raw); location.reload(); } catch(e) { alert("Format salah!"); }
         };
 
-        window.askGeminiAI = async () => { alert("✨ Dashboard Analisis: Rp " + document.getElementById('statTotal').innerText + " masih tertahan. Prioritas percepatan penyerahan barang (Issued)."); };
+        window.askGeminiAI = async () => { alert("✨ Analisis: Outstanding Rp " + document.getElementById('statTotal').innerText + ". Fokus percepatan penyerahan barang (Issued)."); };
     </script>
 </body>
 </html>
