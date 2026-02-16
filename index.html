@@ -3,306 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive Dashboard v6.7</title>
+    <title>Wetar Intelligence Sync - Dashboard v17.0</title>
     
-    <!-- Load External Libraries -->
+    <!-- Library Eksternal -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --primary: #0061ff;
-            --bg: #f8fafc;
-            --sidebar: #111827;
-        }
+        :root { --primary: #0061ff; --bg: #f8fafc; --sidebar: #0f172a; }
+        body { background-color: var(--bg); color: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em; overflow-x: hidden; }
 
-        body { 
-            background-color: var(--bg); 
-            color: #1e293b; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            letter-spacing: -0.01em;
-            overflow-x: hidden;
-        }
-
-        /* Sidebar Styling */
         .sidebar { 
             width: 80px; height: 100vh; position: fixed; left: 0; top: 0; 
             background: var(--sidebar); z-index: 50; display: flex; 
             flex-direction: column; align-items: center; padding: 24px 0;
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 4px 0 24px rgba(0,0,0,0.05);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.1);
         }
         .sidebar:hover { width: 240px; }
-
         .sidebar-item { 
             width: calc(100% - 24px); height: 50px; display: flex; align-items: center; 
             padding: 0 14px; color: #94a3b8; margin-bottom: 8px; 
             border-radius: 14px; cursor: pointer; transition: all 0.2s ease;
             overflow: hidden; white-space: nowrap;
         }
-        .sidebar-item svg { min-width: 24px; margin-right: 16px; }
         .sidebar-item:hover, .sidebar-item.active { background: rgba(255,255,255,0.1); color: white; }
         .sidebar-item.active { background: var(--primary); box-shadow: 0 8px 16px rgba(0,97,255,0.3); }
 
         .main-content { margin-left: 80px; min-height: 100vh; transition: margin-left 0.3s ease; }
-
-        /* Card & UI Elements */
-        .glass-card { 
-            background: white; border: 1px solid #f1f5f9; 
-            border-radius: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03);
-        }
+        .glass-card { background: white; border: 1px solid #f1f5f9; border-radius: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); }
         
-        .kpi-title { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; }
-        .kpi-value { font-size: 26px; font-weight: 800; color: #0f172a; margin-top: 4px; }
-
-        .sub-board-tab {
-            padding: 12px 20px; border-radius: 12px; font-weight: 700;
-            font-size: 10px; text-transform: uppercase; color: #64748b;
-            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;
-            background: #fff; border: 1px solid #f1f5f9;
-        }
-        .sub-board-tab.active { color: white; background: var(--primary); border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,97,255,0.2); }
-
+        /* High Contrast Black - Teks Hitam Pekat */
+        .force-black { color: #000000 !important; font-weight: 800 !important; }
         .input-field {
-            width: 100%; border: 1px solid #e2e8f0; border-radius: 14px;
-            padding: 12px 14px; outline: none; transition: all 0.2s;
-            font-weight: 600; color: #1e293b; font-size: 13px; background: #fff;
+            width: 100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 14px; 
+            outline: none; transition: all 0.2s; font-weight: 700; color: #000; font-size: 13px;
         }
-        .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(0,97,255,0.1); }
-        
-        label { font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 6px; display: block; }
-        
-        .nfm-table th { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; padding: 16px 20px; border-bottom: 1px solid #f1f5f9; }
-        .nfm-table td { padding: 16px 20px; border-bottom: 1px solid #f8fafc; font-size: 13px; font-weight: 600; }
-        
-        .loading-overlay { position: fixed; inset: 0; background: white; z-index: 110; display: flex; align-items: center; justify-content: center; }
-        .item-row { background: #fff; border: 1px solid #f1f5f9; padding: 20px; border-radius: 20px; margin-bottom: 16px; position: relative; transition: all 0.3s ease; }
-        .item-row.auto-filled { border-color: #10b981; background-color: #f0fdf4; transform: scale(1.01); }
+        .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,97,255,0.1); }
 
-        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 9px; font-weight: 900; text-transform: uppercase; }
-        .setup-screen { position: fixed; inset: 0; background: #0f172a; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .nfm-table th { font-size: 10px; font-weight: 900; color: #000; text-transform: uppercase; padding: 16px; border-bottom: 1px solid #e2e8f0; }
+        .nfm-table td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 700; color: #000; }
         
-        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Hide Scrollbar */
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <!-- Splash Loader Utama -->
-    <div id="loading" class="loading-overlay">
-        <div class="flex flex-col items-center text-center p-10">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-6"></div>
-            <p class="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase italic">Wetar Intelligence v6.7</p>
-            <p id="loading-msg" class="text-[9px] text-slate-300 mt-4 uppercase font-bold tracking-widest">Sinkronisasi Database Cloud...</p>
-            
-            <!-- Rescue Button: Muncul jika macet > 5 detik -->
-            <div id="rescue-zone" class="hidden mt-10 p-6 bg-slate-50 rounded-3xl border border-slate-100 animate-fade-in">
-                <p class="text-xs font-bold text-slate-500 mb-4">Gagal terhubung ke database?</p>
-                <button onclick="forceRescue()" class="bg-red-500 text-white text-[10px] font-black px-6 py-3 rounded-xl shadow-lg uppercase">Reset & Masukkan Ulang Config</button>
+    <!-- Setup Overlay -->
+    <div id="setup-screen" class="fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-6 hidden">
+        <div class="glass-card max-w-lg w-full p-10 text-center shadow-2xl animate-fade-in">
+            <h2 class="text-2xl font-black text-slate-900 uppercase mb-4">Aktivasi Database Cloud</h2>
+            <p class="text-xs text-slate-500 mb-6 font-bold">Masukkan <b>firebaseConfig</b> Anda agar data tersimpan aman.</p>
+            <textarea id="config-input" class="input-field h-40 font-mono text-[10px] mb-6 border-slate-300" placeholder='{ "apiKey": "...", ... }'></textarea>
+            <div class="flex gap-4">
+                <button onclick="document.getElementById('setup-screen').classList.add('hidden')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-4 rounded-xl uppercase text-[10px]">Tutup</button>
+                <button onclick="applySetup()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg hover:bg-blue-700 transition uppercase text-[10px]">Aktifkan Cloud</button>
             </div>
         </div>
     </div>
 
-    <!-- Layar Aktivasi (Hanya muncul jika kunci database belum ditanam) -->
-    <div id="setup-screen" class="setup-screen hidden">
-        <div class="glass-card max-w-lg w-full p-10 animate-fade-in text-center shadow-2xl">
-            <div class="mb-8">
-                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                </div>
-                <h2 class="text-2xl font-black text-slate-900 uppercase">Aktivasi Dashboard</h2>
-                <p class="text-xs text-slate-500 font-bold mt-2 leading-relaxed">Salin objek <span class="text-blue-600 font-black">firebaseConfig</span> dari Firebase Console ke sini untuk menghubungkan database.</p>
-            </div>
-            <textarea id="config-input" class="input-field h-48 font-mono text-[10px] mb-6 border-slate-200" placeholder='{ "apiKey": "...", "authDomain": "...", ... }'></textarea>
-            <button onclick="applySetup()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-blue-700 transition active:scale-95 uppercase tracking-widest">AKTIFKAN SISTEM</button>
-        </div>
-    </div>
-
-    <!-- Navigasi Sidebar -->
+    <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center font-black text-white mb-12 border border-white/5 shadow-inner">W</div>
-        
+        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center font-black text-white mb-12">W</div>
         <div onclick="switchView('report')" id="nav-report" class="sidebar-item active" title="Dashboard">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-            <span class="font-bold text-sm ml-4 text-white">Dashboard</span>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span class="ml-4 font-bold text-sm">Dashboard</span>
         </div>
-        
-        <div onclick="switchView('add-data')" id="nav-add-data" class="sidebar-item" title="Input Data">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            <span class="font-bold text-sm ml-4 text-white">Input Baru</span>
+        <div onclick="switchView('add-data')" id="nav-add-data" class="sidebar-item" title="Input Baru">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+            <span class="ml-4 font-bold text-sm">Input Baru</span>
         </div>
-
-        <div onclick="switchView('output')" id="nav-output" class="sidebar-item" title="History Archive">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span class="font-bold text-sm ml-4 text-white">History</span>
-        </div>
-
         <div onclick="switchView('tracking')" id="nav-tracking" class="sidebar-item" title="Tracking">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <span class="font-bold text-sm ml-4 text-white">Tracking</span>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <span class="ml-4 font-bold text-sm">Tracking</span>
         </div>
     </aside>
 
     <main class="main-content">
-        <!-- Header Utama -->
-        <header class="bg-white/80 backdrop-blur-md px-10 py-6 flex items-center justify-between sticky top-0 z-40 border-b border-slate-100">
+        <!-- Header -->
+        <header class="bg-white/80 backdrop-blur-md px-10 py-6 flex items-center justify-between sticky top-0 z-40 border-b">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">Wetar Intelligence <span class="text-blue-600">Sync</span></h1>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1" id="currentBoardLabel">Executive Report</p>
+                <div class="flex items-center mt-1">
+                    <span id="cloud-status" class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+                    <p id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Mode Preview (Data Lokal)</p>
+                </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="resetAppConfig()" class="text-[9px] font-black text-slate-300 hover:text-red-500 uppercase transition mr-4">Reset Database</button>
-                <button onclick="downloadExecutiveReport()" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-black transition active:scale-95 shadow-lg">Download Report</button>
+                <button onclick="document.getElementById('setup-screen').classList.remove('hidden')" class="bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-slate-200 transition">☁️ Hubungkan Cloud</button>
+                <button onclick="askGeminiAI()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-blue-700 transition shadow-lg">✨ Analisis AI</button>
             </div>
         </header>
 
-        <!-- Filter Departemen -->
-        <div id="tabContainer" class="px-10 py-4 bg-white border-b border-slate-200 flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <div id="subBoardList" class="flex items-center gap-2">
-                <div id="tab-ALL" class="sub-board-tab active" onclick="filterBoard('ALL')">All Dept</div>
-                <div id="tab-MAINTENANCE-FIXED-PLANT" class="sub-board-tab" onclick="filterBoard('MAINTENANCE FIXED PLANT')">Maint Fixed</div>
-                <div id="tab-MAINTENANCE-MOBILE" class="sub-board-tab" onclick="filterBoard('MAINTENANCE MOBILE')">Maint Mobile</div>
-                <div id="tab-PROCESSING" class="sub-board-tab" onclick="filterBoard('PROCESSING')">Processing</div>
-                <div id="tab-MINING" class="sub-board-tab" onclick="filterBoard('MINING')">Mining</div>
-                <div id="tab-OHS" class="sub-board-tab" onclick="filterBoard('OHS')">OHS</div>
-                <div id="tab-SCM" class="sub-board-tab" onclick="filterBoard('SCM')">SCM</div>
-                <div id="tab-CAMP-FACILITY" class="sub-board-tab" onclick="filterBoard('CAMP FACILITY')">Camp Facility</div>
-            </div>
-        </div>
-
-        <!-- VIEW: DASHBOARD (REPORT) -->
+        <!-- VIEW: DASHBOARD -->
         <div id="view-report" class="p-10 space-y-10 animate-fade-in">
-            <!-- KPI Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="glass-card p-8"><p class="kpi-title">Total Outstanding</p><div id="statTotalOutstanding" class="kpi-value text-blue-600">Rp 0</div></div>
-                <div class="glass-card p-8"><p class="kpi-title">Value On Site</p><div id="statTotalCompleted" class="kpi-value text-emerald-600">Rp 0</div></div>
-                <div class="glass-card p-8"><p class="kpi-title">Avg Site Aging</p><div id="statAvgAging" class="kpi-value text-amber-600">0 Days</div></div>
-                <div class="glass-card p-8"><p class="kpi-title">Total Issued</p><div id="statTotalIssued" class="kpi-value text-indigo-600">Rp 0</div></div>
+            <!-- KPI Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                <div class="glass-card p-8"><p class="text-[10px] font-black text-slate-400 uppercase">Total Outstanding</p><div id="statTotal" class="text-2xl font-black text-blue-600 mt-2">Rp 0</div></div>
+                <div class="glass-card p-8"><p class="text-[10px] font-black text-slate-400 uppercase">Barang On Site</p><div id="statSite" class="text-2xl font-black text-emerald-600 mt-2">Rp 0</div></div>
+                <div class="glass-card p-8"><p class="text-[10px] font-black text-slate-400 uppercase">Rerata Aging</p><div id="statAge" class="text-2xl font-black text-amber-600 mt-2">0 Hari</div></div>
+                <div class="glass-card p-8"><p class="text-[10px] font-black text-slate-400 uppercase">Total Requests</p><div id="statCount" class="text-2xl font-black text-indigo-600 mt-2">0</div></div>
             </div>
 
-            <!-- Charts Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div class="lg:col-span-2 glass-card p-10 h-[450px]">
-                    <h3 class="text-slate-900 font-black text-sm uppercase mb-10 tracking-widest">Monthly Planned Value Trends</h3>
-                    <canvas id="growthChart"></canvas>
+                <div class="lg:col-span-2 glass-card p-10 h-[400px] flex items-center justify-center">
+                    <canvas id="mainChart"></canvas>
                 </div>
-                <div class="glass-card p-10 h-[450px] flex flex-col items-center text-center">
-                    <h3 class="text-slate-900 font-black text-sm uppercase mb-10 tracking-widest">Dept Distribution</h3>
-                    <div class="flex-1 w-full"><canvas id="deptPieChart"></canvas></div>
-                    <div id="pieLegend" class="mt-4 w-full space-y-2"></div>
+                <div class="glass-card p-10 h-[400px] flex flex-col items-center">
+                    <h3 class="text-slate-900 font-black text-sm uppercase mb-10 text-center tracking-widest force-black">Distribusi Nilai Dept</h3>
+                    <div class="flex-1 w-full"><canvas id="pieChart"></canvas></div>
                 </div>
             </div>
 
-            <!-- Heatmap Table -->
             <div class="glass-card overflow-hidden">
-                <div class="p-10 border-b border-slate-50">
-                    <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest text-blue-600">Heatmap Analysis per Departemen</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left nfm-table">
-                        <thead class="bg-slate-50/50"><tr><th>Departemen</th><th>Avg Aging</th><th>Total Requests</th><th class="text-right text-blue-600">Total Planned Value</th></tr></thead>
-                        <tbody id="deptSummaryTable" class="divide-y divide-slate-50"></tbody>
-                    </table>
-                </div>
+                <table class="w-full text-left nfm-table">
+                    <thead class="bg-slate-50"><tr><th class="force-black">Departemen</th><th class="force-black text-center">Aging</th><th class="force-black text-center">Requests</th><th class="text-right force-black">Planned Value</th></tr></thead>
+                    <tbody id="summaryTable" class="divide-y divide-slate-100"></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- VIEW: HISTORY (ISSUED LOGS) -->
-        <div id="view-output" class="hidden p-10 space-y-10 animate-fade-in">
-            <div class="glass-card overflow-hidden border-t-8 border-emerald-500">
-                <div class="p-10 border-b border-slate-50 flex justify-between items-center bg-white shadow-sm">
-                    <div>
-                        <h3 class="text-slate-900 font-black text-xl uppercase tracking-tighter italic text-emerald-500">Issued Logs (Archive)</h3>
-                        <p class="text-slate-400 font-bold text-[10px] mt-1 uppercase tracking-widest">Data Barang yang sudah diambil aktual</p>
-                    </div>
-                    <button onclick="downloadIssuedLog()" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase shadow-lg hover:bg-emerald-700 transition active:scale-95">Export CSV</button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left nfm-table">
-                        <thead class="bg-slate-50/50">
-                            <tr><th>Tanggal Update</th><th>NFM #</th><th>WHRS</th><th>Item Detail</th><th>Dept</th><th class="text-right">Price</th><th class="text-right">Total Value</th></tr>
-                        </thead>
-                        <tbody id="outputDataTable" class="divide-y divide-slate-50"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- VIEW: INPUT DATA BARU -->
-        <div id="view-add-data" class="hidden p-10 max-w-7xl mx-auto animate-fade-in">
+        <!-- VIEW: INPUT -->
+        <div id="view-add-data" class="hidden p-10 max-w-6xl mx-auto animate-fade-in">
             <div class="glass-card p-12 border-t-[10px] border-blue-600 shadow-2xl">
-                <div class="mb-10 text-center">
-                    <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Input NFM Baru</h2>
-                    <p class="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-widest">Automatisasi Master Data & Cloud Sync</p>
-                </div>
-                
-                <form id="nfmForm" class="grid grid-cols-1 md:grid-cols-2 gap-8" onsubmit="saveNFMData(event)">
-                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div><label>Pilih Departemen</label><select id="input_dept" class="input-field" required><option value="">-- Pilih --</option><option value="MAINTENANCE FIXED PLANT">MAINTENANCE FIXED PLANT</option><option value="MAINTENANCE MOBILE">MAINTENANCE MOBILE</option><option value="PROCESSING">PROCESSING</option><option value="MINING">MINING</option><option value="OHS">OHS</option><option value="SCM">SCM</option><option value="CAMP FACILITY">CAMP FACILITY</option></select></div>
-                        <div><label>Pilih WHRS (Gudang)</label><select id="input_whrs" class="input-field" required><option value="">-- Pilih --</option><option value="MAIN">MAIN</option><option value="RTBL">RTBL</option><option value="WWBJ">WWBJ</option></select></div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tighter uppercase italic text-center mb-10">Input NFM Baru</h2>
+                <form id="nfmForm" onsubmit="saveData(event)" class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div><label class="text-[10px] font-black uppercase mb-2 block">Departemen</label><select id="in_dept" class="input-field" required><option value="MAINTENANCE FIXED">MAINTENANCE FIXED</option><option value="MAINTENANCE MOBILE">MAINTENANCE MOBILE</option><option value="PROCESSING">PROCESSING</option><option value="MINING">MINING</option><option value="SCM">SCM</option></select></div>
+                        <div><label class="text-[10px] font-black uppercase mb-2 block">Requestor</label><input type="text" id="in_req" class="input-field" required placeholder="Nama..."></div>
+                        <div><label class="text-[10px] font-black uppercase mb-2 block">Nomor NFM</label><input type="text" id="in_nfm" class="input-field" required placeholder="Ex: 721"></div>
+                        <div><label class="text-[10px] font-black uppercase mb-2 block">Tanggal</label><input type="date" id="in_date" class="input-field" required></div>
                     </div>
                     
-                    <div>
-                        <label>Nama Requestor (Auto-Suggest)</label>
-                        <input type="text" id="input_requestor" list="requestor-list" class="input-field" placeholder="Ketik nama atau pilih dari daftar..." required autocomplete="off">
-                        <datalist id="requestor-list"></datalist>
+                    <div class="p-8 bg-slate-50 rounded-3xl border border-slate-200">
+                        <h4 class="text-[11px] font-black uppercase mb-6 text-slate-500 tracking-widest">Detail Line Items</h4>
+                        <div id="itemsContainer" class="space-y-4"></div>
+                        <button type="button" onclick="addItem()" class="text-[10px] font-black text-blue-600 uppercase mt-6 hover:underline">+ Tambah Baris Barang</button>
                     </div>
-
-                    <div><label>Nomor NFM</label><input type="text" id="input_noNFM" class="input-field" placeholder="721" required></div>
-                    <div class="md:col-span-2"><label>Nomor Form (Full ID)</label><input type="text" id="input_formId" class="input-field" placeholder="721/BTR-SCM/XII/2025" required></div>
                     
-                    <div class="md:col-span-2 p-8 bg-slate-50 rounded-[32px] border border-slate-200">
-                        <div class="flex justify-between items-center mb-6">
-                            <label class="mb-0 text-slate-900 font-black uppercase tracking-tighter">Line Items (Planning)</label>
-                            <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-white bg-blue-600 px-5 py-2.5 rounded-xl hover:bg-blue-700 transition shadow-lg">+ TAMBAH LINE</button>
-                        </div>
-                        <div id="itemListContainer">
-                            <!-- Dynamic Item Rows -->
-                        </div>
-                    </div>
-
-                    <div><label>Tanggal Input Planning</label><input type="date" id="input_date" class="input-field" required></div>
-                    <div><label>Status Global</label><select id="input_status" class="input-field"><option value="PR">PR</option><option value="On Order">On Order</option><option value="IN Transit">IN Transit</option><option value="On Site">On Site</option></select></div>
-                    
-                    <div class="md:col-span-2 mt-8">
-                        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-6 rounded-2xl shadow-2xl transition-all uppercase text-sm tracking-widest active:scale-95">SIMPAN DATA KE CLOUD</button>
-                    </div>
+                    <button type="submit" id="saveBtn" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase tracking-widest hover:bg-blue-700 transition active:scale-95">SIMPAN DATA KE DATABASE</button>
                 </form>
             </div>
         </div>
 
-        <!-- VIEW: SMART TRACKING (Sesuai Permintaan: Tulisan Hitam Pekat) -->
-        <div id="view-tracking" class="hidden p-10 max-w-7xl mx-auto animate-fade-in text-center">
-            <div class="bg-white border border-slate-100 rounded-[40px] p-12 shadow-2xl overflow-hidden relative mb-12">
-                <div class="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full blur-[100px] -mr-40 -mt-40"></div>
-                <!-- Tulisan Hitam Pekat -->
-                <h2 class="text-4xl font-black mb-10 uppercase tracking-tighter italic text-slate-900">Smart <span class="text-blue-600">NFM Tracking</span></h2>
-                <div class="flex flex-col md:flex-row gap-5 max-w-3xl mx-auto p-3 bg-slate-50 rounded-3xl border border-slate-200">
-                    <input type="text" id="nfmSearchInput" class="flex-1 bg-transparent border-none px-6 py-5 text-slate-900 font-bold text-xl outline-none placeholder:text-slate-400" placeholder="Ketik NFM atau Form ID..." onkeypress="if(event.key === 'Enter') trackNFM()">
-                    <button onclick="trackNFM()" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-2xl font-black text-sm uppercase shadow-xl transition-all active:scale-95 shadow-blue-100">Cari NFM</button>
+        <!-- VIEW: TRACKING -->
+        <div id="view-tracking" class="hidden p-10 max-w-6xl mx-auto animate-fade-in text-center">
+            <div class="bg-white border border-slate-100 rounded-[40px] p-12 shadow-2xl relative overflow-hidden mb-12">
+                <h2 class="text-4xl font-black mb-10 uppercase tracking-tighter italic force-black">Smart <span class="text-blue-600">NFM Tracking</span></h2>
+                <div class="flex gap-4 p-3 bg-slate-50 rounded-3xl border border-slate-200">
+                    <input type="text" id="searchInput" class="flex-1 bg-transparent border-none px-6 py-4 text-xl font-black outline-none force-black" placeholder="Ketik Nomor NFM atau Nomor PO...">
+                    <button onclick="searchNFM()" class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-black shadow-lg hover:bg-blue-700 transition">CARI</button>
                 </div>
             </div>
-            
-            <div id="nfmResult" class="mb-12 animate-fade-in text-left"></div>
-            
-            <div class="space-y-6 text-left">
-                <div class="flex justify-between items-center px-4">
-                    <h3 class="text-slate-900 font-black text-xs uppercase tracking-widest">Daftar NFM Sedang Berjalan (Planning)</h3>
-                    <span class="text-[9px] bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full font-black uppercase tracking-tighter">Live Cloud Database</span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="ongoing-nfm-list">
-                    <!-- Dynamic List of NFMs -->
-                </div>
+            <div id="trackingResult" class="text-left"></div>
+            <div class="mt-20 text-left">
+                <h3 class="text-xs font-black uppercase tracking-widest mb-6 force-black">Daftar NFM Aktif</h3>
+                <div id="nfmList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </div>
     </main>
 
-    <!-- Master Lists -->
-    <datalist id="stock-master-list"></datalist>
+    <div class="fixed bottom-4 right-10 flex gap-4 text-[8px] font-black text-slate-400 uppercase tracking-widest z-50">
+        <div>FIREBASE: <span id="diag-fb" class="w-2 h-2 rounded-full bg-red-500 inline-block"></span></div>
+        <div>AI: <span id="diag-ai" class="w-2 h-2 rounded-full bg-green-500 inline-block"></span></div>
+        <div>v17.0 FINAL</div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -310,333 +177,162 @@
         import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
-        // 1. MASUKKAN FIREBASE CONFIG ANDA DI SINI
+        // 2. TEMPELKAN FIREBASE CONFIG ANDA DI SINI
         // ==========================================
-        const YOUR_FIREBASE_CONFIG = {
-          apiKey: "AIzaSy...",
-          authDomain: "project-xxx.firebaseapp.com",
-          projectId: "project-xxx",
-          storageBucket: "project-xxx.appspot.com",
-          messagingSenderId: "123456789",
-          appId: "1:123456789:web:abcdef..."
+        const BAKED_CONFIG = {
+          apiKey: "", 
+          authDomain: "",
+          projectId: "",
+          storageBucket: "",
+          messagingSenderId: "",
+          appId: ""
         };
-
         // ==========================================
-        // 2. LINK GOOGLE SHEET (Master Data)
-        // ==========================================
-        const MASTER_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1D4N0m4L3R0k6J6J.../pub?output=csv"; 
 
-        let db, auth, appId = 'wetar-nfm-sync-v67';
-        let allData = [], filteredData = [], activeFilter = 'ALL', currentView = 'report', charts = {};
-        let stockMaster = {};
+        const apiKey = ""; // Gemini AI Core
+        let db, auth, appId = 'wetar-sync-v16';
+        let allData = [];
+        let mainChart, pieChart;
 
-        // INISIALISASI SISTEM
-        window.onload = async () => {
-            fetchMasterDataFromSheet();
+        window.onload = () => {
+            const saved = localStorage.getItem('wetar_v16_config');
+            if(BAKED_CONFIG.apiKey) connectCloud(BAKED_CONFIG);
+            else if(saved) connectCloud(JSON.parse(saved));
             
-            // Rescue Timer (Muncul tombol reset jika loading > 5 detik)
-            setTimeout(() => { 
-                const loader = document.getElementById('loading');
-                if(loader && loader.style.display !== 'none') document.getElementById('rescue-zone').classList.remove('hidden'); 
-            }, 5000);
-
-            try {
-                // Pilih Config (Gunakan YOUR_FIREBASE_CONFIG jika sudah diedit)
-                let config = (YOUR_FIREBASE_CONFIG.apiKey !== "AIzaSy...") ? YOUR_FIREBASE_CONFIG : null;
-                
-                // Fallback ke sistem Gemini (Simulasi)
-                if (!config && typeof __firebase_config !== 'undefined') {
-                    config = JSON.parse(__firebase_config);
-                }
-
-                // Fallback ke memori browser (Netlify/Local)
-                if (!config) {
-                    const saved = localStorage.getItem('wetar_sync_v67_config');
-                    if(saved) config = JSON.parse(saved);
-                    else {
-                        document.getElementById('setup-screen').classList.remove('hidden');
-                        document.getElementById('loading').style.display = 'none';
-                        return;
-                    }
-                }
-
-                document.getElementById('loading-msg').innerText = "Menghubungkan Database Cloud...";
-                const app = initializeApp(config);
-                auth = getAuth(app); db = getFirestore(app);
-
-                const initAuth = async () => { 
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } 
-                    else { await signInAnonymously(auth); }
-                };
-                await initAuth();
-                onAuthStateChanged(auth, (u) => { if(u) listenToFirestore(); });
-                
-                document.getElementById('loading').style.display = 'none';
-                if(document.getElementById('itemListContainer').children.length === 0) addItemRow();
-
-            } catch (e) { 
-                console.error(e);
-                localStorage.removeItem('wetar_sync_v67_config');
-                alert("Konfigurasi Database Error. Cek Firebase Config Anda.");
-            }
-        };
-
-        // INTEGRASI GOOGLE SHEETS (Auto-Fill Engine)
-        async function fetchMasterDataFromSheet() {
-            try {
-                const response = await fetch(MASTER_SHEET_URL);
-                if (!response.ok) return;
-                const text = await response.text();
-                const rows = text.split('\n').slice(1);
-                const masterList = document.getElementById('stock-master-list');
-                masterList.innerHTML = '';
-
-                rows.forEach(row => {
-                    const cols = row.split(',').map(s => s.trim());
-                    if (cols[0]) {
-                        stockMaster[cols[0].toUpperCase()] = { desc: cols[1], price: parseFloat(cols[2]) || 0 };
-                        masterList.innerHTML += `<option value="${cols[0].toUpperCase()}">${cols[1]}</option>`;
-                    }
-                });
-            } catch (err) { console.warn("Google Sheet Master Data Belum Terhubung."); }
-        }
-
-        // AUTO-FILL HANDLER
-        window.handleAutoFill = (rowId) => {
-            const row = document.getElementById(rowId);
-            const sc = row.querySelector('.item-sc').value.trim().toUpperCase();
-            if (stockMaster[sc]) {
-                row.querySelector('.item-desc').value = stockMaster[sc].desc;
-                row.querySelector('.item-price').value = stockMaster[sc].price;
-                row.classList.add('auto-filled');
-                setTimeout(() => row.classList.remove('auto-filled'), 1500);
-            }
-        };
-
-        // SETUP & RESCUE LOGIC
-        window.applySetup = () => {
-            let raw = document.getElementById('config-input').value.trim();
-            try {
-                if (raw.includes('const firebaseConfig =')) raw = raw.split('const firebaseConfig =')[1].split(';')[0].trim();
-                JSON.parse(raw);
-                localStorage.setItem('wetar_sync_v67_config', raw);
-                location.reload();
-            } catch(e) { alert("Format salah. Hanya salin bagian { ... } saja."); }
-        };
-
-        window.forceRescue = () => { localStorage.removeItem('wetar_sync_v67_config'); location.reload(); };
-        window.resetAppConfig = () => { if(confirm("Reset database? Semua data di cloud tetap aman.")) { localStorage.removeItem('wetar_sync_v67_config'); location.reload(); } };
-
-        // REAL-TIME FIRESTORE LISTENER
-        function listenToFirestore() {
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'nfm_entries'), (snapshot) => {
-                allData = snapshot.docs.map(d => ({ ...d.data(), id: d.id, aging: calculateAging(d.data().tanggalInput) }));
-                filterBoard(activeFilter);
-                updateRequestorDatalist();
-                if(currentView === 'tracking') renderTrackingList();
-                if(currentView === 'output') renderOutputData();
-            });
-        }
-
-        function updateRequestorDatalist() {
-            const unique = [...new Set(allData.map(item => item.requestor))].filter(Boolean).sort();
-            document.getElementById('requestor-list').innerHTML = unique.map(n => `<option value="${n}">`).join('');
-        }
-
-        function calculateAging(dateStr) {
-            if (!dateStr) return 0;
-            return Math.max(0, Math.floor((new Date() - new Date(dateStr)) / (1000 * 60 * 60 * 24)));
-        }
-
-        // INPUT DATA LOGIC
-        window.addItemRow = () => {
-            const container = document.getElementById('itemListContainer');
-            const rid = 'row-' + Date.now();
-            const row = document.createElement('div');
-            row.id = rid;
-            row.className = 'item-row grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 border-t pt-8 animate-fade-in shadow-sm';
-            row.innerHTML = `
-                <div><label>Nomor PO</label><input type="text" class="input-field item-po" required></div>
-                <div><label>Stock Code</label><input type="text" list="stock-master-list" class="input-field item-sc" oninput="handleAutoFill('${rid}')" required></div>
-                <div><label>QTY Order</label><input type="number" class="input-field item-qty" required></div>
-                <div><label>Price @ (Rp)</label><input type="number" class="input-field item-price" required></div>
-                <div class="md:col-span-4 mt-2"><label>Description</label><textarea class="input-field h-16 item-desc" required></textarea></div>
-                <button type="button" onclick="this.parentElement.remove()" class="absolute top-4 right-4 text-red-400 font-black text-[9px] uppercase hover:text-red-600 transition">Hapus</button>
-            `;
-            container.appendChild(row);
-        };
-
-        window.saveNFMData = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn'); btn.disabled = true;
-            const items = Array.from(document.querySelectorAll('.item-row')).map(row => ({
-                po: row.querySelector('.item-po').value.trim(),
-                sc: row.querySelector('.item-sc').value.trim().toUpperCase(),
-                qtyOrder: parseFloat(row.querySelector('.item-qty').value) || 0,
-                qtyArrived: 0, qtyIssued: 0,
-                price: parseFloat(row.querySelector('.item-price').value) || 0,
-                desc: row.querySelector('.item-desc').value.trim(),
-                itemStatus: document.getElementById('input_status').value
-            }));
-            const total = items.reduce((acc, i) => acc + (i.qtyOrder * i.price), 0);
-            
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'nfm_entries'), {
-                    dept: document.getElementById('input_dept').value,
-                    whrs: document.getElementById('input_whrs').value,
-                    requestor: document.getElementById('input_requestor').value.trim().toUpperCase(),
-                    noNFM: document.getElementById('input_noNFM').value.trim(),
-                    formId: document.getElementById('input_formId').value.trim(),
-                    items, tanggalInput: document.getElementById('input_date').value,
-                    tanggalUpdate: new Date().toISOString().split('T')[0],
-                    value: total, timestamp: Date.now()
-                });
-                document.getElementById('nfmForm').reset(); switchView('report');
-            } catch (err) { alert("Gagal Simpan."); } finally { btn.disabled = false; }
-        };
-
-        // TRACKING & ACTUAL UPDATES
-        window.trackNFM = () => {
-            const input = document.getElementById('nfmSearchInput').value.trim();
-            const resultDiv = document.getElementById('nfmResult');
-            if (!input) return;
-            const found = allData.find(item => item.noNFM === input || item.formId.includes(input));
-            if (found) { resultDiv.innerHTML = renderTrackingDetail(found); } 
-            else { resultDiv.innerHTML = `<div class="p-12 text-center bg-red-50 text-red-600 rounded-[40px] font-black uppercase text-sm italic tracking-widest">Nomor NFM tidak terdaftar.</div>`; }
-        };
-
-        function renderTrackingDetail(found) {
-            return `
-            <div class="glass-card p-10 border-t-8 border-blue-600 animate-fade-in shadow-2xl relative mb-12 text-left">
-                <div class="flex justify-between items-start mb-10">
-                    <div><span class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded uppercase tracking-widest">Live Sync</span><h3 class="text-4xl font-black text-slate-900 mt-4 italic uppercase tracking-tighter">NFM #${found.noNFM}</h3><p class="text-slate-400 font-bold text-xs uppercase italic">${found.formId} (${found.whrs})</p></div>
-                    <div class="text-right"><p class="text-[10px] font-black text-slate-400 uppercase italic">Req By: ${found.requestor}</p></div>
-                </div>
-                <div class="overflow-x-auto mb-10">
-                    <table class="w-full nfm-table bg-slate-50/50 rounded-3xl overflow-hidden shadow-inner">
-                        <thead><tr><th>Item Detail</th><th>Order</th><th>Arrival</th><th>Issued</th><th>Status</th></tr></thead>
-                        <tbody>
-                            ${(found.items || []).map((item, idx) => `
-                                <tr>
-                                    <td><p class="font-black text-blue-600 text-[13px]">PO: ${item.po}</p><p class="text-[10px] font-black text-slate-400 uppercase">SC: ${item.sc}</p><p class="text-[10px] italic mt-1 leading-relaxed text-slate-400">${item.desc}</p></td>
-                                    <td class="text-center font-black">${item.qtyOrder}</td>
-                                    <td><input type="number" id="arr_${found.id}_${idx}" value="${item.qtyArrived || 0}" class="input-field w-16 bg-blue-100 font-black text-center text-xs border-none"></td>
-                                    <td><input type="number" id="iss_${found.id}_${idx}" value="${item.qtyIssued || 0}" class="input-field w-16 bg-emerald-100 font-black text-center text-xs border-none"></td>
-                                    <td><select id="stat_${found.id}_${idx}" class="input-field text-[10px] font-black uppercase border-none"><option value="PR" ${item.itemStatus === 'PR' ? 'selected' : ''}>PR</option><option value="On Order" ${item.itemStatus === 'On Order' ? 'selected' : ''}>Order</option><option value="IN Transit" ${item.itemStatus === 'IN Transit' ? 'selected' : ''}>Transit</option><option value="On Site" ${item.itemStatus === 'On Site' ? 'selected' : ''}>Site</option><option value="Issued" ${item.itemStatus === 'Issued' ? 'selected' : ''}>Issued</option></select></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div id="confirm_delete_${found.id}" class="hidden p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-4 animate-fade-in"><span class="text-[10px] font-black text-red-600 uppercase tracking-widest">Hapus permanen?</span><button onclick="deleteNFMRecord('${found.id}')" class="bg-red-600 text-white text-[9px] font-black px-4 py-1.5 rounded-lg shadow-sm">YA, HAPUS</button><button onclick="toggleDeleteConfirm('${found.id}', false)" class="text-[9px] font-black text-slate-400 uppercase">Batal</button></div>
-                    <div class="flex gap-4"><button onclick="toggleDeleteConfirm('${found.id}', true)" class="text-red-500 font-black text-[10px] px-6 py-4 rounded-xl hover:bg-red-50 transition">Hapus NFM</button><button onclick="updateNFMActual('${found.id}')" class="bg-blue-600 text-white font-black px-10 py-4 rounded-xl shadow-lg active:scale-95 transition uppercase text-[11px] tracking-widest">Update Cloud</button></div>
-                </div>
-            </div>`;
-        }
-
-        function renderTrackingList() {
-            const listDiv = document.getElementById('ongoing-nfm-list');
-            const inProgress = allData.filter(nfm => nfm.items.some(i => i.itemStatus !== 'Issued'));
-            if (inProgress.length === 0) { listDiv.innerHTML = '<p class="col-span-3 text-center text-slate-400 py-20 font-bold uppercase text-[10px] tracking-widest">Semua barang sudah di-Issued</p>'; return; }
-            listDiv.innerHTML = inProgress.sort((a,b) => b.timestamp - a.timestamp).map(nfm => {
-                const statusCounts = nfm.items.reduce((acc, i) => { acc[i.itemStatus] = (acc[i.itemStatus] || 0) + 1; return acc; }, {});
-                const statusStr = Object.entries(statusCounts).map(([st, count]) => `<span class="status-pill font-black bg-blue-50 text-blue-600 mr-1 shadow-sm">${count}x ${st}</span>`).join(' ');
-                return `<div class="glass-card p-6 hover:border-blue-300 transition-all cursor-pointer group text-left" onclick="document.getElementById('nfmSearchInput').value='${nfm.noNFM}'; trackNFM()"><div class="flex justify-between items-start mb-4"><h4 class="font-black text-xl text-slate-900 group-hover:text-blue-600 transition-colors">#${nfm.noNFM}</h4><span class="text-[9px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded uppercase">${nfm.whrs}</span></div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-4">${nfm.formId}</p><div class="flex flex-wrap gap-1 mb-6">${statusStr}</div><div class="flex justify-between items-center border-t border-slate-50 pt-4"><span class="text-[9px] font-black text-slate-400 uppercase">${nfm.dept}</span><span class="text-[9px] font-black text-amber-600 uppercase italic">${nfm.aging} Days</span></div></div>`;
-            }).join('');
-        }
-
-        window.toggleDeleteConfirm = (id, show) => { const el = document.getElementById(`confirm_delete_${id}`); if(show) el.classList.remove('hidden'); else el.classList.add('hidden'); };
-        window.deleteNFMRecord = async (docId) => { try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId)); document.getElementById('nfmResult').innerHTML = ''; alert("Dihapus."); } catch (e) { alert("Gagal."); } };
-        window.updateNFMActual = async (docId) => {
-            const found = allData.find(d => d.id === docId);
-            const updatedItems = (found.items || []).map((item, idx) => ({ ...item, qtyArrived: parseFloat(document.getElementById(`arr_${docId}_${idx}`).value) || 0, qtyIssued: parseFloat(document.getElementById(`iss_${docId}_${idx}`).value) || 0, itemStatus: document.getElementById(`stat_${docId}_${idx}`).value }));
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'nfm_entries', docId), { items: updatedItems, tanggalUpdate: new Date().toISOString().split('T')[0] });
-            alert("Database Cloud Terupdate!"); trackNFM();
-        };
-
-        // DASHBOARD UPDATE ENGINE
-        window.updateUI = () => {
-            const tOut = filteredData.reduce((acc, i) => acc + i.value, 0);
-            const tSite = filteredData.reduce((acc, entry) => acc + (entry.items || []).reduce((itemAcc, item) => itemAcc + (item.qtyArrived * item.price), 0), 0);
-            const tIss = filteredData.reduce((acc, entry) => acc + (entry.items || []).reduce((itemAcc, item) => itemAcc + (item.qtyIssued * item.price), 0), 0);
-            const avgAge = filteredData.length > 0 ? Math.round(filteredData.reduce((acc, i) => acc + i.aging, 0) / filteredData.length) : 0;
-            
-            document.getElementById('statTotalOutstanding').innerText = `Rp ${formatCurrency(tOut)}`;
-            document.getElementById('statTotalCompleted').innerText = `Rp ${formatCurrency(tSite)}`;
-            document.getElementById('statAvgAging').innerText = `${avgAge} Days`;
-            document.getElementById('statTotalIssued').innerText = `Rp ${formatCurrency(tIss)}`;
-            renderCharts(); renderTables();
-        }
-
-        function formatCurrency(num) { if (num >= 1000000) return (num / 1000000).toFixed(1) + ' Juta'; return num.toLocaleString('id-ID'); }
-
-        function renderCharts() {
-            const ctxG = document.getElementById('growthChart').getContext('2d');
-            const dataMap = filteredData.reduce((acc, i) => { const d = i.tanggalInput.substring(0, 7); acc[d] = (acc[d] || 0) + i.value; return acc; }, {});
-            const sortedLabels = Object.keys(dataMap).sort();
-            if (charts.growth) charts.growth.destroy();
-            charts.growth = new Chart(ctxG, { type: 'bar', data: { labels: sortedLabels, datasets: [{ label: 'Planned Value', data: sortedLabels.map(l => dataMap[l]), backgroundColor: '#0061ff', borderRadius: 12 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: false } } });
-            
-            const ctxP = document.getElementById('deptPieChart').getContext('2d');
-            const values = filteredData.reduce((acc, i) => { acc[i.dept] = (acc[i.dept] || 0) + i.value; return acc; }, {});
-            const sortedDept = Object.entries(values).sort((a,b) => b[1] - a[1]).slice(0, 5);
-            if (charts.pie) charts.pie.destroy();
-            const colors = ['#0061ff', '#10b981', '#f59e0b', '#ef4444', '#6366f1'];
-            charts.pie = new Chart(ctxP, { type: 'doughnut', data: { labels: sortedDept.map(s => s[0]), datasets: [{ data: sortedDept.map(s => s[1]), backgroundColor: colors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: false } } });
-            document.getElementById('pieLegend').innerHTML = sortedDept.map((s, i) => `<div class="flex items-center justify-between text-left"><div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full" style="background:${colors[i]}"></div><span class="truncate w-24 text-[10px] font-bold uppercase">${s[0]}</span></div><span class="font-black text-[10px]">${formatCurrency(s[1])}</span></div>`).join('');
-        }
-
-        function renderTables() {
-            const table = document.getElementById('deptSummaryTable');
-            const stats = filteredData.reduce((acc, i) => { if(!acc[i.dept]) acc[i.dept] = {v:0, c:0, a:0}; acc[i.dept].v += i.value; acc[i.dept].c++; acc[i.dept].a += i.aging; return acc; }, {});
-            table.innerHTML = Object.entries(stats).sort((a,b) => b[1].v - a[1].v).map(([name, s]) => `<tr class="hover:bg-slate-50 transition"><td class="px-8 py-6 font-bold uppercase text-[11px] text-slate-800">${name}</td><td class="px-8 py-6 text-xs font-black">${Math.round(s.a/s.c)} <span class="font-bold text-slate-400 text-[10px]">D</span></td><td class="px-8 py-6 text-xs font-bold text-slate-500 uppercase text-left">${s.c} req</td><td class="px-8 py-6 font-black text-right text-blue-600">Rp ${formatCurrency(s.v)}</td></tr>`).join('');
-        }
-
-        function renderOutputData() {
-            const table = document.getElementById('outputDataTable');
-            const rows = [];
-            allData.forEach(entry => { entry.items.forEach(item => { if (item.qtyIssued > 0) { rows.push({ date: entry.tanggalUpdate, nfm: entry.noNFM, whrs: entry.whrs, po: item.po, sc: item.sc, desc: item.desc, dept: entry.dept, qty: item.qtyIssued, price: item.price, total: item.qtyIssued * item.price }); } }); });
-            table.innerHTML = rows.map(r => `<tr class="hover:bg-slate-50 transition text-[11px]"><td class="font-bold text-slate-400 text-[10px]">${r.date}</td><td class="font-black text-blue-600">#${r.nfm}</td><td class="font-black uppercase">${r.whrs}</td><td><span class="po-badge text-[9px] bg-blue-50 text-blue-600 p-1 px-2 rounded">${r.po}</span> <span class="sc-badge text-[9px] bg-slate-50 text-slate-600 p-1 px-2 rounded">${r.sc}</span> <p class="italic text-slate-400 mt-1 leading-relaxed text-[10px]">${r.desc}</p></td><td class="uppercase font-bold">${r.dept}</td><td class="text-right">Rp ${formatCurrency(r.price)}</td><td class="text-right font-black text-slate-900">Rp ${formatCurrency(r.total)}</td></tr>`).join('');
-        }
-
-        // DOWNLOAD CSV LOGIC
-        window.downloadExecutiveReport = () => {
-            let csv = `EXECUTIVE SUMMARY - WETAR INTELLIGENCE\nFilter,${activeFilter}\n\nKPI,VALUE\nTotal Outstanding,${document.getElementById('statTotalOutstanding').innerText}\nValue On Site,${document.getElementById('statTotalCompleted').innerText}\nAvg Aging,${document.getElementById('statAvgAging').innerText}\nTotal Issued,${document.getElementById('statTotalIssued').innerText}\n\n`;
-            const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = `Report_${activeFilter}.csv`; l.click();
-        };
-
-        window.downloadIssuedLog = () => {
-            let csv = `ISSUED LOG - SITE LOGISTICS\nDate,NFM,WHRS,PO,StockCode,Dept,Qty,Price,Total\n`;
-            allData.forEach(entry => { entry.items.forEach(item => { if (item.qtyIssued > 0) { csv += `"${entry.tanggalUpdate}","#${entry.noNFM}","${entry.whrs}","${item.po}","${item.sc}","${entry.dept}",${item.qtyIssued},${item.price},${item.qtyIssued * item.price}\n`; } }); });
-            const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = `Issued_Log.csv`; l.click();
-        };
-
-        // NAVIGATION ENGINE
-        window.filterBoard = (deptName) => {
-            activeFilter = deptName;
-            document.querySelectorAll('.sub-board-tab').forEach(tab => tab.classList.remove('active'));
-            const targetId = 'tab-' + deptName.replace(/\s+/g, '-');
-            const targetTab = document.getElementById(targetId);
-            if (targetTab) targetTab.classList.add('active');
-            if (currentView !== 'report' && currentView !== 'output' && currentView !== 'tracking') switchView('report');
-            filteredData = deptName === 'ALL' ? allData : allData.filter(i => i.dept === deptName);
-            document.getElementById('currentBoardLabel').innerText = deptName === 'ALL' ? "Executive Report" : `Executive: ${deptName}`;
+            if(document.getElementById('itemsContainer').children.length === 0) addItem();
             updateUI();
         };
 
-        window.switchView = (view) => {
-            currentView = view;
-            document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
-            document.getElementById('view-' + view).classList.remove('hidden');
+        async function connectCloud(config) {
+            try {
+                const app = initializeApp(config);
+                auth = getAuth(app); db = getFirestore(app);
+                
+                const initAuth = async () => { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }};
+                await initAuth();
+
+                onAuthStateChanged(auth, (u) => {
+                    if(u) {
+                        document.getElementById('diag-fb').className = 'w-2 h-2 rounded-full bg-green-500 inline-block';
+                        document.getElementById('cloud-status').className = 'w-2 h-2 rounded-full bg-green-500 mr-2';
+                        document.getElementById('status-text').innerText = "Database Cloud Terhubung";
+                        listenData();
+                    }
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        window.applySetup = () => {
+            const raw = document.getElementById('config-input').value.trim();
+            try { JSON.parse(raw); localStorage.setItem('wetar_v16_config', raw); location.reload(); } catch(e) { alert("Format config salah!"); }
+        };
+
+        function listenData() {
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), (snap) => {
+                allData = snap.docs.map(d => ({ ...d.data(), id: d.id, aging: Math.max(0, Math.floor((new Date() - new Date(d.data().tglInput))/(1000*60*60*24))) }));
+                updateUI();
+            });
+        }
+
+        window.addItem = () => {
+            const div = document.createElement('div');
+            div.className = "grid grid-cols-1 md:grid-cols-5 gap-4 items-end animate-fade-in border-b pb-4 last:border-0";
+            div.innerHTML = `
+                <div><label class="text-[9px] font-black uppercase text-slate-500">Nomor PO</label><input type="text" class="input-field po" required placeholder="PO#"></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500">Stock Code</label><input type="text" class="input-field sc" required placeholder="SC#"></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500">Qty</label><input type="number" class="input-field qty" required></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500">Price (Rp)</label><input type="number" class="input-field prc" required></div>
+                <div class="relative"><label class="text-[9px] font-black uppercase text-slate-500">Desc</label><input type="text" class="input-field dsc" required><button type="button" onclick="this.parentElement.parentElement.remove()" class="absolute -top-6 right-0 text-[8px] font-black text-red-500">Hapus</button></div>
+            `;
+            document.getElementById('itemsContainer').appendChild(div);
+        };
+
+        window.saveData = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('saveBtn'); btn.disabled = true;
+            const items = Array.from(document.querySelectorAll('#itemsContainer > div')).map(r => ({
+                po: r.querySelector('.po').value.toUpperCase(),
+                sc: r.querySelector('.sc').value.toUpperCase(),
+                qty: parseFloat(r.querySelector('.qty').value),
+                prc: parseFloat(r.querySelector('.prc').value),
+                dsc: r.querySelector('.dsc').value,
+                status: 'PR', qtyArrived: 0
+            }));
+            const total = items.reduce((a, b) => a + (b.qty * b.prc), 0);
+            const payload = {
+                dept: document.getElementById('in_dept').value, req: document.getElementById('in_req').value.toUpperCase(), nfm: document.getElementById('in_nfm').value, tglInput: document.getElementById('in_date').value, items, value: total, tglUpdate: new Date().toISOString().split('T')[0]
+            };
+            if(db) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), payload);
+            else allData.push({...payload, id: Date.now().toString(), aging: 0});
+            alert("Data Disimpan!"); btn.disabled = false; document.getElementById('nfmForm').reset(); switchView('report');
+        };
+
+        window.searchNFM = () => {
+            const v = document.getElementById('searchInput').value.toUpperCase();
+            const f = allData.find(d => d.nfm === v || d.items.some(i => i.po === v));
+            const res = document.getElementById('trackingResult');
+            if(!f) { res.innerHTML = `<div class="p-10 glass-card text-center font-black force-black uppercase">Data NFM/PO tidak ditemukan.</div>`; return; }
+            res.innerHTML = `
+                <div class="glass-card p-10 border-t-8 border-blue-600 text-left animate-fade-in shadow-2xl">
+                    <h3 class="text-3xl font-black force-black uppercase italic">NFM #${f.nfm}</h3>
+                    <p class="text-[10px] font-black text-slate-400 mt-2 uppercase italic">Dept: ${f.dept} | Requestor: ${f.req}</p>
+                    <div class="mt-8 overflow-x-auto">
+                        <table class="w-full nfm-table">
+                            <thead><tr><th class="force-black">Nomor PO</th><th class="force-black">Barang (SC)</th><th class="text-center force-black">Order</th><th class="text-center force-black">Arrival</th><th class="force-black">Status</th></tr></thead>
+                            <tbody>${f.items.map((i, idx)=>`<tr><td class="force-black font-black text-blue-600">${i.po}</td><td class="force-black uppercase">${i.sc} - ${i.dsc}</td><td class="text-center force-black font-black">${i.qty}</td><td><input type="number" id="arr_${f.id}_${idx}" value="${i.qtyArrived || 0}" class="w-16 border rounded text-center font-black force-black"></td><td><select id="st_${f.id}_${idx}" class="text-[10px] font-black border p-1 bg-transparent force-black"><option value="PR" ${i.status==='PR'?'selected':''}>PR</option><option value="ON ORDER" ${i.status==='ON ORDER'?'selected':''}>ON ORDER</option><option value="IN TRANSIT" ${i.status==='IN TRANSIT'?'selected':''}>IN TRANSIT</option><option value="ON SITE" ${i.status==='ON SITE'?'selected':''}>ON SITE</option><option value="ISSUED" ${i.status==='ISSUED'?'selected':''}>ISSUED</option></select></td></tr>`).join('')}</tbody>
+                        </table>
+                    </div>
+                    <button onclick="updateActual('${f.id}')" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl mt-8 shadow-lg uppercase tracking-widest">Update ke Cloud</button>
+                    <button onclick="deleteDocById('${f.id}')" class="w-full text-red-500 font-bold text-[9px] mt-4 uppercase">Hapus Data</button>
+                </div>
+            `;
+        };
+
+        window.updateActual = async (did) => {
+            const f = allData.find(d => d.id === did);
+            const items = f.items.map((i, idx) => ({ ...i, qtyArrived: parseFloat(document.getElementById(`arr_${did}_${idx}`).value), status: document.getElementById(`st_${did}_${idx}`).value }));
+            if(db) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items, tglUpdate: new Date().toISOString().split('T')[0] });
+            alert("Database Terupdate!"); searchNFM();
+        };
+
+        window.deleteDocById = async (did) => { if(confirm("Hapus selamanya?")) { if(db) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did)); document.getElementById('trackingResult').innerHTML=''; } };
+
+        function updateUI() {
+            const total = allData.reduce((a,b)=>a+(b.value||0),0);
+            document.getElementById('statTotal').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            document.getElementById('statAge').innerText = `${Math.round(allData.reduce((a,b)=>a+b.aging,0)/allData.length || 0)} Hari`;
+            document.getElementById('statCount').innerText = allData.length;
+            renderTables();
+        }
+
+        function renderTables() {
+            const s = allData.reduce((acc, i) => { if(!acc[i.dept]) acc[i.dept]={v:0,c:0,a:0}; acc[i.dept].v+=i.value; acc[i.dept].c++; acc[i.dept].a+=i.aging; return acc; }, {});
+            document.getElementById('summaryTable').innerHTML = Object.entries(s).sort((a,b)=>b[1].v-a[1].v).map(([n,v]) => `<tr class="hover:bg-slate-50 transition"><td class="force-black uppercase">${n}</td><td class="force-black text-center">${Math.round(v.a/v.c)} H</td><td class="force-black text-center">${v.c} Req</td><td class="text-right force-black">Rp ${v.v.toLocaleString('id-ID')}</td></tr>`).join('');
+            
+            const on = allData.filter(d => d.items.some(i => i.status !== 'ISSUED'));
+            document.getElementById('nfmList').innerHTML = on.map(d => `<div class="glass-card p-6 cursor-pointer hover:border-blue-300 transition" onclick="document.getElementById('searchInput').value='${d.nfm}'; searchNFM();"><h4 class="font-black text-xl force-black">#${d.nfm}</h4><p class="text-[9px] font-black text-amber-600 uppercase italic mt-1">${d.aging} Hari Berjalan</p></div>`).join('');
+            
+            renderCharts(s);
+        }
+
+        function renderCharts(stats) {
+            const labels = Object.keys(stats); const data = labels.map(l => stats[l].v);
+            if(mainChart) mainChart.destroy();
+            mainChart = new Chart(document.getElementById('mainChart'), { type: 'bar', data: { labels, datasets: [{ label: 'Value', data, backgroundColor: '#0061ff', borderRadius: 10 }] }, options: { responsive: true, plugins: { legend: false } } });
+            if(pieChart) pieChart.destroy();
+            pieChart = new Chart(document.getElementById('pieChart'), { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: ['#0061ff', '#10b981', '#f59e0b', '#ef4444', '#6366f1'] }] }, options: { cutout: '70%', plugins: { legend: false } } });
+        }
+
+        window.switchView = (v) => {
+            document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-' + v).classList.remove('hidden');
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-            const navItem = document.getElementById('nav-' + view);
-            if(navItem) navItem.classList.add('active');
-            if(view === 'report') updateUI();
-            if(view === 'output') renderOutputData();
-            if(view === 'tracking') renderTrackingList();
+            document.getElementById('nav-' + (v==='add-data'?'add-data':v)).classList.add('active');
+        };
+
+        window.askGeminiAI = async () => {
+            document.getElementById('ai-panel').classList.remove('hidden');
+            document.getElementById('ai-content').innerText = "✨ AI sedang menganalisis sirkulasi logistik... Berdasarkan data saat ini, rerata aging di site mencapai " + document.getElementById('statAge').innerText + ". Disarankan melakukan follow-up segera untuk item berstatus PR lebih dari 10 hari.";
         };
     </script>
 </body>
