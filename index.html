@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive Dashboard v45.0</title>
+    <title>Wetar Intelligence Sync - Executive Dashboard v46.0</title>
     
     <!-- Library Eksternal -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -84,7 +84,7 @@
                 <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">Wetar Intelligence <span class="text-blue-600">Sync</span></h1>
                 <div class="flex items-center mt-1">
                     <span id="cloud-status" class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 animate-pulse"></span>
-                    <p id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic uppercase">Sinkronisasi Memori...</p>
+                    <p id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic uppercase">Sync Ready...</p>
                 </div>
             </div>
             <div class="flex gap-2">
@@ -106,33 +106,36 @@
         </div>
 
         <!-- VIEW: DASHBOARD -->
-        <div id="view-report" class="p-10 space-y-10 animate-fade-in">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center text-black">
-                <div class="glass-card p-8 border-b-8 border-blue-600 shadow-md">
+        <div id="view-report" class="p-10 space-y-8 animate-fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center text-black">
+                <div class="glass-card p-6 border-b-8 border-blue-600 shadow-md">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sisa Outstanding</p>
-                    <div id="statTotal" class="text-2xl font-black text-blue-600 mt-2">Rp 0</div>
+                    <div id="statTotal" class="text-xl font-black text-blue-600 mt-2">Rp 0</div>
                 </div>
-                <div class="glass-card p-8 border-b-8 border-emerald-600 shadow-md">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" title="Total Nilai Pesanan Keseluruhan">Total Monitor Value</p>
-                    <div id="statMonitor" class="text-2xl font-black text-emerald-600 mt-2">Rp 0</div>
+                <div class="glass-card p-6 border-b-8 border-emerald-600 shadow-md">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" title="Total Budget Keseluruhan">Total Monitor Value</p>
+                    <div id="statMonitor" class="text-xl font-black text-emerald-600 mt-2">Rp 0</div>
                 </div>
-                <div class="glass-card p-8 border-b-8 border-indigo-600 shadow-md">
+                <div class="glass-card p-6 border-b-8 border-indigo-600 shadow-md">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Issued</p>
-                    <div id="statIssued" class="text-2xl font-black text-indigo-600 mt-2">Rp 0</div>
+                    <div id="statIssued" class="text-xl font-black text-indigo-600 mt-2">Rp 0</div>
                 </div>
-                <div class="glass-card p-8 border-b-8 border-amber-600 shadow-md">
+                <div class="glass-card p-6 border-b-8 border-amber-600 shadow-md">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total NFM Input</p>
-                    <div id="statAge" class="text-2xl font-black text-amber-600 mt-2">0</div>
+                    <div id="statAge" class="text-xl font-black text-amber-600 mt-2">0</div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div class="lg:col-span-2 glass-card p-10 h-[500px] flex items-center justify-center">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 glass-card p-8 h-[420px] flex items-center justify-center">
                     <canvas id="mainChart"></canvas>
                 </div>
-                <div class="glass-card p-10 h-[500px] flex flex-col items-center justify-center">
-                    <h3 class="text-slate-900 font-black text-sm uppercase mb-10 text-center tracking-widest force-black">Distribusi Stok Dept</h3>
-                    <div class="flex-1 w-full"><canvas id="pieChart"></canvas></div>
+                <!-- BAGIAN LINGKARAN YANG DIKECILKAN -->
+                <div class="glass-card p-8 h-[420px] flex flex-col items-center justify-center relative">
+                    <h3 class="text-slate-900 font-black text-sm uppercase mb-6 text-center tracking-widest force-black">Distribusi Stok Dept</h3>
+                    <div class="flex-1 w-full max-h-[280px] flex items-center justify-center">
+                        <canvas id="pieChart"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -206,16 +209,16 @@
 
         const BAKED_CONFIG = { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
 
-        let db, auth, appId = 'wetar-sync-final-v45'; 
+        let db, auth, appId = 'wetar-sync-final-v46'; 
         let allData = [];
         let mainChart, pieChart;
 
         Chart.register(ChartDataLabels);
 
         window.onload = () => {
-            const localBackup = localStorage.getItem('wetar_db_v45');
+            const localBackup = localStorage.getItem('wetar_db_v46');
             if(localBackup) { allData = JSON.parse(localBackup); updateDashboard(); }
-            const savedConfig = localStorage.getItem('wetar_v45_config');
+            const savedConfig = localStorage.getItem('wetar_v46_config');
             if(BAKED_CONFIG.apiKey) connectCloud(BAKED_CONFIG);
             else if(savedConfig) connectCloud(JSON.parse(savedConfig));
             if(document.getElementById('itemsContainer').children.length === 0) addItemRow();
@@ -241,7 +244,7 @@
         function listenCloudData() {
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), (snap) => {
                 allData = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-                localStorage.setItem('wetar_db_v45', JSON.stringify(allData));
+                localStorage.setItem('wetar_db_v46', JSON.stringify(allData));
                 updateDashboard();
                 syncCurrentSearch();
             });
@@ -278,7 +281,7 @@
             }));
             const payload = { dept: document.getElementById('in_dept').value, whrs: document.getElementById('in_whrs').value, req: document.getElementById('in_req').value.toUpperCase(), nfm: document.getElementById('in_nfm').value, tglInput: document.getElementById('in_date').value, items, tglUpdate: new Date().toISOString().split('T')[0] };
             if(db) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), payload);
-            else { allData.push({...payload, id: Date.now().toString()}); localStorage.setItem('wetar_db_v45', JSON.stringify(allData)); updateDashboard(); }
+            else { allData.push({...payload, id: Date.now().toString()}); localStorage.setItem('wetar_db_v46', JSON.stringify(allData)); updateDashboard(); }
             alert("Data Berhasil Disimpan!"); btn.disabled = false; document.getElementById('nfmForm').reset(); switchView('report');
         };
 
@@ -315,14 +318,14 @@
                 return { ...i, qtyArrived: arr, qtyIssued: iss, tglOnsite: ons, status: st };
             });
             if(db) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items, tglUpdate: new Date().toISOString().split('T')[0] });
-            else { f.items = items; localStorage.setItem('wetar_db_v45', JSON.stringify(allData)); updateDashboard(); runSearch('edit'); }
+            else { f.items = items; localStorage.setItem('wetar_db_v46', JSON.stringify(allData)); updateDashboard(); runSearch('edit'); }
             alert("Database Diperbarui!");
         };
 
         window.deleteEntry = async (did) => { 
             if(confirm("Hapus selamanya?")) { 
                 if(db) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did)); 
-                else { allData = allData.filter(d => d.id !== did); localStorage.setItem('wetar_db_v45', JSON.stringify(allData)); updateDashboard(); document.getElementById('manageResult').innerHTML = ''; }
+                else { allData = allData.filter(d => d.id !== did); localStorage.setItem('wetar_db_v46', JSON.stringify(allData)); updateDashboard(); document.getElementById('manageResult').innerHTML = ''; }
             } 
         };
 
@@ -331,10 +334,9 @@
             allData.forEach(entry => {
                 entry.items.forEach(item => {
                     const prc = item.prc || 0;
-                    // LOGIKA FIX:
                     const itemMonitor = item.qty * prc;
                     const itemIssued = item.qtyIssued * prc;
-                    const itemOut = Math.max(0, itemMonitor - itemIssued); // SISA = TOTAL - KELUAR
+                    const itemOut = Math.max(0, itemMonitor - itemIssued);
 
                     totalMonitorVal += itemMonitor;
                     totalIssuedVal += itemIssued;
@@ -368,6 +370,7 @@
             mainChart = new Chart(document.getElementById('mainChart'), { 
                 type: 'bar', data: { labels, datasets: [{ label: 'Sisa Outstanding (Rp)', data, backgroundColor: '#0061ff', borderRadius: 12 }] }, 
                 options: { 
+                    maintainAspectRatio: false,
                     plugins: { 
                         legend: false,
                         datalabels: { 
@@ -378,8 +381,20 @@
                     scales: { y: { beginAtZero: true, grid: { display: false } } }
                 } 
             });
+
             if(pieChart) pieChart.destroy();
-            pieChart = new Chart(document.getElementById('pieChart'), { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: ['#0061ff', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'] }] }, options: { cutout: '75%', plugins: { legend: false } } });
+            pieChart = new Chart(document.getElementById('pieChart'), { 
+                type: 'doughnut', 
+                data: { labels, datasets: [{ data, backgroundColor: ['#0061ff', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'] }] }, 
+                options: { 
+                    maintainAspectRatio: false,
+                    cutout: '70%', 
+                    plugins: { 
+                        legend: false,
+                        datalabels: { display: false } // Sembunyikan label di lingkaran agar tidak berantakan
+                    } 
+                } 
+            });
         }
 
         window.downloadExcel = () => {
@@ -391,7 +406,7 @@
                 report.push({ "No NFM": e.nfm, "WHRS": e.whrs || '-', "Dept": e.dept, "Requestor": e.req, "Tgl Input": e.tglInput, "PO": i.po, "SC": i.sc, "Desc": i.dsc, "Qty Plan": i.qty, "Harga": i.prc, "Arrived": i.qtyArrived, "Issued": i.qtyIssued, "Tgl Onsite": i.tglOnsite || '-', "Status": i.status, "Sisa Outstanding": Math.max(0, itemMonitor - itemIssued), "Nilai Issued": itemIssued, "Total Monitor Value": itemMonitor });
             }); });
             const ws = XLSX.utils.json_to_sheet(report); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-            XLSX.writeFile(wb, `Laporan_Wetar_NFM_${new Date().toISOString().split('T')[0]}.xlsx`);
+            XLSX.writeFile(wb, `Laporan_Wetar_NFM_v46_${new Date().toISOString().split('T')[0]}.xlsx`);
         };
 
         window.switchView = (v) => {
@@ -404,13 +419,13 @@
 
         window.applySetup = () => {
             const raw = document.getElementById('config-input').value.trim();
-            try { JSON.parse(raw); localStorage.setItem('wetar_v45_config', raw); location.reload(); } catch(e) { alert("Format salah!"); }
+            try { JSON.parse(raw); localStorage.setItem('wetar_v46_config', raw); location.reload(); } catch(e) { alert("Format salah!"); }
         };
     </script>
 
     <div class="fixed bottom-4 right-10 flex gap-4 text-[8px] font-black text-slate-400 uppercase tracking-widest z-50">
         <div>FIREBASE: <span id="diag-fb" class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span></div>
-        <div>v45.0 FINAL LOGIC</div>
+        <div>v46.0 COMPACT VISUAL</div>
     </div>
 </body>
 </html>
