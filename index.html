@@ -3,20 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive Dashboard v47.0</title>
+    <title>Wetar Intelligence Sync - Executive Dashboard v32.6</title>
     
-    <!-- Library Eksternal -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- Library untuk Export Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root { --primary: #0061ff; --bg: #f8fafc; --sidebar: #0f172a; }
-        body { background-color: var(--bg); color: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em; overflow-x: hidden; }
+        body { 
+            background-color: var(--bg); 
+            color: #1e293b; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            letter-spacing: -0.01em; 
+            overflow-x: hidden; 
+        }
 
-        /* --- SIDEBAR --- */
+        /* Sidebar Transition */
         .sidebar { 
             width: 80px; height: 100vh; position: fixed; left: 0; top: 0; 
             background: var(--sidebar); z-index: 50; display: flex; 
@@ -33,125 +38,309 @@
         }
         .sidebar-item:hover, .sidebar-item.active { background: rgba(255,255,255,0.1); color: white; }
         .sidebar-item.active { background: var(--primary); box-shadow: 0 8px 16px rgba(0,97,255,0.3); }
+        .sidebar-label { opacity: 0; transition: opacity 0.2s; margin-left: 1rem; font-weight: 800; font-size: 0.875rem; }
+        .sidebar:hover .sidebar-label { opacity: 1; }
 
         .main-content { margin-left: 80px; min-height: 100vh; transition: margin-left 0.3s ease; }
         .glass-card { background: white; border: 1px solid #f1f5f9; border-radius: 24px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03); }
         
         .force-black { color: #000000 !important; font-weight: 900 !important; }
+        
         .input-field {
             width: 100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 14px; 
-            outline: none; transition: all 0.2s; font-weight: 800; color: #000; font-size: 13px;
+            outline: none; transition: all 0.2s; font-weight: 800; color: #000; font-size: 14px;
         }
         .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,97,255,0.1); }
 
-        /* TABLE */
-        .nfm-table th { font-size: 10px; font-weight: 900; color: #000; text-transform: uppercase; padding: 12px; border-bottom: 2px solid #000; background: #f8fafc; }
-        .nfm-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 800; color: #000; }
+        .nfm-table th { font-size: 11px; font-weight: 900; color: #000; text-transform: uppercase; padding: 16px; border-bottom: 2px solid #000; background: #f8fafc; }
+        .nfm-table td { padding: 16px; border-bottom: 1px solid #e2e8f0; font-size: 14px; font-weight: 800; color: #000; }
         
-        .status-badge { padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; text-transform: uppercase; border: 1.5px solid currentColor; display: inline-block; }
-        .st-pr { color: #64748b; background: #f8fafc; }
-        .st-order { color: #ea580c; background: #fff7ed; }
-        .st-transit { color: #2563eb; background: #eff6ff; }
-        .st-site { color: #059669; background: #ecfdf5; }
-        .st-issued { color: #000000; background: #ffffff; border: 3px solid #000000; }
-
-        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         
         .btn-primary { background: var(--primary); color: white; font-weight: 900; padding: 16px; border-radius: 16px; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; box-shadow: 0 10px 20px -5px rgba(0,97,255,0.3); width: 100%; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(0,97,255,0.4); }
 
-        #error-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ef4444; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 800; z-index: 1000; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        /* AI Modal */
+        #ai-modal { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); }
+
+        /* Pipeline Step Card Styles */
+        .pipeline-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .pipeline-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .pipeline-card.active-pipeline {
+            border-color: #0061ff !important;
+            background-color: #eff6ff !important;
+            box-shadow: 0 0 0 3px rgba(0, 97, 255, 0.2);
+        }
     </style>
 </head>
 <body>
 
-    <div id="error-toast">Kesalahan! Periksa kembali inputan.</div>
+    <!-- CLOUD CONFIG OVERLAY -->
+    <div id="setup-screen" class="fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-6 hidden">
+        <div class="glass-card max-w-lg w-full p-10 text-center shadow-2xl animate-fade-in">
+            <h2 class="text-2xl font-black text-slate-900 uppercase mb-4">Aktivasi Database Cloud</h2>
+            <p class="text-xs text-slate-500 mb-6 font-bold leading-relaxed">Masukkan <b>firebaseConfig</b> agar data sinkron antar perangkat.</p>
+            <textarea id="config-input" class="input-field h-40 font-mono text-[10px] mb-6 border-slate-300" placeholder='{ "apiKey": "...", "projectId": "...", ... }'></textarea>
+            <div class="flex gap-4">
+                <button onclick="document.getElementById('setup-screen').classList.add('hidden')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-4 rounded-xl uppercase text-[10px]">Gunakan Lokal</button>
+                <button id="cloud-activate-btn" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg hover:bg-blue-700 transition uppercase text-[10px]">Aktifkan Cloud</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM CONFIRM MODAL -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/80 z-[120] flex items-center justify-center p-6 hidden animate-fade-in">
+        <div class="glass-card max-w-sm w-full p-8 text-center shadow-2xl">
+            <h3 class="text-lg font-black text-slate-900 uppercase mb-2">Konfirmasi Tindakan</h3>
+            <p id="confirm-modal-text" class="text-xs text-slate-500 mb-6 font-bold leading-relaxed">Apakah Anda yakin ingin melakukan tindakan ini?</p>
+            <div class="flex gap-4">
+                <button id="confirm-cancel" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl uppercase text-[10px]">Batal</button>
+                <button id="confirm-ok" class="flex-1 bg-red-600 text-white font-black py-3 rounded-xl shadow-lg hover:bg-red-700 transition uppercase text-[10px]">Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI INSIGHTS MODAL -->
+    <div id="ai-modal" class="fixed inset-0 z-[110] flex items-center justify-center p-6 hidden">
+        <div class="glass-card max-w-2xl w-full p-8 shadow-2xl relative max-h-[80vh] flex flex-col">
+            <button onclick="closeAI()" class="absolute top-4 right-4 text-slate-400 hover:text-black font-black">✕</button>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">✨</div>
+                <h2 class="text-xl font-black uppercase italic">Executive AI Analysis</h2>
+            </div>
+            <div id="ai-content" class="overflow-y-auto pr-4 text-slate-700 space-y-4 font-medium leading-relaxed">
+                <div class="flex flex-col items-center justify-center py-12">
+                    <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p class="font-black text-slate-400 uppercase text-[10px] tracking-widest">Menganalisis Data NFM...</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
-        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center font-black text-white mb-12 border border-white/20 shadow-inner">W</div>
-        <div onclick="switchView('report')" id="nav-report" class="sidebar-item active" title="Dashboard Utama"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span class="ml-4 font-black text-sm text-white">Dashboard</span></div>
-        <div onclick="switchView('add-data')" id="nav-add-data" class="sidebar-item" title="Input Baru"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg><span class="ml-4 font-black text-sm text-white">Input Baru</span></div>
-        <div onclick="switchView('tracking')" id="nav-tracking" class="sidebar-item" title="Tracking User"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><span class="ml-4 font-black text-sm text-white">Tracking</span></div>
-        <div onclick="switchView('manage')" id="nav-manage" class="sidebar-item" title="Update Stok"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg><span class="ml-4 font-black text-sm text-white">Update Stok</span></div>
+        <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center font-black text-white mb-12 shadow-lg">W</div>
+        <div onclick="switchView('report')" id="nav-report" class="sidebar-item active">
+            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span class="sidebar-label">Dashboard</span>
+        </div>
+        <div onclick="switchView('add-data')" id="nav-add-data" class="sidebar-item">
+            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
+            <span class="sidebar-label">Input NFM</span>
+        </div>
+        <div onclick="switchView('pipeline')" id="nav-pipeline" class="sidebar-item" title="Update Cepat Status">
+            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <span class="sidebar-label">Update Cepat</span>
+        </div>
+        <div onclick="switchView('tracking')" id="nav-tracking" class="sidebar-item">
+            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <span class="sidebar-label">Tracking</span>
+        </div>
     </aside>
 
     <main class="main-content">
         <!-- HEADER -->
-        <header class="bg-white/80 backdrop-blur-md px-10 py-6 flex items-center justify-between sticky top-0 z-40 border-b border-slate-100 shadow-sm">
+        <header class="bg-white/80 backdrop-blur-md px-6 md:px-10 py-6 flex flex-col md:flex-row items-start md:items-center justify-between sticky top-0 z-40 border-b border-slate-100 shadow-sm gap-4">
             <div>
-                <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">Wetar Intelligence <span class="text-blue-600">Sync</span></h1>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">Wetar Intel <span class="text-blue-600">Sync</span></h1>
                 <div class="flex items-center mt-1">
-                    <span id="cloud-status" class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 animate-pulse"></span>
-                    <p id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic uppercase">Sync Ready...</p>
+                    <span id="cloud-status" class="w-2.5 h-2.5 rounded-full bg-slate-300 mr-2"></span>
+                    <p id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Offline Mode</p>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <button onclick="downloadExcel()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-emerald-700 transition shadow-lg">📊 Download Excel</button>
-                <button onclick="document.getElementById('setup-screen').classList.remove('hidden')" class="bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-slate-200 transition">☁️ Config</button>
-                <button onclick="updateDashboard()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-blue-700 transition shadow-lg">🔄 Refresh</button>
+            <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                <button onclick="document.getElementById('setup-screen').classList.remove('hidden')" class="bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-slate-200 transition whitespace-nowrap">Config Cloud</button>
+                <button onclick="downloadExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-emerald-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap">📊 Export Excel</button>
+                <button onclick="triggerAIAnalysis()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-blue-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap">✨ Analisis AI</button>
             </div>
         </header>
 
-        <div id="setup-screen" class="fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-6 hidden">
-            <div class="glass-card max-w-lg w-full p-10 text-center shadow-2xl animate-fade-in">
-                <h2 class="text-2xl font-black text-slate-900 uppercase mb-4">Integrasi Database Cloud</h2>
-                <textarea id="config-input" class="input-field h-40 font-mono text-[10px] mb-6 border-slate-300" placeholder='{ "apiKey": "...", ... }'></textarea>
-                <div class="flex gap-4">
-                    <button onclick="document.getElementById('setup-screen').classList.add('hidden')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-4 rounded-xl uppercase text-[10px]">Tutup</button>
-                    <button onclick="applySetup()" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg hover:bg-blue-700 transition uppercase text-[10px]">Hubungkan</button>
-                </div>
-            </div>
-        </div>
-
         <!-- VIEW: DASHBOARD -->
-        <div id="view-report" class="p-10 space-y-8 animate-fade-in">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center text-black">
-                <div class="glass-card p-6 border-b-8 border-blue-600 shadow-md">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sisa Outstanding</p>
-                    <div id="statTotal" class="text-xl font-black text-blue-600 mt-2">Rp 0</div>
+        <div id="view-report" class="p-6 md:p-10 space-y-8 animate-fade-in">
+            
+            <!-- PENGINGAT PENGAMBILAN BARANG (OVERDUE ALERTS) -->
+            <div id="overdue-alerts-panel" class="glass-card p-6 border-l-8 border-red-600 bg-red-50/20 hidden">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-xl">🚨</span>
+                    <div>
+                        <h3 class="text-md font-black uppercase text-red-700 tracking-tight italic">Pengingat Pengambilan Barang (Overdue Gudang)</h3>
+                        <p class="text-xs text-red-600 font-bold">Barang sudah di site melampaui batas target atau melebihi 3 hari masa tinggal di gudang.</p>
+                    </div>
                 </div>
-                <div class="glass-card p-6 border-b-8 border-emerald-600 shadow-md">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" title="Total Budget Keseluruhan">Total Monitor Value</p>
-                    <div id="statMonitor" class="text-xl font-black text-emerald-600 mt-2">Rp 0</div>
-                </div>
-                <div class="glass-card p-6 border-b-8 border-indigo-600 shadow-md">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Issued</p>
-                    <div id="statIssued" class="text-xl font-black text-indigo-600 mt-2">Rp 0</div>
-                </div>
-                <div class="glass-card p-6 border-b-8 border-amber-600 shadow-md">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total NFM Input</p>
-                    <div id="statAge" class="text-xl font-black text-amber-600 mt-2">0</div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left nfm-table bg-white rounded-xl shadow-inner border border-red-100">
+                        <thead>
+                            <tr class="bg-red-50/50">
+                                <th class="text-red-700 font-black text-[10px]" style="padding:10px;">NFM #</th>
+                                <th class="text-red-700 font-black text-[10px]" style="padding:10px;">Barang (SC#)</th>
+                                <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Requestor</th>
+                                <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Tgl Tiba</th>
+                                <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Target Ambil</th>
+                                <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Keterlambatan</th>
+                                <th class="text-red-700 font-black text-[10px] text-right" style="padding:10px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overdueAlertsTableBody" class="divide-y divide-red-50">
+                            <!-- Generated Dynamically -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 glass-card p-8 h-[420px] flex items-center justify-center">
-                    <canvas id="mainChart"></canvas>
+            <!-- KARTU KPI UTAMA -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card p-6 border-l-8 border-blue-600">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Outstanding</p>
+                    <div id="statTotal" class="text-2xl font-black text-slate-900 mt-2">Rp 0</div>
                 </div>
-                <div class="glass-card p-8 h-[420px] flex flex-col items-center justify-center relative">
-                    <h3 class="text-slate-900 font-black text-sm uppercase mb-6 text-center tracking-widest force-black">Distribusi Stok Dept</h3>
-                    <div class="flex-1 w-full max-h-[280px] flex items-center justify-center">
-                        <canvas id="pieChart"></canvas>
+                <div class="glass-card p-6 border-l-8 border-emerald-600">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Value On Site</p>
+                    <div id="statSite" class="text-2xl font-black text-slate-900 mt-2">Rp 0</div>
+                </div>
+                <div class="glass-card p-6 border-l-8 border-indigo-600">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Total Issued</p>
+                    <div id="statIssued" class="text-2xl font-black text-slate-900 mt-2">Rp 0</div>
+                </div>
+                <div class="glass-card p-6 border-l-8 border-amber-600">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Avg Aging</p>
+                    <div id="statAge" class="text-2xl font-black text-slate-900 mt-2">0 Hari</div>
+                </div>
+            </div>
+
+            <!-- PELACAK ALUR JALUR LOGISTIK (LOGISTICS PIPELINE PROGRESS TRACKER) -->
+            <div class="glass-card p-6 md:p-8 border-t-4 border-blue-500">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                        <h3 class="text-lg font-black uppercase tracking-tight force-black italic">Logistics Pipeline Tracker</h3>
+                        <p class="text-xs text-slate-500 font-bold">Lacak PR yang sudah diproses menjadi PO, Transit, Tiba di Site, atau Diambil. Klik salah satu kartu fase untuk melihat detail barang.</p>
+                    </div>
+                </div>
+                
+                <!-- Pipeline Stepper Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <!-- PR -->
+                    <div onclick="selectPipelineStage('PR')" id="pipe-PR" class="pipeline-card p-5 rounded-2xl border-2 border-slate-200 bg-white">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-black bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full uppercase">Fase 1</span>
+                            <span class="text-xs font-black text-slate-400">⏱️ PR</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-500 mt-3 uppercase">PR Baru</h4>
+                        <div id="pipeVal-PR" class="text-md font-black force-black mt-1">Rp 0</div>
+                        <p id="pipeQty-PR" class="text-[10px] text-slate-400 font-bold mt-1">0 Item Barang</p>
+                    </div>
+
+                    <!-- ON ORDER -->
+                    <div onclick="selectPipelineStage('ON ORDER')" id="pipe-ON_ORDER" class="pipeline-card p-5 rounded-2xl border-2 border-amber-200 bg-white">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-black bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full uppercase">Fase 2</span>
+                            <span class="text-xs font-black text-amber-600">📋 PO</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-500 mt-3 uppercase">Sudah jadi PO</h4>
+                        <div id="pipeVal-ON_ORDER" class="text-md font-black force-black mt-1">Rp 0</div>
+                        <p id="pipeQty-ON_ORDER" class="text-[10px] text-slate-400 font-bold mt-1">0 Item Barang</p>
+                    </div>
+
+                    <!-- IN TRANSIT -->
+                    <div onclick="selectPipelineStage('IN TRANSIT')" id="pipe-IN_TRANSIT" class="pipeline-card p-5 rounded-2xl border-2 border-blue-200 bg-white">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-black bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full uppercase">Fase 3</span>
+                            <span class="text-xs font-black text-blue-600">🚢 TRANSIT</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-500 mt-3 uppercase">Dalam Transit</h4>
+                        <div id="pipeVal-IN_TRANSIT" class="text-md font-black force-black mt-1">Rp 0</div>
+                        <p id="pipeQty-IN_TRANSIT" class="text-[10px] text-slate-400 font-bold mt-1">0 Item Barang</p>
+                    </div>
+
+                    <!-- ON SITE -->
+                    <div onclick="selectPipelineStage('ON SITE')" id="pipe-ON_SITE" class="pipeline-card p-5 rounded-2xl border-2 border-emerald-200 bg-white">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-black bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full uppercase">Fase 4</span>
+                            <span class="text-xs font-black text-emerald-600">🏢 SITE</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-500 mt-3 uppercase">Sudah di Site</h4>
+                        <div id="pipeVal-ON_SITE" class="text-md font-black force-black mt-1">Rp 0</div>
+                        <p id="pipeQty-ON_SITE" class="text-[10px] text-slate-400 font-bold mt-1">0 Item Barang</p>
+                    </div>
+
+                    <!-- ISSUED -->
+                    <div onclick="selectPipelineStage('ISSUED')" id="pipe-ISSUED" class="pipeline-card p-5 rounded-2xl border-2 border-indigo-200 bg-white">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-black bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full uppercase">Selesai</span>
+                            <span class="text-xs font-black text-indigo-600">📦 ISSUED</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-500 mt-3 uppercase">Sudah Diambil</h4>
+                        <div id="pipeVal-ISSUED" class="text-md font-black force-black mt-1">Rp 0</div>
+                        <p id="pipeQty-ISSUED" class="text-[10px] text-slate-400 font-bold mt-1">0 Item Barang</p>
+                    </div>
+                </div>
+
+                <!-- Detail Panel Barang Berdasarkan Fase -->
+                <div id="pipeline-details-section" class="mt-6 bg-slate-50 rounded-2xl p-6 border border-slate-100 hidden">
+                    <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
+                        <h4 class="text-sm font-black force-black uppercase tracking-tight italic" id="pipeline-detail-title">Detail Item</h4>
+                        <span class="text-[10px] font-black uppercase text-slate-400" id="pipeline-item-count">0 Item</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left nfm-table bg-white rounded-xl shadow-inner border border-slate-200">
+                            <thead>
+                                <tr>
+                                    <th class="force-black" style="padding:12px; font-size:10px;">NFM #</th>
+                                    <th class="force-black" style="padding:12px; font-size:10px;">PO / SC</th>
+                                    <th class="force-black" style="padding:12px; font-size:10px;">Deskripsi Barang</th>
+                                    <th class="force-black text-center" style="padding:12px; font-size:10px;">Requestor / Dept</th>
+                                    <th class="force-black text-right" style="padding:12px; font-size:10px;">Rencana / Terpenuhi</th>
+                                    <th class="force-black text-center" style="padding:12px; font-size:10px;" id="pipeline-dynamic-header">Estimasi Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pipelineDetailsTableBody" class="divide-y divide-slate-100">
+                                <!-- Generated Dynamically -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-            <div class="glass-card overflow-hidden shadow-sm">
+            <!-- GRAFIK -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 glass-card p-8 h-[400px]">
+                    <h3 class="text-slate-900 font-black text-sm uppercase mb-4 force-black italic">Dept. Outstanding Value</h3>
+                    <div class="h-[320px]"><canvas id="mainChart"></canvas></div>
+                </div>
+                <div class="glass-card p-8 h-[400px] flex flex-col">
+                    <h3 class="text-slate-900 font-black text-sm uppercase mb-8 text-center force-black italic">Stock Distribution</h3>
+                    <div class="flex-1"><canvas id="pieChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- TABEL RINGKASAN DEPARTEMEN -->
+            <div class="glass-card overflow-x-auto">
                 <table class="w-full text-left nfm-table">
-                    <thead><tr><th class="force-black">Departemen</th><th class="force-black text-center">Avg Site Age</th><th class="force-black text-center">Outstanding Value</th><th class="text-right force-black">Total Issued</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th class="force-black">Departemen</th>
+                            <th class="force-black text-center">Avg Aging</th>
+                            <th class="force-black text-center">Outstanding Value</th>
+                            <th class="text-right force-black">Total Issued</th>
+                        </tr>
+                    </thead>
                     <tbody id="summaryTable" class="divide-y divide-slate-100"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- VIEW: INPUT BARU -->
-        <div id="view-add-data" class="hidden p-10 max-w-6xl mx-auto animate-fade-in text-left">
-            <div class="glass-card p-12 border-t-[10px] border-blue-600 shadow-2xl">
+        <!-- VIEW: INPUT NFM -->
+        <div id="view-add-data" class="hidden p-6 md:p-10 max-w-6xl mx-auto animate-fade-in">
+            <div class="glass-card p-8 md:p-12 border-t-[10px] border-blue-600 shadow-2xl">
                 <h2 class="text-3xl font-black text-slate-900 tracking-tighter uppercase italic text-center mb-10">Input NFM Baru</h2>
-                <form id="nfmForm" onsubmit="saveData(event)" class="space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <form id="nfmForm" class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div>
                             <label class="text-[10px] font-black uppercase mb-2 block text-black">Departemen</label>
                             <select id="in_dept" class="input-field" required>
@@ -160,44 +349,87 @@
                                 <option value="PROCESSING">PROCESSING</option>
                                 <option value="MINING">MINING</option>
                                 <option value="SCM">SCM</option>
-                                <option value="OHS">OHS</option>
                             </select>
                         </div>
-                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">WHRS (Gudang)</label><select id="in_whrs" class="input-field" required><option value="MAIN">MAIN</option><option value="RTBL">RTBL</option><option value="WWBJ">WWBJ</option></select></div>
-                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Requestor</label><input type="text" id="in_req" class="input-field" required placeholder="Nama Anda..."></div>
-                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Nomor NFM</label><input type="text" id="in_nfm" class="input-field" required placeholder="Ex: 012/BTR-SCM/2024"></div>
-                        <div><label class="text-[10px] font-black uppercase mb-2 block text-black">Tanggal Input</label><input type="date" id="in_date" class="input-field" required></div>
+                        <div>
+                            <label class="text-[10px] font-black uppercase mb-2 block text-black">Requestor</label>
+                            <input type="text" id="in_req" class="input-field" required placeholder="Nama Anda...">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black uppercase mb-2 block text-black">Nomor NFM</label>
+                            <input type="text" id="in_nfm" class="input-field" required placeholder="Ex: 012/BTR-SCM/2024">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black uppercase mb-2 block text-black">Tanggal Planning</label>
+                            <input type="date" id="in_date" class="input-field" required>
+                        </div>
                     </div>
-                    <div class="p-8 bg-slate-50 rounded-3xl border border-slate-200">
-                        <h4 class="text-[11px] font-black uppercase mb-6 text-black tracking-widest">Detail Item List</h4>
+                    
+                    <div class="p-6 md:p-8 bg-slate-50 rounded-3xl border border-slate-200">
+                        <div class="flex justify-between items-center mb-6">
+                            <h4 class="text-[11px] font-black uppercase text-black tracking-widest">Detail Item List</h4>
+                            <span class="text-[8px] font-black bg-blue-100 text-blue-800 px-2 py-1 rounded uppercase">💡 Ketik SC# untuk Auto-Fill Deskripsi & Set Target Ambil</span>
+                        </div>
                         <div id="itemsContainer" class="space-y-4"></div>
-                        <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-blue-600 uppercase mt-6 hover:underline tracking-widest">+ TAMBAH BARANG</button>
+                        <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-blue-600 uppercase mt-6 hover:underline tracking-widest">+ Tambah Baris Barang</button>
                     </div>
-                    <button type="submit" id="saveBtn" class="btn-primary">SIMPAN & SINKRONKAN</button>
+                    
+                    <button type="submit" id="saveBtn" class="btn-primary">Simpan NFM & Update Dashboard</button>
                 </form>
             </div>
         </div>
 
-        <!-- VIEW: TRACKING -->
-        <div id="view-tracking" class="hidden p-10 max-w-7xl mx-auto animate-fade-in text-center">
-            <div class="bg-white border border-slate-100 rounded-[40px] p-12 shadow-2xl mb-12">
-                <h2 class="text-4xl font-black mb-10 uppercase tracking-tighter italic force-black">Tracking <span class="text-blue-600">NFM Status</span></h2>
-                <div class="flex gap-4 p-3 bg-slate-50 rounded-3xl border-2 border-slate-200 shadow-inner">
-                    <input type="text" id="trackingSearch" class="flex-1 bg-transparent border-none px-6 py-4 text-2xl font-black outline-none force-black" placeholder="Ketik nomor NFM (misal: 012)..." oninput="runSearch('view')">
+        <!-- VIEW: UPDATE PIPELINE CEPAT (MENU BARU!) -->
+        <div id="view-pipeline" class="hidden p-6 md:p-10 max-w-7xl mx-auto animate-fade-in">
+            <div class="bg-white border border-slate-100 rounded-[32px] p-6 md:p-8 shadow-2xl mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-black uppercase tracking-tight force-black italic">Pipeline Manager <span class="text-blue-600">(Update Cepat)</span></h2>
+                        <p class="text-xs text-slate-500 font-bold mt-1">Kelola seluruh barang berstatus PR, ON ORDER, atau IN TRANSIT dari semua NFM sekaligus. Tekan tombol <b class="text-emerald-600">"Tiba di Site"</b> untuk checklist cepat otomatis.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <button onclick="filterPipelineView('ALL')" id="tab-pipe-ALL" class="bg-blue-600 text-white font-black text-[10px] uppercase px-4 py-2.5 rounded-xl shadow-md">Semua (${countPendingStage('ALL')})</button>
+                        <button onclick="filterPipelineView('PR')" id="tab-pipe-PR" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">PR (${countPendingStage('PR')})</button>
+                        <button onclick="filterPipelineView('ON ORDER')" id="tab-pipe-ON_ORDER" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">PO / Order (${countPendingStage('ON ORDER')})</button>
+                        <button onclick="filterPipelineView('IN TRANSIT')" id="tab-pipe-IN_TRANSIT" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">Transit (${countPendingStage('IN TRANSIT')})</button>
+                    </div>
+                </div>
+                
+                <!-- Kolom Pencarian Cepat di Menu Pipeline -->
+                <div class="mt-6 flex gap-4 p-2 bg-slate-50 rounded-2xl border border-slate-200">
+                    <input type="text" id="pipelineFilterSearch" class="flex-1 bg-transparent px-4 py-2 text-sm font-bold outline-none force-black" placeholder="Cari berdasarkan NFM, Requestor, PO, SC, atau Nama Barang..." oninput="triggerPipelineSearch()">
                 </div>
             </div>
-            <div id="trackingResult" class="text-left animate-fade-in space-y-6"></div>
+
+            <div class="glass-card overflow-x-auto">
+                <table class="w-full text-left nfm-table">
+                    <thead>
+                        <tr>
+                            <th class="force-black">NFM / Requestor</th>
+                            <th class="force-black">Barang / SC# / PO#</th>
+                            <th class="force-black text-center">Plan Qty</th>
+                            <th class="force-black text-center" style="width:120px;">Qty Datang</th>
+                            <th class="force-black text-center" style="width:120px;">Qty Keluar</th>
+                            <th class="force-black text-center" style="width:130px;">Status / Target</th>
+                            <th class="force-black text-right">Aksi Cepat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quickPipelineTableBody" class="divide-y divide-slate-100">
+                        <!-- Diisi secara dinamis -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- VIEW: UPDATE STOK -->
-        <div id="view-manage" class="hidden p-10 max-w-7xl mx-auto animate-fade-in text-center">
-            <div class="bg-white border-2 border-blue-600 rounded-[40px] p-12 shadow-2xl mb-12 text-left">
-                <h2 class="text-4xl font-black mb-10 uppercase tracking-tighter italic force-black text-center">Admin <span class="text-blue-600">Stock Update</span></h2>
+        <!-- VIEW: TRACKING -->
+        <div id="view-tracking" class="hidden p-6 md:p-10 max-w-7xl mx-auto animate-fade-in">
+            <div class="bg-white border border-slate-100 rounded-[40px] p-8 md:p-12 shadow-2xl mb-12 text-center">
+                <h2 class="text-4xl font-black mb-10 uppercase tracking-tighter italic force-black">Smart <span class="text-blue-600">NFM Tracking</span></h2>
                 <div class="flex gap-4 p-3 bg-slate-50 rounded-3xl border-2 border-slate-200 shadow-inner">
-                    <input type="text" id="manageSearch" class="flex-1 bg-transparent border-none px-6 py-4 text-2xl font-black outline-none force-black" placeholder="Cari NFM untuk update..." oninput="runSearch('edit')">
+                    <input type="text" id="trackingSearch" class="flex-1 bg-transparent border-none px-6 py-4 text-xl md:text-2xl font-black outline-none force-black" placeholder="Cari NFM (misal: 012)...">
                 </div>
             </div>
-            <div id="manageResult" class="text-left animate-fade-in space-y-6"></div>
+            <div id="trackingResult" class="text-left animate-fade-in"></div>
         </div>
     </main>
 
@@ -206,236 +438,1019 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const BAKED_CONFIG = { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
-
-        let db, auth, appId = 'wetar-sync-final-v47'; 
+        const apiKey = ""; // Global API Key for Gemini
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-sync-v32';
+        let db, auth, user;
         let allData = [];
         let mainChart, pieChart;
+        let selectedStage = null; // Menyimpan status filter alur logistik yang sedang aktif
+        let scLookup = {}; // Tempat penyimpanan relasi SC -> Deskripsi secara global
+        let currentPipelineTab = 'ALL'; // Tab aktif pada pipeline manager
+        let pipelineSearchQuery = ''; // Filter text pencarian dalam pipeline manager
 
-        Chart.register(ChartDataLabels);
+        // Global Custom Toast Notification
+        window.showCustomToast = (msg, type = 'success') => {
+            const existing = document.getElementById('custom-toast');
+            if (existing) existing.remove();
 
-        window.onload = () => {
-            const localBackup = localStorage.getItem('wetar_db_v47');
-            if(localBackup) { allData = JSON.parse(localBackup); updateDashboard(); }
-            const savedConfig = localStorage.getItem('wetar_v47_config');
-            if(BAKED_CONFIG.apiKey) connectCloud(BAKED_CONFIG);
-            else if(savedConfig) connectCloud(JSON.parse(savedConfig));
-            if(document.getElementById('itemsContainer').children.length === 0) addItemRow();
+            const toast = document.createElement('div');
+            toast.id = 'custom-toast';
+            toast.className = `fixed bottom-4 right-4 z-[200] px-6 py-4 rounded-2xl shadow-2xl font-black text-xs uppercase tracking-wider animate-fade-in flex items-center gap-3 border ${
+                type === 'success' 
+                    ? 'bg-emerald-600 text-white border-emerald-500' 
+                    : 'bg-red-600 text-white border-red-500'
+            }`;
+            toast.innerHTML = `
+                <span>${type === 'success' ? '✅' : '🚨'}</span>
+                <span>${msg}</span>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                setTimeout(() => toast.remove(), 500);
+            }, 3500);
         };
 
-        async function connectCloud(config) {
+        // CUSTOM CONFIRM MODAL SYSTEM
+        let confirmCallback = null;
+        window.showCustomConfirm = (text, callback) => {
+            document.getElementById('confirm-modal-text').innerText = text;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+            confirmCallback = callback;
+        };
+        document.getElementById('confirm-cancel').onclick = () => {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            confirmCallback = null;
+        };
+        document.getElementById('confirm-ok').onclick = () => {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            if (confirmCallback) confirmCallback();
+            confirmCallback = null;
+        };
+
+        // Clipboard copy compatibility fallback for browser frames
+        window.copyTextToClipboard = (text) => {
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = text;
+            tempTextArea.style.position = "fixed"; 
+            document.body.appendChild(tempTextArea);
+            tempTextArea.focus();
+            tempTextArea.select();
+            try {
+                document.execCommand("copy");
+                showCustomToast("Teks Pengingat Berhasil Disalin!");
+            } catch (err) {
+                showCustomToast("Gagal menyalin teks.", "error");
+            }
+            document.body.removeChild(tempTextArea);
+        };
+
+        // Trigger SMS/WhatsApp Template copy
+        window.sendReminder = (nfm, req, dsc, tglArrived, tglTargetAmbil) => {
+            const cleanTglArrived = tglArrived || '-';
+            const cleanTarget = tglTargetAmbil || '-';
+            const msg = `Halo ${req}, barang Anda (${dsc}) untuk NFM #${nfm} sudah tiba di site sejak ${cleanTglArrived} (Target Ambil: ${cleanTarget}). Harap segera melakukan pengambilan di Gudang. Terima kasih!`;
+            copyTextToClipboard(msg);
+        };
+
+        // Initialize App
+        window.addEventListener('load', async () => {
+            loadLocalBackup();
+            initCharts();
+            
+            const savedConfig = localStorage.getItem('wetar_v32_config');
+            if (savedConfig) {
+                await setupFirebase(JSON.parse(savedConfig));
+            } else if (typeof __firebase_config !== 'undefined') {
+                await setupFirebase(JSON.parse(__firebase_config));
+            }
+
+            if (document.getElementById('itemsContainer').children.length === 0) addItemRow();
+        });
+
+        async function setupFirebase(config) {
             try {
                 const app = initializeApp(config);
-                auth = getAuth(app); db = getFirestore(app);
-                const initAuth = async () => { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }};
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                };
+                
                 await initAuth();
+                
                 onAuthStateChanged(auth, (u) => {
-                    if(u) {
-                        document.getElementById('diag-fb').className = 'w-2.5 h-2.5 rounded-full bg-green-500 inline-block';
+                    if (u) {
+                        user = u;
                         document.getElementById('cloud-status').className = 'w-2.5 h-2.5 rounded-full bg-green-500 mr-2';
-                        document.getElementById('status-text').innerText = "CLOUD ACTIVE";
-                        listenCloudData();
+                        document.getElementById('status-text').innerText = "Cloud Sync Active";
+                        bindFirestore();
                     }
                 });
-            } catch (e) { console.error("Cloud failed."); }
+            } catch (e) {
+                console.error("Firebase Auth Error", e);
+            }
         }
 
-        function listenCloudData() {
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), (snap) => {
-                allData = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-                localStorage.setItem('wetar_db_v47', JSON.stringify(allData));
+        function bindFirestore() {
+            if (!user) return;
+            const entriesRef = collection(db, 'artifacts', appId, 'public', 'data', 'entries');
+            onSnapshot(entriesRef, (snap) => {
+                allData = snap.docs.map(d => ({
+                    ...d.data(),
+                    id: d.id,
+                    aging: calculateAging(d.data().tglPlanning)
+                }));
+                localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
                 updateDashboard();
-                syncCurrentSearch();
+                if (selectedStage) selectPipelineStage(selectedStage); // Auto refresh detail yang terpilih
+            }, (err) => console.error("Snapshot Error", err));
+        }
+
+        function loadLocalBackup() {
+            const local = localStorage.getItem('wetar_db_v32');
+            if (local) {
+                allData = JSON.parse(local).map(d => ({ ...d, aging: calculateAging(d.tglPlanning) }));
+                updateDashboard();
+            }
+        }
+
+        function calculateAging(dateStr) {
+            if (!dateStr) return 0;
+            const diff = new Date() - new Date(dateStr);
+            return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+        }
+
+        // Helper untuk hitung selisih hari spesifik (seperti Aging di Site)
+        function getDaysDiff(dateStr) {
+            if (!dateStr) return 0;
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const targetDate = new Date(dateStr);
+            targetDate.setHours(0,0,0,0);
+            const diff = today - targetDate;
+            return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+        }
+
+        // Membangun kamus data relasi SC# ke Deskripsi agar bisa auto-fill
+        function updateSCLookup() {
+            scLookup = {};
+            allData.forEach(entry => {
+                if (entry.items) {
+                    entry.items.forEach(item => {
+                        if (item.sc && item.dsc) {
+                            const scClean = item.sc.toUpperCase().trim();
+                            const dscClean = item.dsc.trim();
+                            if (scClean && dscClean) {
+                                scLookup[scClean] = dscClean;
+                            }
+                        }
+                    });
+                }
             });
         }
 
-        function syncCurrentSearch() {
-            if(document.getElementById('trackingSearch').value) runSearch('view');
-            if(document.getElementById('manageSearch').value) runSearch('edit');
+        // Event Listener ketika user mengetik SC# di form input
+        window.handleSCOnInput = (inputEl) => {
+            const scVal = inputEl.value.toUpperCase().trim();
+            const row = inputEl.closest('.item-row');
+            if (!row) return;
+
+            const dscInput = row.querySelector('.dsc');
+            if (dscInput && scLookup[scVal]) {
+                const prevVal = dscInput.value;
+                dscInput.value = scLookup[scVal];
+
+                // Beri efek flash warna biru jika deskripsi berhasil terisi otomatis
+                if (prevVal !== scLookup[scVal]) {
+                    dscInput.classList.add('bg-blue-50', 'border-blue-400');
+                    setTimeout(() => {
+                        dscInput.classList.remove('bg-blue-50', 'border-blue-400');
+                    }, 800);
+                }
+            }
+        };
+
+        // PIPELINE CEPAT: Fungsi untuk menghitung total barang per stage
+        window.countPendingStage = (stage) => {
+            let totalCount = 0;
+            allData.forEach(entry => {
+                entry.items.forEach(item => {
+                    const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
+                    if (stage === 'ALL') {
+                        if (normStatus === 'PR' || normStatus === 'ON ORDER' || normStatus === 'IN TRANSIT') {
+                            totalCount++;
+                        }
+                    } else {
+                        if (normStatus === stage) {
+                            totalCount++;
+                        }
+                    }
+                });
+            });
+            return totalCount;
+        };
+
+        // PIPELINE CEPAT: Ganti Kategori Tab Filter
+        window.filterPipelineView = (stage) => {
+            currentPipelineTab = stage;
+            
+            // Atur styling tombol filter aktif
+            const tabs = ['ALL', 'PR', 'ON_ORDER', 'IN_TRANSIT'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-pipe-${t}`);
+                if (btn) {
+                    btn.className = "bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl";
+                }
+            });
+            const activeId = stage === 'ON ORDER' ? 'ON_ORDER' : (stage === 'IN TRANSIT' ? 'IN_TRANSIT' : stage);
+            const activeBtn = document.getElementById(`tab-pipe-${activeId}`);
+            if (activeBtn) {
+                activeBtn.className = "bg-blue-600 text-white font-black text-[10px] uppercase px-4 py-2.5 rounded-xl shadow-md";
+            }
+
+            renderPipelineManager();
+        };
+
+        // PIPELINE CEPAT: Event pencarian real-time
+        window.triggerPipelineSearch = () => {
+            pipelineSearchQuery = document.getElementById('pipelineFilterSearch').value.toUpperCase().trim();
+            renderPipelineManager();
+        };
+
+        // PIPELINE CEPAT: Render List Pipeline Manager
+        function renderPipelineManager() {
+            const tableBody = document.getElementById('quickPipelineTableBody');
+            if (!tableBody) return;
+
+            const matchedItems = [];
+            allData.forEach(entry => {
+                entry.items.forEach((item, idx) => {
+                    const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
+                    
+                    // Filter berdasarkan Tab Kategori
+                    let passTab = false;
+                    if (currentPipelineTab === 'ALL') {
+                        if (normStatus === 'PR' || normStatus === 'ON ORDER' || normStatus === 'IN TRANSIT') passTab = true;
+                    } else {
+                        if (normStatus === currentPipelineTab) passTab = true;
+                    }
+
+                    if (!passTab) return;
+
+                    // Filter berdasarkan Kolom Pencarian Cepat
+                    if (pipelineSearchQuery) {
+                        const inSearch = (
+                            entry.nfm.toUpperCase().includes(pipelineSearchQuery) ||
+                            entry.req.toUpperCase().includes(pipelineSearchQuery) ||
+                            entry.dept.toUpperCase().includes(pipelineSearchQuery) ||
+                            item.dsc.toUpperCase().includes(pipelineSearchQuery) ||
+                            item.po.toUpperCase().includes(pipelineSearchQuery) ||
+                            item.sc.toUpperCase().includes(pipelineSearchQuery)
+                        );
+                        if (!inSearch) return;
+                    }
+
+                    matchedItems.push({
+                        entryId: entry.id,
+                        itemIndex: idx,
+                        nfm: entry.nfm,
+                        dept: entry.dept,
+                        req: entry.req,
+                        ...item
+                    });
+                });
+            });
+
+            // Update statistik angka pada Filter Tab
+            const allBtn = document.getElementById('tab-pipe-ALL');
+            if (allBtn) allBtn.innerText = `Semua (${countPendingStage('ALL')})`;
+            const prBtn = document.getElementById('tab-pipe-PR');
+            if (prBtn) prBtn.innerText = `PR (${countPendingStage('PR')})`;
+            const orderBtn = document.getElementById('tab-pipe-ON_ORDER');
+            if (orderBtn) orderBtn.innerText = `PO / Order (${countPendingStage('ON ORDER')})`;
+            const transitBtn = document.getElementById('tab-pipe-IN_TRANSIT');
+            if (transitBtn) transitBtn.innerText = `Transit (${countPendingStage('IN TRANSIT')})`;
+
+            if (matchedItems.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-slate-400 font-bold uppercase italic bg-slate-50">Tidak ada barang pending yang ditemukan dalam kriteria ini.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = matchedItems.map(i => `
+                <tr class="hover:bg-slate-50/50 transition">
+                    <td style="padding:12px;">
+                        <span class="font-black text-slate-900 block text-sm">NFM-${i.nfm}</span>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase">${i.dept}</span>
+                        <span class="text-[11px] text-blue-600 font-black block mt-0.5">Req: ${i.req}</span>
+                    </td>
+                    <td style="padding:12px;">
+                        <span class="font-bold text-slate-800 block text-xs">${i.dsc}</span>
+                        <span class="text-[10px] text-slate-400 font-bold block">SC: ${i.sc || '-'} | PO: ${i.po || '-'}</span>
+                    </td>
+                    <td class="text-center font-black text-slate-900" style="padding:12px;">${i.qty}</td>
+                    <td style="padding:12px; text-align:center;">
+                        <input type="number" id="quick_arr_${i.entryId}_${i.itemIndex}" value="${i.qtyArrived || 0}" class="w-20 border-2 border-slate-200 rounded text-center font-black text-xs p-1">
+                    </td>
+                    <td style="padding:12px; text-align:center;">
+                        <input type="number" id="quick_iss_${i.entryId}_${i.itemIndex}" value="${i.qtyIssued || 0}" class="w-20 border-2 border-slate-200 rounded text-center font-black text-xs p-1">
+                    </td>
+                    <td style="padding:12px;">
+                        <select id="quick_st_${i.entryId}_${i.itemIndex}" class="text-[10px] font-black border-2 border-slate-200 p-1 w-full bg-white rounded-lg mb-1">
+                            <option value="PR" ${i.status === 'PR' ? 'selected' : ''}>PR</option>
+                            <option value="ON ORDER" ${i.status === 'ON ORDER' || i.status === 'ORDER' ? 'selected' : ''}>ORDER</option>
+                            <option value="IN TRANSIT" ${i.status === 'IN TRANSIT' ? 'selected' : ''}>TRANSIT</option>
+                            <option value="ON SITE" ${i.status === 'ON SITE' ? 'selected' : ''}>SITE</option>
+                            <option value="ISSUED" ${i.status === 'ISSUED' ? 'selected' : ''}>ISSUED</option>
+                        </select>
+                        <input type="date" id="quick_tgt_${i.entryId}_${i.itemIndex}" value="${i.tglTargetAmbil || ''}" class="text-[9px] font-bold border-2 border-slate-200 p-1 w-full rounded" title="Target Tanggal Ambil">
+                    </td>
+                    <td style="padding:12px; text-align:right;">
+                        <div class="flex gap-1 justify-end">
+                            <button onclick="quickCheckOnSite('${i.entryId}', ${i.itemIndex})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md whitespace-nowrap">✔️ Tiba di Site</button>
+                            <button onclick="saveQuickPipelineRow('${i.entryId}', ${i.itemIndex})" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase px-2 py-2 rounded-lg transition shadow-md">Simpan</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
         }
 
+        // PIPELINE CEPAT: Aksi Pintas Checklist instan (Tiba di Site)
+        window.quickCheckOnSite = async (did, idx) => {
+            const entry = allData.find(d => d.id === did);
+            if (!entry) return;
+
+            const item = entry.items[idx];
+            item.qtyArrived = item.qty; // set arrived qty = plan qty
+            item.status = 'ON SITE';
+            item.tglArrived = new Date().toISOString().split('T')[0]; // Set tgl kedatangan hari ini
+
+            try {
+                if (db && user) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items: entry.items });
+                } else {
+                    localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
+                    updateDashboard();
+                }
+                showCustomToast(`Barang "${item.dsc}" berhasil di-set ON SITE!`);
+                renderPipelineManager();
+            } catch (err) {
+                showCustomToast("Gagal menyimpan data: " + err.message, "error");
+            }
+        };
+
+        // PIPELINE CEPAT: Simpan Perubahan Baris Manual
+        window.saveQuickPipelineRow = async (did, idx) => {
+            const entry = allData.find(d => d.id === did);
+            if (!entry) return;
+
+            const arr = parseFloat(document.getElementById(`quick_arr_${did}_${idx}`).value) || 0;
+            const iss = parseFloat(document.getElementById(`quick_iss_${did}_${idx}`).value) || 0;
+            let st = document.getElementById(`quick_st_${did}_${idx}`).value;
+            const tgt = document.getElementById(`quick_tgt_${did}_${idx}`).value || "";
+
+            const item = entry.items[idx];
+            item.qtyArrived = arr;
+            item.qtyIssued = iss;
+            item.status = st;
+            item.tglTargetAmbil = tgt;
+
+            // Logika auto-status
+            if (item.qtyIssued >= item.qty) {
+                item.status = 'ISSUED';
+            } else if (item.qtyArrived > 0 && item.qtyIssued < item.qtyArrived) {
+                item.status = 'ON SITE';
+            }
+
+            // Stamp tglArrived otomatis jika di-set ke ON SITE
+            if (item.status === 'ON SITE' && !item.tglArrived) {
+                item.tglArrived = new Date().toISOString().split('T')[0];
+            } else if (item.status !== 'ON SITE' && item.status !== 'ISSUED') {
+                delete item.tglArrived;
+            }
+
+            try {
+                if (db && user) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items: entry.items });
+                } else {
+                    localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
+                    updateDashboard();
+                }
+                showCustomToast(`Item "${item.dsc}" diperbarui!`);
+                renderPipelineManager();
+            } catch (err) {
+                showCustomToast("Gagal memperbarui: " + err.message, "error");
+            }
+        };
+
+        // Dashboard Logic & Pipeline Calculation
+        function updateDashboard() {
+            let totals = { out: 0, site: 0, iss: 0, ageSum: 0 };
+            const deptStats = {};
+            const overdueItems = [];
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            // Pipeline stage data holders
+            const pipelineData = {
+                'PR': { value: 0, count: 0 },
+                'ON ORDER': { value: 0, count: 0 },
+                'IN TRANSIT': { value: 0, count: 0 },
+                'ON SITE': { value: 0, count: 0 },
+                'ISSUED': { value: 0, count: 0 }
+            };
+
+            allData.forEach(entry => {
+                totals.ageSum += entry.aging;
+                if (!deptStats[entry.dept]) deptStats[entry.dept] = { out: 0, iss: 0, age: 0, count: 0 };
+                
+                deptStats[entry.dept].age += entry.aging;
+                deptStats[entry.dept].count++;
+
+                entry.items.forEach(item => {
+                    const price = item.prc || 0;
+                    const qty = item.qty || 0;
+                    const arrived = item.qtyArrived || 0;
+                    const issued = item.qtyIssued || 0;
+                    const rawStatus = item.status || 'PR';
+
+                    // Normalisasi status string
+                    const normalizedStatus = (rawStatus === 'ORDER' || rawStatus === 'ON ORDER') ? 'ON ORDER' : rawStatus;
+
+                    const outVal = Math.max(0, qty - issued) * price;
+                    const siteVal = Math.max(0, arrived - issued) * price;
+                    const issVal = issued * price;
+
+                    totals.out += outVal;
+                    totals.site += siteVal;
+                    totals.iss += issVal;
+
+                    deptStats[entry.dept].out += outVal;
+                    deptStats[entry.dept].iss += issVal;
+
+                    // Hitung total data per fase untuk pipeline tracker
+                    if (pipelineData[normalizedStatus]) {
+                        pipelineData[normalizedStatus].count++;
+                        pipelineData[normalizedStatus].value += (qty * price);
+                    }
+
+                    // Deteksi Overdue Barang di Site
+                    if (normalizedStatus === 'ON SITE') {
+                        let overdue = false;
+                        let delayDays = 0;
+
+                        if (item.tglTargetAmbil) {
+                            const target = new Date(item.tglTargetAmbil);
+                            target.setHours(0,0,0,0);
+                            if (today > target) {
+                                overdue = true;
+                                delayDays = Math.floor((today - target) / (1000 * 60 * 60 * 24));
+                            }
+                        } else if (item.tglArrived) {
+                            // Default overdue jika barang mengendap lebih dari 3 hari tanpa batas target spesifik
+                            const arrivedDate = new Date(item.tglArrived);
+                            arrivedDate.setHours(0,0,0,0);
+                            const daysOnSite = Math.floor((today - arrivedDate) / (1000 * 60 * 60 * 24));
+                            if (daysOnSite > 3) {
+                                overdue = true;
+                                delayDays = daysOnSite - 3;
+                            }
+                        }
+
+                        if (overdue) {
+                            overdueItems.push({
+                                id: entry.id,
+                                nfm: entry.nfm,
+                                dept: entry.dept,
+                                req: entry.req,
+                                dsc: item.dsc,
+                                sc: item.sc,
+                                tglArrived: item.tglArrived,
+                                tglTargetAmbil: item.tglTargetAmbil,
+                                delayDays: delayDays
+                            });
+                        }
+                    }
+                });
+            });
+
+            document.getElementById('statTotal').innerText = `Rp ${totals.out.toLocaleString('id-ID')}`;
+            document.getElementById('statSite').innerText = `Rp ${totals.site.toLocaleString('id-ID')}`;
+            document.getElementById('statIssued').innerText = `Rp ${totals.iss.toLocaleString('id-ID')}`;
+            document.getElementById('statAge').innerText = `${Math.round(totals.ageSum / (allData.length || 1))} Hari`;
+
+            // Update database relasi kamus
+            updateSCLookup();
+
+            // Update nilai numerik di kartu alur logistik
+            updatePipelineUI(pipelineData);
+
+            // Update Tampilan Banner Pengingat Overdue
+            const alertsPanel = document.getElementById('overdue-alerts-panel');
+            const alertsTableBody = document.getElementById('overdueAlertsTableBody');
+
+            if (overdueItems.length > 0) {
+                alertsPanel.classList.remove('hidden');
+                alertsTableBody.innerHTML = overdueItems.map(item => `
+                    <tr class="hover:bg-red-50 transition">
+                        <td class="font-black text-slate-900" style="padding:10px; font-size:12px;">NFM-${item.nfm}</td>
+                        <td class="font-bold text-slate-800" style="padding:10px; font-size:12px;">
+                            <div>${item.dsc}</div>
+                            <div class="text-[10px] text-slate-400 font-bold">${item.sc}</div>
+                        </td>
+                        <td class="text-center font-black text-slate-900" style="padding:10px; font-size:11px;">
+                            <div>${item.req}</div>
+                            <div class="text-[9px] text-slate-400 uppercase">${item.dept}</div>
+                        </td>
+                        <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglArrived || '-'}</td>
+                        <td class="text-center font-bold text-red-600" style="padding:10px; font-size:11px;">${item.tglTargetAmbil || '<span class="text-slate-400 italic">Batas 3 Hari</span>'}</td>
+                        <td class="text-center" style="padding:10px;">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-100 text-red-800 uppercase inline-block">
+                                ⚠️ Terlewat ${item.delayDays} Hari
+                            </span>
+                        </td>
+                        <td class="text-right" style="padding:10px;">
+                            <button onclick="window.sendReminder('${item.nfm}', '${item.req}', '${item.dsc}', '${item.tglArrived}', '${item.tglTargetAmbil}')" 
+                                    class="bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase px-3 py-1.5 rounded-lg transition shadow-md whitespace-nowrap">
+                                📢 Salin Pengingat
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                alertsPanel.classList.add('hidden');
+                alertsTableBody.innerHTML = '';
+            }
+
+            renderTable(deptStats);
+            updateCharts(deptStats);
+            renderPipelineManager(); // Render daftar update cepat
+        }
+
+        // Tampilkan kalkulasi total ke kartu pipeline
+        function updatePipelineUI(pipe) {
+            document.getElementById('pipeVal-PR').innerText = `Rp ${pipe['PR'].value.toLocaleString('id-ID')}`;
+            document.getElementById('pipeQty-PR').innerText = `${pipe['PR'].count} Item Barang`;
+
+            document.getElementById('pipeVal-ON_ORDER').innerText = `Rp ${pipe['ON ORDER'].value.toLocaleString('id-ID')}`;
+            document.getElementById('pipeQty-ON_ORDER').innerText = `${pipe['ON ORDER'].count} Item Barang`;
+
+            document.getElementById('pipeVal-IN_TRANSIT').innerText = `Rp ${pipe['IN TRANSIT'].value.toLocaleString('id-ID')}`;
+            document.getElementById('pipeQty-IN_TRANSIT').innerText = `${pipe['IN TRANSIT'].count} Item Barang`;
+
+            document.getElementById('pipeVal-ON_SITE').innerText = `Rp ${pipe['ON SITE'].value.toLocaleString('id-ID')}`;
+            document.getElementById('pipeQty-ON_SITE').innerText = `${pipe['ON SITE'].count} Item Barang`;
+
+            document.getElementById('pipeVal-ISSUED').innerText = `Rp ${pipe['ISSUED'].value.toLocaleString('id-ID')}`;
+            document.getElementById('pipeQty-ISSUED').innerText = `${pipe['ISSUED'].count} Item Barang`;
+        }
+
+        // INTERAKSI CLIK ALUR: Filter & Tampilkan Item Yang Relevan
+        window.selectPipelineStage = (stage) => {
+            selectedStage = stage;
+            
+            // Atur styling active pada kartu pipeline yang dipilih
+            document.querySelectorAll('.pipeline-card').forEach(el => el.classList.remove('active-pipeline'));
+            const stageId = stage === 'ON ORDER' ? 'ON_ORDER' : stage;
+            const activeCard = document.getElementById(`pipe-${stageId}`);
+            if (activeCard) activeCard.classList.add('active-pipeline');
+
+            const tableContainer = document.getElementById('pipeline-details-section');
+            const tableBody = document.getElementById('pipelineDetailsTableBody');
+            const titleEl = document.getElementById('pipeline-detail-title');
+            const countEl = document.getElementById('pipeline-item-count');
+            const dynamicHeader = document.getElementById('pipeline-dynamic-header');
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            // Deteksi jika fase adalah ON SITE
+            const isStageOnSite = stage === 'ON SITE';
+            if (isStageOnSite) {
+                dynamicHeader.innerText = 'Tgl Tiba & Status Ambil';
+            } else {
+                dynamicHeader.innerText = 'Estimasi Value';
+            }
+
+            // Kumpulkan seluruh item berstatus terpilih
+            const matchedItems = [];
+            allData.forEach(entry => {
+                entry.items.forEach(item => {
+                    const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
+                    if (normStatus === stage) {
+                        matchedItems.push({
+                            nfm: entry.nfm,
+                            dept: entry.dept,
+                            req: entry.req,
+                            ...item
+                        });
+                    }
+                });
+            });
+
+            // Tampilkan Detail
+            titleEl.innerHTML = `Barang pada Fase: <span class="text-blue-600">${stage}</span>`;
+            countEl.innerText = `${matchedItems.length} Item Terdeteksi`;
+            tableContainer.classList.remove('hidden');
+
+            if (matchedItems.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-bold uppercase italic bg-slate-50">Tidak ada barang yang saat ini berada dalam fase ini.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = matchedItems.map(i => {
+                let rightColContent = "";
+                
+                if (isStageOnSite) {
+                    const daysOnSite = getDaysDiff(i.tglArrived);
+                    let overdueText = "On Track";
+                    let badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                    
+                    if (i.tglTargetAmbil) {
+                        const target = new Date(i.tglTargetAmbil);
+                        target.setHours(0,0,0,0);
+                        if (today > target) {
+                            const delay = Math.floor((today - target) / (1000 * 60 * 60 * 24));
+                            overdueText = `🚨 Terlewat ${delay} Hari`;
+                            badgeClass = "bg-red-100 text-red-800 border-red-300 animate-pulse";
+                        }
+                    } else if (daysOnSite > 3) {
+                        overdueText = `🚨 Mengendap ${daysOnSite} Hari`;
+                        badgeClass = "bg-red-100 text-red-800 border-red-300 animate-pulse";
+                    }
+
+                    rightColContent = `
+                        <div class="text-center space-y-1">
+                            <span class="font-black text-emerald-600 block text-[11px]">Tiba: ${i.tglArrived || '-'}</span>
+                            <span class="font-bold text-slate-500 block text-[10px]">Batas: ${i.tglTargetAmbil || '3 Hari'}</span>
+                            <span class="px-2 py-0.5 rounded border text-[9px] font-black ${badgeClass} uppercase inline-block">
+                                ${overdueText}
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    rightColContent = `
+                        <div class="text-right font-black text-slate-900 text-xs">
+                            Rp ${(i.qty * i.prc).toLocaleString('id-ID')}
+                        </div>
+                    `;
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="font-black text-slate-900" style="padding:10px; font-size:13px;">NFM-${i.nfm}</td>
+                        <td style="padding:10px; font-size:12px;">
+                            <span class="text-blue-600 font-bold block">${i.po || '-'}</span>
+                            <span class="text-[10px] text-slate-400 font-bold block">${i.sc || '-'}</span>
+                        </td>
+                        <td class="font-bold text-slate-800" style="padding:10px; font-size:12px;">${i.dsc}</td>
+                        <td class="text-center" style="padding:10px; font-size:11px;">
+                            <span class="font-black text-slate-900 block">${i.req}</span>
+                            <span class="text-[9px] text-slate-400 font-black uppercase block">${i.dept}</span>
+                        </td>
+                        <td class="text-right" style="padding:10px; font-size:12px;">
+                            <div class="font-bold">Plan: ${i.qty}</div>
+                            <div class="text-[10px] text-slate-500">Arr: ${i.qtyArrived || 0} | Iss: ${i.qtyIssued || 0}</div>
+                        </td>
+                        <td style="padding:10px;">
+                            ${rightColContent}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        };
+
+        function renderTable(stats) {
+            const tbody = document.getElementById('summaryTable');
+            tbody.innerHTML = Object.entries(stats)
+                .sort((a, b) => b[1].out - a[1].out)
+                .map(([name, data]) => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="force-black uppercase">${name}</td>
+                    <td class="force-black text-center">${Math.round(data.age / data.count)} H</td>
+                    <td class="force-black text-center text-blue-600">Rp ${data.out.toLocaleString('id-ID')}</td>
+                    <td class="text-right force-black text-indigo-600">Rp ${data.iss.toLocaleString('id-ID')}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Charts
+        function initCharts() {
+            const ctxBar = document.getElementById('mainChart').getContext('2d');
+            mainChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Value', data: [], backgroundColor: '#0061ff', borderRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#0061ff', '#10b981', '#f59e0b', '#6366f1', '#ec4899'] }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { font: { weight: '800', size: 10 } } } } }
+            });
+        }
+
+        function updateCharts(stats) {
+            const labels = Object.keys(stats);
+            const data = labels.map(l => stats[l].out);
+
+            mainChart.data.labels = labels;
+            mainChart.data.datasets[0].data = data;
+            mainChart.update();
+
+            pieChart.data.labels = labels;
+            pieChart.data.datasets[0].data = data;
+            pieChart.update();
+        }
+
+        // EXCEL DOWNLOAD LOGIC
+        window.downloadExcel = () => {
+            if (allData.length === 0) {
+                showCustomToast("Tidak ada data untuk diunduh.", "error");
+                return;
+            }
+
+            const exportRows = [];
+            allData.forEach(entry => {
+                entry.items.forEach(item => {
+                    const daysOnSite = item.tglArrived ? getDaysDiff(item.tglArrived) : 0;
+                    exportRows.push({
+                        'No NFM': entry.nfm,
+                        'Departemen': entry.dept,
+                        'Requestor': entry.req,
+                        'Tgl Planning': entry.tglPlanning,
+                        'Aging (Hari)': entry.aging,
+                        'PO #': item.po,
+                        'SC #': item.sc,
+                        'Deskripsi Barang': item.dsc,
+                        'Qty Rencana': item.qty,
+                        'Harga Satuan (Rp)': item.prc,
+                        'Qty Datang': item.qtyArrived || 0,
+                        'Qty Keluar': item.qtyIssued || 0,
+                        'Status': item.status,
+                        'Tgl Tiba di Site': item.tglArrived || '-',
+                        'Target Ambil Gudang': item.tglTargetAmbil || '-',
+                        'Aging Gudang Site (Hari)': item.status === 'ON SITE' ? daysOnSite : '-',
+                        'Value Outstanding (Rp)': Math.max(0, item.qty - (item.qtyIssued || 0)) * (item.prc || 0),
+                        'Tgl Terakhir Update': entry.tglUpdate ? entry.tglUpdate.split('T')[0] : '-'
+                    });
+                });
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(exportRows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "NFM Data");
+
+            const timestamp = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `Wetar_NFM_Report_${timestamp}.xlsx`);
+        };
+
+        // CRUD Operations
         window.addItemRow = () => {
             const div = document.createElement('div');
-            div.className = "grid grid-cols-1 md:grid-cols-5 gap-4 items-end animate-fade-in border-b border-slate-200 pb-6 last:border-0";
+            div.className = "item-row grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-4 items-end animate-fade-in border-b border-slate-200 pb-6 last:border-0";
             div.innerHTML = `
-                <div><label class="text-[9px] font-black uppercase text-slate-500">PO#</label><input type="text" class="input-field po" required></div>
-                <div><label class="text-[9px] font-black uppercase text-slate-500">SC#</label><input type="text" class="input-field sc" required></div>
-                <div><label class="text-[9px] font-black uppercase text-slate-500">Desc</label><input type="text" class="input-field dsc" required></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500">PO#</label><input type="text" class="input-field po" required placeholder="PO..."></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500">SC#</label><input type="text" class="input-field sc" required placeholder="SC..." oninput="window.handleSCOnInput(this)"></div>
                 <div><label class="text-[9px] font-black uppercase text-slate-500">Qty Plan</label><input type="number" class="input-field qty" required></div>
-                <div class="relative"><label class="text-[9px] font-black uppercase text-slate-500">Price (Rp)</label><input type="number" class="input-field prc" required><button type="button" onclick="this.parentElement.parentElement.remove()" class="absolute -top-6 right-0 text-[8px] font-black text-red-500 uppercase">Hapus</button></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500">Price (Rp)</label><input type="number" class="input-field prc" required></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500">Target Ambil</label><input type="date" class="input-field tgt"></div>
+                <div class="relative"><label class="text-[9px] font-black uppercase text-slate-500">Desc</label><input type="text" class="input-field dsc" required placeholder="Barang..."><button type="button" onclick="this.parentElement.parentElement.remove()" class="absolute -top-6 right-0 text-[8px] font-black text-red-500 uppercase">Hapus</button></div>
             `;
             document.getElementById('itemsContainer').appendChild(div);
         };
 
-        window.saveData = async (e) => {
+        document.getElementById('nfmForm').onsubmit = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('saveBtn'); btn.disabled = true;
-            const items = Array.from(document.querySelectorAll('#itemsContainer > div')).map(r => ({
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.innerText = "MENYIMPAN...";
+
+            const items = Array.from(document.querySelectorAll('#itemsContainer > .item-row')).map(r => ({
                 po: r.querySelector('.po').value.toUpperCase(),
                 sc: r.querySelector('.sc').value.toUpperCase(),
                 qty: parseFloat(r.querySelector('.qty').value),
                 prc: parseFloat(r.querySelector('.prc').value),
                 dsc: r.querySelector('.dsc').value,
-                status: 'PR', qtyArrived: 0, qtyIssued: 0, tglOnsite: ''
+                tglTargetAmbil: r.querySelector('.tgt').value || "", // Menyimpan target ambil
+                status: 'PR', qtyArrived: 0, qtyIssued: 0
             }));
-            const payload = { dept: document.getElementById('in_dept').value, whrs: document.getElementById('in_whrs').value, req: document.getElementById('in_req').value.toUpperCase(), nfm: document.getElementById('in_nfm').value, tglInput: document.getElementById('in_date').value, items, tglUpdate: new Date().toISOString().split('T')[0] };
-            if(db) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), payload);
-            else { allData.push({...payload, id: Date.now().toString()}); localStorage.setItem('wetar_db_v47', JSON.stringify(allData)); updateDashboard(); }
-            alert("Data Berhasil Disimpan!"); btn.disabled = false; document.getElementById('nfmForm').reset(); switchView('report');
+
+            const payload = {
+                dept: document.getElementById('in_dept').value,
+                req: document.getElementById('in_req').value.toUpperCase(),
+                nfm: document.getElementById('in_nfm').value,
+                tglPlanning: document.getElementById('in_date').value,
+                items,
+                tglUpdate: new Date().toISOString()
+            };
+
+            try {
+                if (db && user) {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), payload);
+                } else {
+                    allData.push({ ...payload, id: Date.now().toString(), aging: calculateAging(payload.tglPlanning) });
+                    localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
+                    updateDashboard();
+                }
+                document.getElementById('nfmForm').reset();
+                document.getElementById('itemsContainer').innerHTML = '';
+                addItemRow();
+                switchView('report');
+                showCustomToast("Data Berhasil Disimpan!");
+            } catch (err) {
+                showCustomToast("Gagal menyimpan: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "SIMPAN NFM & UPDATE DASHBOARD";
+            }
         };
 
-        window.runSearch = (mode) => {
-            const v = document.getElementById(mode === 'view' ? 'trackingSearch' : 'manageSearch').value.toUpperCase();
-            const res = document.getElementById(mode === 'view' ? 'trackingResult' : 'manageResult');
-            if(!v) { res.innerHTML = ''; return; }
-            
-            // MENGGUNAKAN FILTER UNTUK MULTI-SEARCH
-            const results = allData.filter(d => d.nfm && d.nfm.toUpperCase().includes(v));
-            if(results.length === 0) { res.innerHTML = `<div class="p-12 glass-card text-center font-black force-black bg-red-50 text-red-600 italic">NFM "${v}" tidak ditemukan.</div>`; return; }
-            
-            res.innerHTML = results.map(f => {
-                let tableRows = f.items.map((i, idx) => {
-                    const sCls = i.status === 'PR' ? 'st-pr' : i.status === 'ON ORDER' ? 'st-order' : i.status === 'IN TRANSIT' ? 'st-transit' : i.status === 'ON SITE' ? 'st-site' : 'st-issued';
-                    let siteAging = i.tglOnsite ? Math.floor(Math.abs(new Date() - new Date(i.tglOnsite)) / (1000 * 60 * 60 * 24)) : 0;
-                    if(mode === 'edit') {
-                        return `<tr><td class="force-black text-blue-600 font-bold">${i.po}</td><td class="force-black">${i.sc}</td><td class="text-center font-black text-black font-bold">${i.qty}</td><td><input type="number" id="arr_${f.id}_${idx}" value="${i.qtyArrived || 0}" class="w-16 border-2 border-blue-100 rounded text-center font-black force-black p-1"></td><td><input type="number" id="iss_${f.id}_${idx}" value="${i.qtyIssued || 0}" class="w-16 border-2 border-indigo-100 rounded text-center font-black force-black p-1"></td><td><input type="date" id="onsite_${f.id}_${idx}" value="${i.tglOnsite || ''}" class="text-[10px] border-2 border-emerald-100 p-1 rounded font-black"></td><td><select id="st_${f.id}_${idx}" class="text-[10px] font-black border-2 border-slate-200 p-1 bg-white force-black uppercase rounded-lg"><option value="PR" ${i.status==='PR'?'selected':''}>PR</option><option value="ON ORDER" ${i.status==='ON ORDER'?'selected':''}>ORDER</option><option value="IN TRANSIT" ${i.status==='IN TRANSIT'?'selected':''}>TRANSIT</option><option value="ON SITE" ${i.status==='ON SITE'?'selected':''}>SITE</option><option value="ISSUED" ${i.status==='ISSUED'?'selected':''}>ISSUED</option></select></td></tr>`;
-                    } else {
-                        return `<tr><td class="force-black text-blue-600 font-bold">${i.po}</td><td class="force-black">${i.sc} - ${i.dsc}</td><td class="text-center font-black text-black font-bold">${i.qty}</td><td class="text-center font-black text-black">${i.qtyArrived || 0}</td><td class="text-center font-black text-black underline font-bold">${i.qtyIssued || 0}</td><td class="text-center force-black text-emerald-600">${siteAging} H</td><td><span class="status-badge ${sCls}">${i.status}</span></td></tr>`;
-                    }
-                }).join('');
+        // Tracking Logic
+        document.getElementById('trackingSearch').oninput = (e) => {
+            const query = e.target.value.toUpperCase();
+            const res = document.getElementById('trackingResult');
+            if (!query) { res.innerHTML = ''; return; }
 
-                const headerExtra = mode === 'edit' ? '<th class="force-black">Tgl Onsite</th>' : '<th class="force-black text-center">Site Age</th>';
-                return `<div class="glass-card p-10 border-t-8 ${mode==='edit'?'border-blue-600':'border-slate-900'} animate-fade-in shadow-2xl relative mb-6">
+            const filtered = allData.filter(d => d.nfm.toUpperCase().includes(query));
+            if (filtered.length === 0) {
+                res.innerHTML = `<div class="p-12 glass-card text-center font-black force-black bg-red-50 text-red-600">NFM TIDAK DITEMUKAN</div>`;
+                return;
+            }
+
+            res.innerHTML = filtered.map(f => `
+                <div class="glass-card p-8 border-t-8 border-blue-600 mb-6 animate-fade-in shadow-xl">
                     <div class="flex justify-between items-start mb-6">
-                        <h3 class="text-3xl font-black force-black italic uppercase tracking-tighter">NFM #${f.nfm}</h3>
-                        <div class="text-right"><p class="text-[11px] font-black text-slate-500 uppercase italic">Dept: ${f.dept} | WHRS: ${f.whrs || '-'}</p><p class="text-[11px] font-black text-slate-400 uppercase italic">Req: ${f.req}</p></div>
+                        <div>
+                            <h3 class="text-2xl font-black italic uppercase">NFM #${f.nfm}</h3>
+                            <p class="text-[10px] font-black text-slate-400 uppercase">Requestor: ${f.req} | Dept: ${f.dept}</p>
+                        </div>
+                        <button onclick="deleteEntry('${f.id}')" class="text-red-500 font-black text-[10px] uppercase">Hapus NFM</button>
                     </div>
-                    <div class="mt-8 overflow-x-auto"><table class="w-full nfm-table"><thead><tr><th class="force-black">PO</th><th class="force-black">Barang</th><th class="text-center force-black">Plan</th><th class="text-center force-black">Arrived</th><th class="text-center force-black">Issued</th>${headerExtra}<th class="force-black">Status</th></tr></thead><tbody>${tableRows}</tbody></table></div>
-                    ${mode==='edit' ? `<div class="flex gap-4 mt-8"><button onclick="commitStockUpdate('${f.id}')" class="flex-1 bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase text-sm tracking-widest hover:bg-blue-700 transition">SINKRONKAN DATA</button><button onclick="deleteEntry('${f.id}')" class="px-8 text-red-500 font-black text-[10px] uppercase hover:bg-red-50 rounded-xl transition">Hapus</button></div>` : ''}
-                </div>`;
-            }).join('');
+                    <div class="overflow-x-auto">
+                        <table class="w-full nfm-table">
+                            <thead><tr><th>PO/SC</th><th>Deskripsi & Target</th><th>Plan</th><th>Arrived</th><th>Issued</th><th>Status, Tgl Tiba & Target</th></tr></thead>
+                            <tbody>
+                                ${f.items.map((i, idx) => `
+                                    <tr>
+                                        <td class="text-blue-600">${i.po}<br><span class="text-[9px] text-slate-400">${i.sc}</span></td>
+                                        <td>
+                                            <div class="font-bold text-slate-800 mb-1">${i.dsc}</div>
+                                            <div class="mt-1">
+                                                <label class="text-[8px] font-black text-slate-400 block uppercase">Target Ambil:</label>
+                                                <input type="date" value="${i.tglTargetAmbil || ''}" onchange="updateItem('${f.id}', ${idx}, 'tglTargetAmbil', this.value)" class="text-[9px] font-black border p-1 rounded w-full">
+                                            </div>
+                                        </td>
+                                        <td class="text-center">${i.qty}</td>
+                                        <td><input type="number" value="${i.qtyArrived || 0}" onchange="updateItem('${f.id}', ${idx}, 'qtyArrived', this.value)" class="w-16 border rounded p-1 text-center font-black"></td>
+                                        <td><input type="number" value="${i.qtyIssued || 0}" onchange="updateItem('${f.id}', ${idx}, 'qtyIssued', this.value)" class="w-16 border rounded p-1 text-center font-black"></td>
+                                        <td>
+                                            <select onchange="updateItem('${f.id}', ${idx}, 'status', this.value)" class="text-[10px] font-black border p-1 rounded w-full mb-1">
+                                                <option value="PR" ${i.status === 'PR' ? 'selected' : ''}>PR</option>
+                                                <option value="ON ORDER" ${i.status === 'ON ORDER' ? 'selected' : ''}>ORDER</option>
+                                                <option value="IN TRANSIT" ${i.status === 'IN TRANSIT' ? 'selected' : ''}>TRANSIT</option>
+                                                <option value="ON SITE" ${i.status === 'ON SITE' ? 'selected' : ''}>SITE</option>
+                                                <option value="ISSUED" ${i.status === 'ISSUED' ? 'selected' : ''}>ISSUED</option>
+                                            </select>
+                                            ${i.status === 'ON SITE' || i.status === 'ISSUED' ? `
+                                                <div class="mt-1">
+                                                    <label class="text-[8px] font-black text-slate-400 block uppercase">Tgl Tiba Site:</label>
+                                                    <input type="date" value="${i.tglArrived || ''}" onchange="updateItem('${f.id}', ${idx}, 'tglArrived', this.value)" class="text-[9px] font-black border p-1 rounded w-full">
+                                                </div>
+                                            ` : ''}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
         };
 
-        window.commitStockUpdate = async (did) => {
-            const f = allData.find(d => d.id === did);
-            const items = f.items.map((i, idx) => {
-                const arr = Math.abs(parseFloat(document.getElementById(`arr_${did}_${idx}`).value)) || 0;
-                const iss = Math.abs(parseFloat(document.getElementById(`iss_${did}_${idx}`).value)) || 0;
-                const ons = document.getElementById(`onsite_${did}_${idx}`).value;
-                let st = document.getElementById(`st_${did}_${idx}`).value;
-                if(iss >= i.qty) st = 'ISSUED';
-                else if(arr > 0 && iss < arr) st = 'ON SITE';
-                return { ...i, qtyArrived: arr, qtyIssued: iss, tglOnsite: ons, status: st };
-            });
-            if(db) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items, tglUpdate: new Date().toISOString().split('T')[0] });
-            else { f.items = items; localStorage.setItem('wetar_db_v47', JSON.stringify(allData)); updateDashboard(); runSearch('edit'); }
-            alert("Database Diperbarui!");
-        };
-
-        window.deleteEntry = async (did) => { 
-            if(confirm("Hapus selamanya?")) { 
-                if(db) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did)); 
-                else { allData = allData.filter(d => d.id !== did); localStorage.setItem('wetar_db_v47', JSON.stringify(allData)); updateDashboard(); document.getElementById('manageResult').innerHTML = ''; }
-            } 
-        };
-
-        window.updateDashboard = () => {
-            let totalOutVal = 0, totalIssuedVal = 0, totalMonitorVal = 0;
-            allData.forEach(entry => {
-                entry.items.forEach(item => {
-                    const prc = item.prc || 0;
-                    const itemMonitor = item.qty * prc;
-                    const itemIssued = Math.abs(item.qtyIssued || 0) * prc;
-                    const itemOut = Math.max(0, itemMonitor - itemIssued);
-
-                    totalMonitorVal += itemMonitor;
-                    totalIssuedVal += itemIssued;
-                    totalOutVal += itemOut;
-                });
-            });
-            document.getElementById('statTotal').innerText = `Rp ${totalOutVal.toLocaleString('id-ID')}`;
-            document.getElementById('statIssued').innerText = `Rp ${totalIssuedVal.toLocaleString('id-ID')}`;
-            document.getElementById('statMonitor').innerText = `Rp ${totalMonitorVal.toLocaleString('id-ID')}`;
-            document.getElementById('statAge').innerText = allData.length;
-            renderVisualDashboard();
-        };
-
-        function renderVisualDashboard() {
-            const s = allData.reduce((acc, entry) => {
-                if(!acc[entry.dept]) acc[entry.dept]={out:0, iss:0, ageSum:0, ageCount:0};
-                entry.items.forEach(i => {
-                    const prc = i.prc || 0;
-                    const valOut = Math.max(0, (i.qty - (Math.abs(i.qtyIssued) || 0)) * prc);
-                    acc[entry.dept].out += valOut;
-                    acc[entry.dept].iss += (Math.abs(i.qtyIssued) || 0) * prc;
-                    if(i.tglOnsite) { acc[entry.dept].ageSum += Math.floor(Math.abs(new Date() - new Date(i.tglOnsite)) / (1000*60*60*24)); acc[entry.dept].ageCount++; }
-                });
-                return acc;
-            }, {});
-
-            document.getElementById('summaryTable').innerHTML = Object.entries(s).sort((a,b)=>b[1].out-a[1].out).map(([n,v]) => `<tr class="hover:bg-slate-50 transition"><td class="force-black uppercase font-bold">${n}</td><td class="force-black text-center">${v.ageCount > 0 ? Math.round(v.ageSum/v.ageCount) : 0} H</td><td class="force-black text-center font-black text-blue-600">Rp ${v.out.toLocaleString('id-ID')}</td><td class="text-right force-black text-indigo-600 font-bold">Rp ${v.iss.toLocaleString('id-ID')}</td></tr>`).join('');
+        window.updateItem = async (did, idx, field, val) => {
+            const entry = allData.find(d => d.id === did);
+            if (!entry) return;
             
-            const labels = Object.keys(s); const data = labels.map(l => s[l].out);
-            if(mainChart) mainChart.destroy();
-            mainChart = new Chart(document.getElementById('mainChart'), { 
-                type: 'bar', data: { labels, datasets: [{ label: 'Sisa Outstanding (Rp)', data, backgroundColor: '#0061ff', borderRadius: 12 }] }, 
-                options: { 
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: false,
-                        datalabels: { 
-                            anchor: 'end', align: 'top', font: { weight: '900', size: 10 }, color: '#000',
-                            formatter: (v) => v > 0 ? 'Rp ' + v.toLocaleString('id-ID') : ''
-                        }
-                    },
-                    scales: { y: { beginAtZero: true, grid: { display: false } } }
-                } 
-            });
+            entry.items[idx][field] = field.includes('qty') ? parseFloat(val) : val;
+            
+            const i = entry.items[idx];
+            
+            // Logika Auto-Status & Auto Stamp tglArrived
+            const prevStatus = i.status;
+            if (i.qtyIssued >= i.qty) {
+                i.status = 'ISSUED';
+            } else if (i.qtyArrived > 0 && i.qtyIssued < i.qtyArrived) {
+                i.status = 'ON SITE';
+            }
 
-            if(pieChart) pieChart.destroy();
-            pieChart = new Chart(document.getElementById('pieChart'), { 
-                type: 'doughnut', 
-                data: { labels, datasets: [{ data, backgroundColor: ['#0061ff', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'] }] }, 
-                options: { 
-                    maintainAspectRatio: false,
-                    cutout: '70%', 
-                    plugins: { 
-                        legend: false,
-                        datalabels: { display: false }
-                    } 
-                } 
-            });
-        }
+            // Jika status baru menjadi ON SITE dan belum memiliki tglArrived, beri stamp hari ini
+            if (i.status === 'ON SITE' && !i.tglArrived) {
+                i.tglArrived = new Date().toISOString().split('T')[0];
+            } else if (i.status !== 'ON SITE' && i.status !== 'ISSUED') {
+                // Jika status turun lagi, hapus tanggal tibanya
+                delete i.tglArrived;
+            }
 
-        window.downloadExcel = () => {
-            if(allData.length === 0) { alert("Tidak ada data!"); return; }
-            const report = [];
-            allData.forEach(e => { e.items.forEach(i => {
-                const itemMonitor = i.qty * i.prc;
-                const itemIssued = Math.abs(i.qtyIssued || 0) * i.prc;
-                report.push({ "No NFM": e.nfm, "WHRS": e.whrs || '-', "Dept": e.dept, "Requestor": e.req, "Tgl Input": e.tglInput, "PO": i.po, "SC": i.sc, "Desc": i.dsc, "Qty Plan": i.qty, "Harga": i.prc, "Arrived": i.qtyArrived, "Issued": i.qtyIssued, "Tgl Onsite": i.tglOnsite || '-', "Status": i.status, "Sisa Outstanding": Math.max(0, itemMonitor - itemIssued), "Nilai Issued": itemIssued, "Total Monitor Value": itemMonitor });
-            }); });
-            const ws = XLSX.utils.json_to_sheet(report); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-            XLSX.writeFile(wb, `Laporan_Wetar_NFM_v47_${new Date().toISOString().split('T')[0]}.xlsx`);
+            if (db && user) {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items: entry.items });
+            } else {
+                localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
+                updateDashboard();
+                if (selectedStage) selectPipelineStage(selectedStage);
+            }
         };
 
+        window.deleteEntry = async (did) => {
+            showCustomConfirm("Apakah Anda yakin ingin menghapus NFM ini beserta seluruh item di dalamnya secara permanen?", async () => {
+                if (db && user) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did));
+                } else {
+                    allData = allData.filter(d => d.id !== did);
+                    localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
+                    updateDashboard();
+                    document.getElementById('trackingResult').innerHTML = '';
+                    if (selectedStage) selectPipelineStage(selectedStage);
+                }
+                showCustomToast("NFM berhasil dihapus!");
+            });
+        };
+
+        // Navigation
         window.switchView = (v) => {
             document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-' + v).classList.remove('hidden');
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
             document.getElementById('nav-' + v).classList.add('active');
-            if(v==='report') updateDashboard();
+            
+            if (v === 'pipeline') {
+                renderPipelineManager();
+            }
         };
 
+        // AI Analysis Logic
+        window.triggerAIAnalysis = async () => {
+            document.getElementById('ai-modal').classList.remove('hidden');
+            const content = document.getElementById('ai-content');
+            content.innerHTML = `<div class="flex flex-col items-center py-12"><div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div><p class="font-black text-slate-400 uppercase text-[10px]">Menyusun Laporan Intelijen...</p></div>`;
+
+            if (allData.length === 0) {
+                content.innerHTML = `<p class="text-center font-black uppercase text-red-500 py-10">Data tidak cukup untuk dianalisis.</p>`;
+                return;
+            }
+
+            const dataSummary = allData.map(d => ({
+                dept: d.dept,
+                nfm: d.nfm,
+                age: d.aging,
+                value: d.items.reduce((acc, i) => acc + (i.qty * i.prc), 0),
+                outstanding: d.items.reduce((acc, i) => acc + (Math.max(0, i.qty - i.qtyIssued) * i.prc), 0)
+            }));
+
+            const prompt = `Analisis data logistik tambang Wetar berikut dan berikan 3 poin insight eksekutif yang kritis (Singkat dan Tajam): ${JSON.stringify(dataSummary)}`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Gagal mendapatkan analisis.";
+                
+                content.innerHTML = `
+                    <div class="bg-blue-50 border-l-4 border-blue-600 p-4 mb-4">
+                        <p class="text-[10px] font-black text-blue-800 uppercase mb-2">Executive Summary</p>
+                        <div class="text-sm font-bold text-slate-800">${text.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            } catch (err) {
+                content.innerHTML = `<p class="text-red-500 font-bold">Terjadi kesalahan koneksi AI.</p>`;
+            }
+        };
+
+        window.closeAI = () => document.getElementById('ai-modal').classList.add('hidden');
+        
         window.applySetup = () => {
             const raw = document.getElementById('config-input').value.trim();
-            try { JSON.parse(raw); localStorage.setItem('wetar_v47_config', raw); location.reload(); } catch(e) { alert("Format salah!"); }
+            try { 
+                JSON.parse(raw); 
+                localStorage.setItem('wetar_v32_config', raw); 
+                location.reload(); 
+            } catch(e) { 
+                showCustomToast("Format JSON tidak valid!", "error"); 
+            }
         };
-    </script>
+        
+        document.getElementById('cloud-activate-btn').onclick = applySetup;
 
-    <div class="fixed bottom-4 right-10 flex gap-4 text-[8px] font-black text-slate-400 uppercase tracking-widest z-50">
-        <div>FIREBASE: <span id="diag-fb" class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span></div>
-        <div>v47.0 MULTI-SEARCH FIX</div>
-    </div>
+    </script>
 </body>
 </html>
