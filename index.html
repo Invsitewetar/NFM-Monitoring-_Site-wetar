@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive Dashboard v32.6</title>
+    <title>Wetar Intelligence Sync - Executive Dashboard v32.7</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -379,25 +379,48 @@
             </div>
         </div>
 
-        <!-- VIEW: UPDATE PIPELINE CEPAT (MENU BARU!) -->
+        <!-- VIEW: UPDATE PIPELINE CEPAT (PIPELINE MANAGER) -->
         <div id="view-pipeline" class="hidden p-6 md:p-10 max-w-7xl mx-auto animate-fade-in">
             <div class="bg-white border border-slate-100 rounded-[32px] p-6 md:p-8 shadow-2xl mb-8">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                     <div>
                         <h2 class="text-2xl font-black uppercase tracking-tight force-black italic">Pipeline Manager <span class="text-blue-600">(Update Cepat)</span></h2>
-                        <p class="text-xs text-slate-500 font-bold mt-1">Kelola seluruh barang berstatus PR, ON ORDER, atau IN TRANSIT dari semua NFM sekaligus. Tekan tombol <b class="text-emerald-600">"Tiba di Site"</b> untuk checklist cepat otomatis.</p>
+                        <p class="text-xs text-slate-500 font-bold mt-1">Kelola seluruh barang PR, PO, Transit, maupun yang sudah Tiba di Site dari semua NFM sekaligus tanpa perlu cari manual.</p>
                     </div>
-                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                    <!-- Filter Status Tabs -->
+                    <div class="flex flex-wrap gap-2 w-full lg:w-auto">
                         <button onclick="filterPipelineView('ALL')" id="tab-pipe-ALL" class="bg-blue-600 text-white font-black text-[10px] uppercase px-4 py-2.5 rounded-xl shadow-md">Semua (${countPendingStage('ALL')})</button>
                         <button onclick="filterPipelineView('PR')" id="tab-pipe-PR" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">PR (${countPendingStage('PR')})</button>
                         <button onclick="filterPipelineView('ON ORDER')" id="tab-pipe-ON_ORDER" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">PO / Order (${countPendingStage('ON ORDER')})</button>
                         <button onclick="filterPipelineView('IN TRANSIT')" id="tab-pipe-IN_TRANSIT" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">Transit (${countPendingStage('IN TRANSIT')})</button>
+                        <button onclick="filterPipelineView('ON SITE')" id="tab-pipe-ON_SITE" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">Sudah di Site (${countPendingStage('ON SITE')})</button>
                     </div>
                 </div>
                 
-                <!-- Kolom Pencarian Cepat di Menu Pipeline -->
-                <div class="mt-6 flex gap-4 p-2 bg-slate-50 rounded-2xl border border-slate-200">
-                    <input type="text" id="pipelineFilterSearch" class="flex-1 bg-transparent px-4 py-2 text-sm font-bold outline-none force-black" placeholder="Cari berdasarkan NFM, Requestor, PO, SC, atau Nama Barang..." oninput="triggerPipelineSearch()">
+                <!-- Kolom Pencarian Cepat & Filter Multiselect per Departemen & Nama Requestor -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-slate-400 mb-1 block">Cari Kata Kunci</label>
+                        <input type="text" id="pipelineFilterSearch" class="input-field bg-white" placeholder="Cari NFM, PO, SC, Barang..." oninput="triggerPipelineSearch()">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-slate-400 mb-1 block">Filter Departemen</label>
+                        <select id="pipelineFilterDept" class="input-field bg-white" onchange="triggerPipelineSearch()">
+                            <option value="ALL">SEMUA DEPARTEMEN</option>
+                            <option value="MAINTENANCE FIXED">MAINTENANCE FIXED</option>
+                            <option value="MAINTENANCE MOBILE">MAINTENANCE MOBILE</option>
+                            <option value="PROCESSING">PROCESSING</option>
+                            <option value="MINING">MINING</option>
+                            <option value="SCM">SCM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-slate-400 mb-1 block">Filter Requestor (Nama)</label>
+                        <select id="pipelineFilterReq" class="input-field bg-white" onchange="triggerPipelineSearch()">
+                            <option value="ALL">SEMUA REQUESTOR</option>
+                            <!-- Diisi secara dinamis dari JS -->
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -411,7 +434,7 @@
                             <th class="force-black text-center" style="width:120px;">Qty Datang</th>
                             <th class="force-black text-center" style="width:120px;">Qty Keluar</th>
                             <th class="force-black text-center" style="width:130px;">Status / Target</th>
-                            <th class="force-black text-right">Aksi Cepat</th>
+                            <th class="force-black text-right">Aksi & Pengingat</th>
                         </tr>
                     </thead>
                     <tbody id="quickPipelineTableBody" class="divide-y divide-slate-100">
@@ -505,12 +528,18 @@
             document.body.removeChild(tempTextArea);
         };
 
-        // Trigger SMS/WhatsApp Template copy
+        // Trigger SMS/WhatsApp Template copy AND open WhatsApp Web
         window.sendReminder = (nfm, req, dsc, tglArrived, tglTargetAmbil) => {
             const cleanTglArrived = tglArrived || '-';
             const cleanTarget = tglTargetAmbil || '-';
-            const msg = `Halo ${req}, barang Anda (${dsc}) untuk NFM #${nfm} sudah tiba di site sejak ${cleanTglArrived} (Target Ambil: ${cleanTarget}). Harap segera melakukan pengambilan di Gudang. Terima kasih!`;
+            const msg = `Halo *${req}*, barang Anda (*${dsc}*) untuk NFM *#${nfm}* sudah tiba di site sejak *${cleanTglArrived}* (Target Ambil: *${cleanTarget}*). Harap segera melakukan pengambilan di Gudang Wetar. Terima kasih!`;
+            
+            // Salin ke Clipboard
             copyTextToClipboard(msg);
+            
+            // Redirect langsung ke WhatsApp Web / WhatsApp Mobile
+            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+            window.open(waUrl, '_blank');
         };
 
         // Initialize App
@@ -636,14 +665,15 @@
             }
         };
 
-        // PIPELINE CEPAT: Fungsi untuk menghitung total barang per stage
+        // PIPELINE CEPAT: Fungsi untuk menghitung total barang per stage (termasuk ON SITE!)
         window.countPendingStage = (stage) => {
             let totalCount = 0;
             allData.forEach(entry => {
                 entry.items.forEach(item => {
                     const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
                     if (stage === 'ALL') {
-                        if (normStatus === 'PR' || normStatus === 'ON ORDER' || normStatus === 'IN TRANSIT') {
+                        // Semua barang yang belum selesai di-ISSUED
+                        if (normStatus !== 'ISSUED') {
                             totalCount++;
                         }
                     } else {
@@ -661,14 +691,14 @@
             currentPipelineTab = stage;
             
             // Atur styling tombol filter aktif
-            const tabs = ['ALL', 'PR', 'ON_ORDER', 'IN_TRANSIT'];
+            const tabs = ['ALL', 'PR', 'ON_ORDER', 'IN_TRANSIT', 'ON_SITE'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`tab-pipe-${t}`);
                 if (btn) {
                     btn.className = "bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl";
                 }
             });
-            const activeId = stage === 'ON ORDER' ? 'ON_ORDER' : (stage === 'IN TRANSIT' ? 'IN_TRANSIT' : stage);
+            const activeId = stage === 'ON ORDER' ? 'ON_ORDER' : (stage === 'IN TRANSIT' ? 'IN_TRANSIT' : (stage === 'ON SITE' ? 'ON_SITE' : stage));
             const activeBtn = document.getElementById(`tab-pipe-${activeId}`);
             if (activeBtn) {
                 activeBtn.className = "bg-blue-600 text-white font-black text-[10px] uppercase px-4 py-2.5 rounded-xl shadow-md";
@@ -683,35 +713,64 @@
             renderPipelineManager();
         };
 
-        // PIPELINE CEPAT: Render List Pipeline Manager
+        // PIPELINE CEPAT: Populasi dropdown Requestor unik secara otomatis
+        window.populatePipelineFilters = () => {
+            const reqSelect = document.getElementById('pipelineFilterReq');
+            if (!reqSelect) return;
+            
+            const currentSelected = reqSelect.value;
+            const requestors = new Set();
+            
+            allData.forEach(d => {
+                if (d.req) {
+                    requestors.add(d.req.toUpperCase().trim());
+                }
+            });
+
+            let optionsHtml = '<option value="ALL">SEMUA REQUESTOR</option>';
+            Array.from(requestors).sort().forEach(req => {
+                optionsHtml += `<option value="${req}" ${currentSelected === req ? 'selected' : ''}>${req}</option>`;
+            });
+            reqSelect.innerHTML = optionsHtml;
+        };
+
+        // PIPELINE CEPAT: Render List Pipeline Manager dengan Filter Departemen & Requestor
         function renderPipelineManager() {
             const tableBody = document.getElementById('quickPipelineTableBody');
             if (!tableBody) return;
 
+            const filterDept = document.getElementById('pipelineFilterDept')?.value || 'ALL';
+            const filterReq = document.getElementById('pipelineFilterReq')?.value || 'ALL';
+
             const matchedItems = [];
             allData.forEach(entry => {
+                // Filter Departemen global
+                if (filterDept !== 'ALL' && entry.dept !== filterDept) return;
+                // Filter Requestor global
+                if (filterReq !== 'ALL' && entry.req.toUpperCase().trim() !== filterReq) return;
+
                 entry.items.forEach((item, idx) => {
                     const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
                     
                     // Filter berdasarkan Tab Kategori
                     let passTab = false;
                     if (currentPipelineTab === 'ALL') {
-                        if (normStatus === 'PR' || normStatus === 'ON ORDER' || normStatus === 'IN TRANSIT') passTab = true;
+                        if (normStatus !== 'ISSUED') passTab = true;
                     } else {
                         if (normStatus === currentPipelineTab) passTab = true;
                     }
 
                     if (!passTab) return;
 
-                    // Filter berdasarkan Kolom Pencarian Cepat
+                    // Filter berdasarkan Kolom Pencarian Kata Kunci
                     if (pipelineSearchQuery) {
                         const inSearch = (
                             entry.nfm.toUpperCase().includes(pipelineSearchQuery) ||
                             entry.req.toUpperCase().includes(pipelineSearchQuery) ||
                             entry.dept.toUpperCase().includes(pipelineSearchQuery) ||
                             item.dsc.toUpperCase().includes(pipelineSearchQuery) ||
-                            item.po.toUpperCase().includes(pipelineSearchQuery) ||
-                            item.sc.toUpperCase().includes(pipelineSearchQuery)
+                            (item.po && item.po.toUpperCase().includes(pipelineSearchQuery)) ||
+                            (item.sc && item.sc.toUpperCase().includes(pipelineSearchQuery))
                         );
                         if (!inSearch) return;
                     }
@@ -736,48 +795,71 @@
             if (orderBtn) orderBtn.innerText = `PO / Order (${countPendingStage('ON ORDER')})`;
             const transitBtn = document.getElementById('tab-pipe-IN_TRANSIT');
             if (transitBtn) transitBtn.innerText = `Transit (${countPendingStage('IN TRANSIT')})`;
+            const onsiteBtn = document.getElementById('tab-pipe-ON_SITE');
+            if (onsiteBtn) onsiteBtn.innerText = `Sudah di Site (${countPendingStage('ON SITE')})`;
 
             if (matchedItems.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-slate-400 font-bold uppercase italic bg-slate-50">Tidak ada barang pending yang ditemukan dalam kriteria ini.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-slate-400 font-bold uppercase italic bg-slate-50">Tidak ada barang yang ditemukan dalam kriteria filter ini.</td></tr>`;
                 return;
             }
 
-            tableBody.innerHTML = matchedItems.map(i => `
-                <tr class="hover:bg-slate-50/50 transition">
-                    <td style="padding:12px;">
-                        <span class="font-black text-slate-900 block text-sm">NFM-${i.nfm}</span>
-                        <span class="text-[10px] text-slate-400 font-bold block uppercase">${i.dept}</span>
-                        <span class="text-[11px] text-blue-600 font-black block mt-0.5">Req: ${i.req}</span>
-                    </td>
-                    <td style="padding:12px;">
-                        <span class="font-bold text-slate-800 block text-xs">${i.dsc}</span>
-                        <span class="text-[10px] text-slate-400 font-bold block">SC: ${i.sc || '-'} | PO: ${i.po || '-'}</span>
-                    </td>
-                    <td class="text-center font-black text-slate-900" style="padding:12px;">${i.qty}</td>
-                    <td style="padding:12px; text-align:center;">
-                        <input type="number" id="quick_arr_${i.entryId}_${i.itemIndex}" value="${i.qtyArrived || 0}" class="w-20 border-2 border-slate-200 rounded text-center font-black text-xs p-1">
-                    </td>
-                    <td style="padding:12px; text-align:center;">
-                        <input type="number" id="quick_iss_${i.entryId}_${i.itemIndex}" value="${i.qtyIssued || 0}" class="w-20 border-2 border-slate-200 rounded text-center font-black text-xs p-1">
-                    </td>
-                    <td style="padding:12px;">
-                        <select id="quick_st_${i.entryId}_${i.itemIndex}" class="text-[10px] font-black border-2 border-slate-200 p-1 w-full bg-white rounded-lg mb-1">
-                            <option value="PR" ${i.status === 'PR' ? 'selected' : ''}>PR</option>
-                            <option value="ON ORDER" ${i.status === 'ON ORDER' || i.status === 'ORDER' ? 'selected' : ''}>ORDER</option>
-                            <option value="IN TRANSIT" ${i.status === 'IN TRANSIT' ? 'selected' : ''}>TRANSIT</option>
-                            <option value="ON SITE" ${i.status === 'ON SITE' ? 'selected' : ''}>SITE</option>
-                            <option value="ISSUED" ${i.status === 'ISSUED' ? 'selected' : ''}>ISSUED</option>
-                        </select>
-                        <input type="date" id="quick_tgt_${i.entryId}_${i.itemIndex}" value="${i.tglTargetAmbil || ''}" class="text-[9px] font-bold border-2 border-slate-200 p-1 w-full rounded" title="Target Tanggal Ambil">
-                    </td>
-                    <td style="padding:12px; text-align:right;">
+            tableBody.innerHTML = matchedItems.map(i => {
+                let actionButtons = "";
+                
+                // Jika status barang adalah ON SITE, ganti tombol checklist menjadi "Kirim WA"
+                if (i.status === 'ON SITE') {
+                    actionButtons = `
+                        <div class="flex gap-1 justify-end">
+                            <button onclick="window.sendReminder('${i.nfm}', '${i.req}', '${i.dsc}', '${i.tglArrived}', '${i.tglTargetAmbil || ""}')" 
+                                    class="bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md whitespace-nowrap">
+                                📢 Kirim WA
+                            </button>
+                            <button onclick="saveQuickPipelineRow('${i.entryId}', ${i.itemIndex})" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md">Simpan</button>
+                        </div>
+                    `;
+                } else {
+                    actionButtons = `
                         <div class="flex gap-1 justify-end">
                             <button onclick="quickCheckOnSite('${i.entryId}', ${i.itemIndex})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md whitespace-nowrap">✔️ Tiba di Site</button>
-                            <button onclick="saveQuickPipelineRow('${i.entryId}', ${i.itemIndex})" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase px-2 py-2 rounded-lg transition shadow-md">Simpan</button>
+                            <button onclick="saveQuickPipelineRow('${i.entryId}', ${i.itemIndex})" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md">Simpan</button>
                         </div>
-                    </td>
-                </tr>
-            `).join('');
+                    `;
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50/50 transition">
+                        <td style="padding:12px;">
+                            <span class="font-black text-slate-900 block text-sm">NFM-${i.nfm}</span>
+                            <span class="text-[10px] text-slate-400 font-bold block uppercase">${i.dept}</span>
+                            <span class="text-[11px] text-blue-600 font-black block mt-0.5">Req: ${i.req}</span>
+                        </td>
+                        <td style="padding:12px;">
+                            <span class="font-bold text-slate-800 block text-xs">${i.dsc}</span>
+                            <span class="text-[10px] text-slate-400 font-bold block">SC: ${i.sc || '-'} | PO: ${i.po || '-'}</span>
+                        </td>
+                        <td class="text-center font-black text-slate-900" style="padding:12px;">${i.qty}</td>
+                        <td style="padding:12px; text-align:center;">
+                            <input type="number" id="quick_arr_${i.entryId}_${i.itemIndex}" value="${i.qtyArrived || 0}" class="w-20 border-2 border-slate-200 rounded text-center font-black text-xs p-1">
+                        </td>
+                        <td style="padding:12px; text-align:center;">
+                            <input type="number" id="quick_iss_${i.entryId}_${i.itemIndex}" value="${i.qtyIssued || 0}" class="w-20 border-2 border-slate-200 rounded text-center font-black text-xs p-1">
+                        </td>
+                        <td style="padding:12px;">
+                            <select id="quick_st_${i.entryId}_${i.itemIndex}" class="text-[10px] font-black border-2 border-slate-200 p-1 w-full bg-white rounded-lg mb-1">
+                                <option value="PR" ${i.status === 'PR' ? 'selected' : ''}>PR</option>
+                                <option value="ON ORDER" ${i.status === 'ON ORDER' || i.status === 'ORDER' ? 'selected' : ''}>ORDER</option>
+                                <option value="IN TRANSIT" ${i.status === 'IN TRANSIT' ? 'selected' : ''}>TRANSIT</option>
+                                <option value="ON SITE" ${i.status === 'ON SITE' ? 'selected' : ''}>SITE</option>
+                                <option value="ISSUED" ${i.status === 'ISSUED' ? 'selected' : ''}>ISSUED</option>
+                            </select>
+                            <input type="date" id="quick_tgt_${i.entryId}_${i.itemIndex}" value="${i.tglTargetAmbil || ''}" class="text-[9px] font-bold border-2 border-slate-200 p-1 w-full rounded" title="Target Tanggal Ambil">
+                        </td>
+                        <td style="padding:12px; text-align:right;">
+                            ${actionButtons}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         // PIPELINE CEPAT: Aksi Pintas Checklist instan (Tiba di Site)
@@ -946,6 +1028,7 @@
 
             // Update database relasi kamus
             updateSCLookup();
+            populatePipelineFilters();
 
             // Update nilai numerik di kartu alur logistik
             updatePipelineUI(pipelineData);
@@ -977,7 +1060,7 @@
                         <td class="text-right" style="padding:10px;">
                             <button onclick="window.sendReminder('${item.nfm}', '${item.req}', '${item.dsc}', '${item.tglArrived}', '${item.tglTargetAmbil}')" 
                                     class="bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase px-3 py-1.5 rounded-lg transition shadow-md whitespace-nowrap">
-                                📢 Salin Pengingat
+                                📢 Kirim WA
                             </button>
                         </td>
                     </tr>
@@ -1085,12 +1168,16 @@
                     }
 
                     rightColContent = `
-                        <div class="text-center space-y-1">
+                        <div class="text-center space-y-1.5">
                             <span class="font-black text-emerald-600 block text-[11px]">Tiba: ${i.tglArrived || '-'}</span>
                             <span class="font-bold text-slate-500 block text-[10px]">Batas: ${i.tglTargetAmbil || '3 Hari'}</span>
                             <span class="px-2 py-0.5 rounded border text-[9px] font-black ${badgeClass} uppercase inline-block">
                                 ${overdueText}
                             </span>
+                            <button onclick="window.sendReminder('${i.nfm}', '${i.req}', '${i.dsc}', '${i.tglArrived}', '${i.tglTargetAmbil || ""}')" 
+                                    class="bg-red-600 hover:bg-red-700 text-white font-black text-[8px] uppercase px-2 py-1 rounded-md transition shadow-sm block mx-auto whitespace-nowrap">
+                                📢 Kirim WA
+                            </button>
                         </div>
                     `;
                 } else {
@@ -1390,6 +1477,7 @@
             document.getElementById('nav-' + v).classList.add('active');
             
             if (v === 'pipeline') {
+                populatePipelineFilters();
                 renderPipelineManager();
             }
         };
