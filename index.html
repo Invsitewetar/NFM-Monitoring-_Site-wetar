@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive Dashboard v32.7</title>
+    <title>Wetar Intelligence Sync - Executive Dashboard v32.9</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -61,8 +61,8 @@
         .btn-primary { background: var(--primary); color: white; font-weight: 900; padding: 16px; border-radius: 16px; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; box-shadow: 0 10px 20px -5px rgba(0,97,255,0.3); width: 100%; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(0,97,255,0.4); }
 
-        /* AI Modal */
-        #ai-modal { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); }
+        /* Modal Styles */
+        #ai-modal, #dept-modal, #confirm-modal { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); }
 
         /* Pipeline Step Card Styles */
         .pipeline-card {
@@ -91,6 +91,29 @@
             <div class="flex gap-4">
                 <button onclick="document.getElementById('setup-screen').classList.add('hidden')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-4 rounded-xl uppercase text-[10px]">Gunakan Lokal</button>
                 <button id="cloud-activate-btn" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg hover:bg-blue-700 transition uppercase text-[10px]">Aktifkan Cloud</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KELOLA DEPARTEMEN MODAL (FITUR BARU) -->
+    <div id="dept-modal" class="fixed inset-0 z-[110] flex items-center justify-center p-6 hidden">
+        <div class="glass-card max-w-md w-full p-8 shadow-2xl relative max-h-[80vh] flex flex-col animate-fade-in">
+            <button onclick="closeDeptModal()" class="absolute top-4 right-4 text-slate-400 hover:text-black font-black">✕</button>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">🏢</div>
+                <h2 class="text-xl font-black uppercase italic">Kelola Departemen</h2>
+            </div>
+            
+            <div class="flex gap-2 mb-6">
+                <input type="text" id="new-dept-input" class="input-field uppercase" placeholder="Nama Departemen Baru...">
+                <button onclick="addNewDepartment()" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-black text-[10px] uppercase hover:bg-blue-700 transition shadow-md whitespace-nowrap">Tambah</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-2">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Daftar Departemen Aktif</p>
+                <div id="dept-list-container" class="divide-y divide-slate-100 border border-slate-100 rounded-2xl p-4 bg-slate-50">
+                    <!-- List of depts with delete button diisi oleh JS -->
+                </div>
             </div>
         </div>
     </div>
@@ -156,6 +179,7 @@
                 </div>
             </div>
             <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                <button onclick="openDeptModal()" class="bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-slate-200 transition whitespace-nowrap">🏢 Kelola Departemen</button>
                 <button onclick="document.getElementById('setup-screen').classList.remove('hidden')" class="bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-slate-200 transition whitespace-nowrap">Config Cloud</button>
                 <button onclick="downloadExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-emerald-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap">📊 Export Excel</button>
                 <button onclick="triggerAIAnalysis()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase hover:bg-blue-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap">✨ Analisis AI</button>
@@ -344,11 +368,7 @@
                         <div>
                             <label class="text-[10px] font-black uppercase mb-2 block text-black">Departemen</label>
                             <select id="in_dept" class="input-field" required>
-                                <option value="MAINTENANCE FIXED">MAINTENANCE FIXED</option>
-                                <option value="MAINTENANCE MOBILE">MAINTENANCE MOBILE</option>
-                                <option value="PROCESSING">PROCESSING</option>
-                                <option value="MINING">MINING</option>
-                                <option value="SCM">SCM</option>
+                                <!-- Diisi secara dinamis dari JS list -->
                             </select>
                         </div>
                         <div>
@@ -407,11 +427,7 @@
                         <label class="text-[9px] font-black uppercase text-slate-400 mb-1 block">Filter Departemen</label>
                         <select id="pipelineFilterDept" class="input-field bg-white" onchange="triggerPipelineSearch()">
                             <option value="ALL">SEMUA DEPARTEMEN</option>
-                            <option value="MAINTENANCE FIXED">MAINTENANCE FIXED</option>
-                            <option value="MAINTENANCE MOBILE">MAINTENANCE MOBILE</option>
-                            <option value="PROCESSING">PROCESSING</option>
-                            <option value="MINING">MINING</option>
-                            <option value="SCM">SCM</option>
+                            <!-- Diisi secara dinamis oleh renderer dropdown departemen -->
                         </select>
                     </div>
                     <div>
@@ -459,7 +475,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const apiKey = ""; // Global API Key for Gemini
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-sync-v32';
@@ -470,6 +486,9 @@
         let scLookup = {}; // Tempat penyimpanan relasi SC -> Deskripsi secara global
         let currentPipelineTab = 'ALL'; // Tab aktif pada pipeline manager
         let pipelineSearchQuery = ''; // Filter text pencarian dalam pipeline manager
+
+        // DEPARTEMEN LIST UTAMA (Bisa ditambah/dikurangi secara dinamis)
+        let departments = ['MAINTENANCE FIXED', 'MAINTENANCE MOBILE', 'PROCESSING', 'MINING', 'SCM'];
 
         // Global Custom Toast Notification
         window.showCustomToast = (msg, type = 'success') => {
@@ -542,9 +561,85 @@
             window.open(waUrl, '_blank');
         };
 
+        // DYNAMIC DEPARTMENTS LOGIC
+        window.renderDepartmentDropdowns = () => {
+            // 1. Dropdown di form "Input NFM Baru"
+            const inDept = document.getElementById('in_dept');
+            if (inDept) {
+                inDept.innerHTML = departments.map(d => `<option value="${d}">${d}</option>`).join('');
+            }
+            // 2. Dropdown di filter "Pipeline Manager"
+            const pipeDept = document.getElementById('pipelineFilterDept');
+            if (pipeDept) {
+                const currentSelected = pipeDept.value || 'ALL';
+                pipeDept.innerHTML = `<option value="ALL">SEMUA DEPARTEMEN</option>` + 
+                    departments.map(d => `<option value="${d}" ${currentSelected === d ? 'selected' : ''}>${d}</option>`).join('');
+            }
+        };
+
+        window.openDeptModal = () => {
+            document.getElementById('dept-modal').classList.remove('hidden');
+            renderDeptModalList();
+        };
+
+        window.closeDeptModal = () => {
+            document.getElementById('dept-modal').classList.add('hidden');
+        };
+
+        window.renderDeptModalList = () => {
+            const container = document.getElementById('dept-list-container');
+            if (!container) return;
+            container.innerHTML = departments.map(d => `
+                <div class="flex justify-between items-center py-2.5">
+                    <span class="font-black text-slate-800 text-sm uppercase">${d}</span>
+                    <button onclick="deleteDepartment('${d}')" class="text-red-500 font-black text-[10px] uppercase hover:underline">Hapus</button>
+                </div>
+            `).join('');
+        };
+
+        window.addNewDepartment = async () => {
+            const input = document.getElementById('new-dept-input');
+            const name = input.value.toUpperCase().trim();
+            if (!name) return;
+            
+            if (departments.includes(name)) {
+                showCustomToast("Departemen sudah terdaftar!", "error");
+                return;
+            }
+
+            departments.push(name);
+            input.value = '';
+            await saveDepartments();
+            showCustomToast(`Departemen ${name} berhasil ditambahkan!`);
+        };
+
+        window.deleteDepartment = (name) => {
+            showCustomConfirm(`Hapus departemen ${name} dari daftar? Hal ini tidak akan mengubah data NFM lama, namun departemen ini tidak akan muncul lagi di opsi input baru.`, async () => {
+                departments = departments.filter(d => d !== name);
+                await saveDepartments();
+                showCustomToast(`Departemen ${name} dihapus!`);
+            });
+        };
+
+        async function saveDepartments() {
+            localStorage.setItem('wetar_departments', JSON.stringify(departments));
+            renderDepartmentDropdowns();
+            renderDeptModalList();
+            
+            if (db && user) {
+                try {
+                    // RULE 1: Simpan di path yang diizinkan sistem
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'departments'), { list: departments });
+                } catch (e) {
+                    console.error("Gagal sinkronisasi departemen ke cloud:", e);
+                }
+            }
+        }
+
         // Initialize App
         window.addEventListener('load', async () => {
             loadLocalBackup();
+            renderDepartmentDropdowns();
             initCharts();
             
             const savedConfig = localStorage.getItem('wetar_v32_config');
@@ -599,13 +694,32 @@
                 updateDashboard();
                 if (selectedStage) selectPipelineStage(selectedStage); // Auto refresh detail yang terpilih
             }, (err) => console.error("Snapshot Error", err));
+
+            // Sync Dynamic Departments Settings Document (RULE 1)
+            const deptDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'departments');
+            onSnapshot(deptDocRef, (docSnap) => {
+                if (docSnap.exists() && docSnap.data().list) {
+                    departments = docSnap.data().list;
+                    localStorage.setItem('wetar_departments', JSON.stringify(departments));
+                    renderDepartmentDropdowns();
+                    if (!document.getElementById('dept-modal').classList.contains('hidden')) {
+                        renderDeptModalList();
+                    }
+                }
+            }, (err) => console.error("Department Sync Error", err));
         }
 
         function loadLocalBackup() {
+            // Load Backup Data NFM
             const local = localStorage.getItem('wetar_db_v32');
             if (local) {
                 allData = JSON.parse(local).map(d => ({ ...d, aging: calculateAging(d.tglPlanning) }));
                 updateDashboard();
+            }
+            // Load Backup Dynamic Departments
+            const localDepts = localStorage.getItem('wetar_departments');
+            if (localDepts) {
+                departments = JSON.parse(localDepts);
             }
         }
 
@@ -930,6 +1044,32 @@
             }
         };
 
+        // UPDATE METADATA NFM (Requestor, No NFM, Dept, Tgl Planning)
+        window.updateNfmMeta = async (did, field, val) => {
+            const entry = allData.find(d => d.id === did);
+            if (!entry) return;
+
+            entry[field] = val;
+
+            if (field === 'tglPlanning') {
+                entry.aging = calculateAging(val);
+            }
+
+            try {
+                if (db && user) {
+                    const payload = {};
+                    payload[field] = val;
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), payload);
+                } else {
+                    localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
+                    updateDashboard();
+                }
+                showCustomToast(`Data ${field.toUpperCase()} berhasil diperbarui!`);
+            } catch (err) {
+                showCustomToast("Gagal memperbarui data: " + err.message, "error");
+            }
+        };
+
         // Dashboard Logic & Pipeline Calculation
         function updateDashboard() {
             let totals = { out: 0, site: 0, iss: 0, ageSum: 0 };
@@ -949,6 +1089,8 @@
 
             allData.forEach(entry => {
                 totals.ageSum += entry.aging;
+                
+                // Inisialisasi stat departemen secara dinamis
                 if (!deptStats[entry.dept]) deptStats[entry.dept] = { out: 0, iss: 0, age: 0, count: 0 };
                 
                 deptStats[entry.dept].age += entry.aging;
@@ -1026,9 +1168,10 @@
             document.getElementById('statIssued').innerText = `Rp ${totals.iss.toLocaleString('id-ID')}`;
             document.getElementById('statAge').innerText = `${Math.round(totals.ageSum / (allData.length || 1))} Hari`;
 
-            // Update database relasi kamus
+            // Update database relasi kamus & dropdowns
             updateSCLookup();
             populatePipelineFilters();
+            renderDepartmentDropdowns();
 
             // Update nilai numerik di kartu alur logistik
             updatePipelineUI(pipelineData);
@@ -1373,13 +1516,33 @@
 
             res.innerHTML = filtered.map(f => `
                 <div class="glass-card p-8 border-t-8 border-blue-600 mb-6 animate-fade-in shadow-xl">
-                    <div class="flex justify-between items-start mb-6">
-                        <div>
-                            <h3 class="text-2xl font-black italic uppercase">NFM #${f.nfm}</h3>
-                            <p class="text-[10px] font-black text-slate-400 uppercase">Requestor: ${f.req} | Dept: ${f.dept}</p>
-                        </div>
-                        <button onclick="deleteEntry('${f.id}')" class="text-red-500 font-black text-[10px] uppercase">Hapus NFM</button>
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-black italic uppercase text-blue-600">Edit Data NFM #${f.nfm}</h3>
+                        <button onclick="deleteEntry('${f.id}')" class="text-red-500 font-black text-[10px] uppercase hover:underline">Hapus NFM</button>
                     </div>
+                    
+                    <!-- Metadata Editor -->
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Nomor NFM</label>
+                            <input type="text" value="${f.nfm}" onchange="window.updateNfmMeta('${f.id}', 'nfm', this.value)" class="input-field bg-white py-1.5 px-3">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Nama Requestor</label>
+                            <input type="text" value="${f.req}" onchange="window.updateNfmMeta('${f.id}', 'req', this.value.toUpperCase())" class="input-field bg-white py-1.5 px-3">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Departemen</label>
+                            <select onchange="window.updateNfmMeta('${f.id}', 'dept', this.value)" class="input-field bg-white py-1.5 px-3">
+                                ${departments.map(d => `<option value="${d}" ${f.dept === d ? 'selected' : ''}>${d}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Tanggal Planning</label>
+                            <input type="date" value="${f.tglPlanning || ''}" onchange="window.updateNfmMeta('${f.id}', 'tglPlanning', this.value)" class="input-field bg-white py-1.5 px-3">
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto">
                         <table class="w-full nfm-table">
                             <thead><tr><th>PO/SC</th><th>Deskripsi & Target</th><th>Plan</th><th>Arrived</th><th>Issued</th><th>Status, Tgl Tiba & Target</th></tr></thead>
