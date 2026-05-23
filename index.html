@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wetar Intelligence Sync - Executive Dashboard v32.9</title>
+    <title>Wetar Intelligence Sync - Executive Dashboard v32.10</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -95,7 +95,7 @@
         </div>
     </div>
 
-    <!-- KELOLA DEPARTEMEN MODAL (FITUR BARU) -->
+    <!-- KELOLA DEPARTEMEN MODAL -->
     <div id="dept-modal" class="fixed inset-0 z-[110] flex items-center justify-center p-6 hidden">
         <div class="glass-card max-w-md w-full p-8 shadow-2xl relative max-h-[80vh] flex flex-col animate-fade-in">
             <button onclick="closeDeptModal()" class="absolute top-4 right-4 text-slate-400 hover:text-black font-black">✕</button>
@@ -331,15 +331,19 @@
                 </div>
             </div>
 
-            <!-- GRAFIK -->
+            <!-- GRAFIK (DISEMPURNAKAN AGAR RESPONSif DAN SELALU TAMPIL) -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 glass-card p-8 h-[400px]">
+                <div class="lg:col-span-2 glass-card p-8 h-[400px] flex flex-col">
                     <h3 class="text-slate-900 font-black text-sm uppercase mb-4 force-black italic">Dept. Outstanding Value</h3>
-                    <div class="h-[320px]"><canvas id="mainChart"></canvas></div>
+                    <div class="relative flex-1 min-h-0">
+                        <canvas id="mainChart"></canvas>
+                    </div>
                 </div>
                 <div class="glass-card p-8 h-[400px] flex flex-col">
                     <h3 class="text-slate-900 font-black text-sm uppercase mb-8 text-center force-black italic">Stock Distribution</h3>
-                    <div class="flex-1"><canvas id="pieChart"></canvas></div>
+                    <div class="relative flex-1 min-h-0">
+                        <canvas id="pieChart"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -487,7 +491,7 @@
         let currentPipelineTab = 'ALL'; // Tab aktif pada pipeline manager
         let pipelineSearchQuery = ''; // Filter text pencarian dalam pipeline manager
 
-        // DEPARTEMEN LIST UTAMA (Bisa ditambah/dikurangi secara dinamis)
+        // DEPARTEMEN LIST UTAMA
         let departments = ['MAINTENANCE FIXED', 'MAINTENANCE MOBILE', 'PROCESSING', 'MINING', 'SCM'];
 
         // Global Custom Toast Notification
@@ -628,7 +632,6 @@
             
             if (db && user) {
                 try {
-                    // RULE 1: Simpan di path yang diizinkan sistem
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'departments'), { list: departments });
                 } catch (e) {
                     console.error("Gagal sinkronisasi departemen ke cloud:", e);
@@ -638,9 +641,10 @@
 
         // Initialize App
         window.addEventListener('load', async () => {
+            // PERBAIKAN UTAMA: Inisialisasi Chart terlebih dahulu sebelum memuat Backup!
+            initCharts();
             loadLocalBackup();
             renderDepartmentDropdowns();
-            initCharts();
             
             const savedConfig = localStorage.getItem('wetar_v32_config');
             if (savedConfig) {
@@ -695,7 +699,7 @@
                 if (selectedStage) selectPipelineStage(selectedStage); // Auto refresh detail yang terpilih
             }, (err) => console.error("Snapshot Error", err));
 
-            // Sync Dynamic Departments Settings Document (RULE 1)
+            // Sync Dynamic Departments Settings Document
             const deptDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'departments');
             onSnapshot(deptDocRef, (docSnap) => {
                 if (docSnap.exists() && docSnap.data().list) {
@@ -779,7 +783,7 @@
             }
         };
 
-        // PIPELINE CEPAT: Fungsi untuk menghitung total barang per stage (termasuk ON SITE!)
+        // PIPELINE CEPAT: Fungsi untuk menghitung total barang per stage
         window.countPendingStage = (stage) => {
             let totalCount = 0;
             allData.forEach(entry => {
@@ -1387,6 +1391,9 @@
         }
 
         function updateCharts(stats) {
+            // Pengaman agar tidak terjadi crash jika fungsi dipanggil sebelum chart ter-inisialisasi
+            if (!mainChart || !pieChart) return;
+            
             const labels = Object.keys(stats);
             const data = labels.map(l => stats[l].out);
 
