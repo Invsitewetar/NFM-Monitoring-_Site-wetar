@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.12</title>
+    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.15</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -205,7 +205,7 @@
                                 <th class="text-red-700 font-black text-[10px]" style="padding:10px;">NFM #</th>
                                 <th class="text-red-700 font-black text-[10px]" style="padding:10px;">Barang (SC#)</th>
                                 <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Requestor</th>
-                                <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Tgl Tiba</th>
+                                <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Tanggal Input</th>
                                 <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Target Ambil</th>
                                 <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Keterlambatan</th>
                                 <th class="text-red-700 font-black text-[10px] text-right" style="padding:10px;">Aksi</th>
@@ -316,7 +316,7 @@
                             <thead>
                                 <tr>
                                     <th class="force-black" style="padding:12px; font-size:10px;">NFM #</th>
-                                    <th class="force-black" style="padding:12px; font-size:10px;">PO / SC</th>
+                                    <th class="force-black" style="padding:12px; font-size:10px;">PO / SC (Edit)</th>
                                     <th class="force-black" style="padding:12px; font-size:10px;">Deskripsi Barang</th>
                                     <th class="force-black text-center" style="padding:12px; font-size:10px;">Requestor / Dept</th>
                                     <th class="force-black text-right" style="padding:12px; font-size:10px;">Rencana / Terpenuhi</th>
@@ -384,7 +384,7 @@
                             <input type="text" id="in_nfm" class="input-field" required placeholder="Ex: 012/BTR-SCM/2024">
                         </div>
                         <div>
-                            <label class="text-[10px] font-black uppercase mb-2 block text-black">Tanggal Planning</label>
+                            <label class="text-[10px] font-black uppercase mb-2 block text-black">Tanggal Input</label>
                             <input type="date" id="in_date" class="input-field" required>
                         </div>
                     </div>
@@ -398,7 +398,9 @@
                         <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-blue-600 uppercase mt-6 hover:underline tracking-widest">+ Tambah Baris Barang</button>
                     </div>
                     
-                    <button type="submit" id="saveBtn" class="btn-primary">Simpan NFM & Update Dashboard</button>
+                    <div class="flex gap-4">
+                        <button type="submit" id="saveBtn" class="btn-primary">Simpan NFM & Update Dashboard</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -552,10 +554,10 @@
         };
 
         // Trigger SMS/WhatsApp Template copy AND open WhatsApp Web
-        window.sendReminder = (nfm, req, dsc, tglArrived, tglTargetAmbil) => {
-            const cleanTglArrived = tglArrived || '-';
+        window.sendReminder = (nfm, req, dsc, tglPlanning, tglTargetAmbil) => {
+            const cleanTglPlanning = tglPlanning || '-';
             const cleanTarget = tglTargetAmbil || '-';
-            const msg = `Halo *${req}*, barang Anda (*${dsc}*) untuk NFM *#${nfm}* sudah tiba di site sejak *${cleanTglArrived}* (Target Ambil: *${cleanTarget}*). Harap segera melakukan pengambilan di Gudang Wetar. Terima kasih!`;
+            const msg = `Halo *${req}*, barang Anda (*${dsc}*) untuk NFM *#${nfm}* (Tanggal Input NFM: *${cleanTglPlanning}*) saat ini statusnya sudah ON SITE di gudang dan sudah bisa diambil (Target Batas Ambil: *${cleanTarget}*). Harap segera melakukan pengambilan. Terima kasih!`;
             
             // Salin ke Clipboard
             copyTextToClipboard(msg);
@@ -567,12 +569,10 @@
 
         // DYNAMIC DEPARTMENTS LOGIC
         window.renderDepartmentDropdowns = () => {
-            // 1. Dropdown di form "Input NFM Baru"
             const inDept = document.getElementById('in_dept');
             if (inDept) {
                 inDept.innerHTML = departments.map(d => `<option value="${d}">${d}</option>`).join('');
             }
-            // 2. Dropdown di filter "Pipeline Manager"
             const pipeDept = document.getElementById('pipelineFilterDept');
             if (pipeDept) {
                 const currentSelected = pipeDept.value || 'ALL';
@@ -713,13 +713,11 @@
         }
 
         function loadLocalBackup() {
-            // Load Backup Data NFM
             const local = localStorage.getItem('wetar_db_v32');
             if (local) {
                 allData = JSON.parse(local).map(d => ({ ...d, aging: calculateAging(d.tglPlanning) }));
                 updateDashboard();
             }
-            // Load Backup Dynamic Departments
             const localDepts = localStorage.getItem('wetar_departments');
             if (localDepts) {
                 departments = JSON.parse(localDepts);
@@ -732,7 +730,7 @@
             return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
         }
 
-        // Helper untuk hitung selisih hari spesifik (seperti Aging di Site)
+        // Helper untuk hitung selisih hari spesifik
         function getDaysDiff(dateStr) {
             if (!dateStr) return 0;
             const today = new Date();
@@ -772,7 +770,6 @@
                 const prevVal = dscInput.value;
                 dscInput.value = scLookup[scVal];
 
-                // Beri efek flash warna biru jika deskripsi berhasil terisi otomatis
                 if (prevVal !== scLookup[scVal]) {
                     dscInput.classList.add('bg-blue-50', 'border-blue-400');
                     setTimeout(() => {
@@ -789,7 +786,6 @@
                 entry.items.forEach(item => {
                     const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
                     if (stage === 'ALL') {
-                        // Semua barang yang belum selesai di-ISSUED
                         if (normStatus !== 'ISSUED') {
                             totalCount++;
                         }
@@ -807,7 +803,6 @@
         window.filterPipelineView = (stage) => {
             currentPipelineTab = stage;
             
-            // Atur styling tombol filter aktif
             const tabs = ['ALL', 'PR', 'ON_ORDER', 'IN_TRANSIT', 'ON_SITE'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`tab-pipe-${t}`);
@@ -861,15 +856,12 @@
 
             const matchedItems = [];
             allData.forEach(entry => {
-                // Filter Departemen global
                 if (filterDept !== 'ALL' && entry.dept !== filterDept) return;
-                // Filter Requestor global
                 if (filterReq !== 'ALL' && entry.req.toUpperCase().trim() !== filterReq) return;
 
                 entry.items.forEach((item, idx) => {
                     const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
                     
-                    // Filter berdasarkan Tab Kategori
                     let passTab = false;
                     if (currentPipelineTab === 'ALL') {
                         if (normStatus !== 'ISSUED') passTab = true;
@@ -879,7 +871,6 @@
 
                     if (!passTab) return;
 
-                    // Filter berdasarkan Kolom Pencarian Kata Kunci
                     if (pipelineSearchQuery) {
                         const inSearch = (
                             entry.nfm.toUpperCase().includes(pipelineSearchQuery) ||
@@ -898,12 +889,12 @@
                         nfm: entry.nfm,
                         dept: entry.dept,
                         req: entry.req,
+                        tglPlanning: entry.tglPlanning,
                         ...item
                     });
                 });
             });
 
-            // Update statistik angka pada Filter Tab
             const allBtn = document.getElementById('tab-pipe-ALL');
             if (allBtn) allBtn.innerText = `Semua (${countPendingStage('ALL')})`;
             const prBtn = document.getElementById('tab-pipe-PR');
@@ -923,11 +914,10 @@
             tableBody.innerHTML = matchedItems.map(i => {
                 let actionButtons = "";
                 
-                // Jika status barang adalah ON SITE, ganti tombol checklist menjadi "Kirim WA"
                 if (i.status === 'ON SITE') {
                     actionButtons = `
                         <div class="flex gap-1 justify-end">
-                            <button onclick="window.sendReminder('${i.nfm}', '${i.req}', '${i.dsc}', '${i.tglArrived}', '${i.tglTargetAmbil || ""}')" 
+                            <button onclick="window.sendReminder('${i.nfm}', '${i.req}', '${i.dsc}', '${i.tglPlanning}', '${i.tglTargetAmbil || ""}')" 
                                     class="bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md whitespace-nowrap">
                                 📢 Kirim WA
                             </button>
@@ -952,15 +942,14 @@
                         </td>
                         <td style="padding:12px;">
                             <span class="font-bold text-slate-800 block text-xs mb-1.5">${i.dsc}</span>
-                            <!-- MODIFIKASI: Input Edit PO & SC di Pipeline Manager -->
                             <div class="flex flex-col gap-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
                                 <div class="flex items-center gap-1 text-[10px]">
                                     <span class="text-slate-400 font-black">PO:</span>
-                                    <input type="text" id="quick_po_${i.entryId}_${i.itemIndex}" value="${i.po || ''}" class="w-24 border bg-white rounded px-1 py-0.5 font-bold text-blue-600 outline-none">
+                                    <input type="text" id="quick_po_${i.entryId}_${i.itemIndex}" value="${i.po || ''}" class="w-24 border bg-white rounded px-1.5 py-0.5 font-bold text-blue-600 outline-none">
                                 </div>
                                 <div class="flex items-center gap-1 text-[10px]">
                                     <span class="text-slate-400 font-black">SC:</span>
-                                    <input type="text" id="quick_sc_${i.entryId}_${i.itemIndex}" value="${i.sc || ''}" class="w-24 border bg-white rounded px-1 py-0.5 font-bold text-slate-500 outline-none">
+                                    <input type="text" id="quick_sc_${i.entryId}_${i.itemIndex}" value="${i.sc || ''}" class="w-24 border bg-white rounded px-1.5 py-0.5 font-bold text-slate-500 outline-none">
                                 </div>
                             </div>
                         </td>
@@ -995,9 +984,9 @@
             if (!entry) return;
 
             const item = entry.items[idx];
-            item.qtyArrived = item.qty; // set arrived qty = plan qty
+            item.qtyArrived = item.qty;
             item.status = 'ON SITE';
-            item.tglArrived = new Date().toISOString().split('T')[0]; // Set tgl kedatangan hari ini
+            item.tglArrived = new Date().toISOString().split('T')[0];
 
             try {
                 if (db && user) {
@@ -1013,7 +1002,7 @@
             }
         };
 
-        // PIPELINE CEPAT: Simpan Perubahan Baris Manual (Termasuk PO & SC)
+        // PIPELINE CEPAT: Simpan Perubahan Baris Manual
         window.saveQuickPipelineRow = async (did, idx) => {
             const entry = allData.find(d => d.id === did);
             if (!entry) return;
@@ -1023,7 +1012,6 @@
             let st = document.getElementById(`quick_st_${did}_${idx}`).value;
             const tgt = document.getElementById(`quick_tgt_${did}_${idx}`).value || "";
             
-            // Mengambil input PO & SC dari Pipeline Manager
             const po = document.getElementById(`quick_po_${did}_${idx}`).value.toUpperCase().trim();
             const sc = document.getElementById(`quick_sc_${did}_${idx}`).value.toUpperCase().trim();
 
@@ -1035,14 +1023,12 @@
             item.po = po;
             item.sc = sc;
 
-            // Logika auto-status
             if (item.qtyIssued >= item.qty) {
                 item.status = 'ISSUED';
             } else if (item.qtyArrived > 0 && item.qtyIssued < item.qtyArrived) {
                 item.status = 'ON SITE';
             }
 
-            // Stamp tglArrived otomatis jika di-set ke ON SITE
             if (item.status === 'ON SITE' && !item.tglArrived) {
                 item.tglArrived = new Date().toISOString().split('T')[0];
             } else if (item.status !== 'ON SITE' && item.status !== 'ISSUED') {
@@ -1063,7 +1049,7 @@
             }
         };
 
-        // UPDATE METADATA NFM (Requestor, No NFM, Dept, Tgl Planning)
+        // UPDATE METADATA NFM
         window.updateNfmMeta = async (did, field, val) => {
             const entry = allData.find(d => d.id === did);
             if (!entry) return;
@@ -1097,7 +1083,6 @@
             const today = new Date();
             today.setHours(0,0,0,0);
 
-            // Pipeline stage data holders
             const pipelineData = {
                 'PR': { value: 0, count: 0 },
                 'ON ORDER': { value: 0, count: 0 },
@@ -1109,7 +1094,6 @@
             allData.forEach(entry => {
                 totals.ageSum += entry.aging;
                 
-                // Inisialisasi stat departemen secara dinamis
                 if (!deptStats[entry.dept]) deptStats[entry.dept] = { out: 0, iss: 0, age: 0, count: 0 };
                 
                 deptStats[entry.dept].age += entry.aging;
@@ -1122,7 +1106,6 @@
                     const issued = item.qtyIssued || 0;
                     const rawStatus = item.status || 'PR';
 
-                    // Normalisasi status string
                     const normalizedStatus = (rawStatus === 'ORDER' || rawStatus === 'ON ORDER') ? 'ON ORDER' : rawStatus;
 
                     const outVal = Math.max(0, qty - issued) * price;
@@ -1136,7 +1119,6 @@
                     deptStats[entry.dept].out += outVal;
                     deptStats[entry.dept].iss += issVal;
 
-                    // Hitung total data per fase untuk pipeline tracker
                     if (pipelineData[normalizedStatus]) {
                         pipelineData[normalizedStatus].count++;
                         pipelineData[normalizedStatus].value += (qty * price);
@@ -1154,14 +1136,13 @@
                                 overdue = true;
                                 delayDays = Math.floor((today - target) / (1000 * 60 * 60 * 24));
                             }
-                        } else if (item.tglArrived) {
-                            // Default overdue jika barang mengendap lebih dari 3 hari tanpa batas target spesifik
-                            const arrivedDate = new Date(item.tglArrived);
-                            arrivedDate.setHours(0,0,0,0);
-                            const daysOnSite = Math.floor((today - arrivedDate) / (1000 * 60 * 60 * 24));
-                            if (daysOnSite > 3) {
+                        } else if (entry.tglPlanning) {
+                            const planDate = new Date(entry.tglPlanning);
+                            planDate.setHours(0,0,0,0);
+                            const daysSincePlan = Math.floor((today - planDate) / (1000 * 60 * 60 * 24));
+                            if (daysSincePlan > 3) {
                                 overdue = true;
-                                delayDays = daysOnSite - 3;
+                                delayDays = daysSincePlan - 3;
                             }
                         }
 
@@ -1173,7 +1154,7 @@
                                 req: entry.req,
                                 dsc: item.dsc,
                                 sc: item.sc,
-                                tglArrived: item.tglArrived,
+                                tglPlanning: entry.tglPlanning,
                                 tglTargetAmbil: item.tglTargetAmbil,
                                 delayDays: delayDays
                             });
@@ -1187,15 +1168,11 @@
             document.getElementById('statIssued').innerText = `Rp ${totals.iss.toLocaleString('id-ID')}`;
             document.getElementById('statAge').innerText = `${Math.round(totals.ageSum / (allData.length || 1))} Hari`;
 
-            // Update database relasi kamus & dropdowns
             updateSCLookup();
             populatePipelineFilters();
             renderDepartmentDropdowns();
-
-            // Update nilai numerik di kartu alur logistik
             updatePipelineUI(pipelineData);
 
-            // Update Tampilan Banner Pengingat Overdue
             const alertsPanel = document.getElementById('overdue-alerts-panel');
             const alertsTableBody = document.getElementById('overdueAlertsTableBody');
 
@@ -1212,7 +1189,7 @@
                             <div>${item.req}</div>
                             <div class="text-[9px] text-slate-400 uppercase">${item.dept}</div>
                         </td>
-                        <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglArrived || '-'}</td>
+                        <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglPlanning || '-'}</td>
                         <td class="text-center font-bold text-red-600" style="padding:10px; font-size:11px;">${item.tglTargetAmbil || '<span class="text-slate-400 italic">Batas 3 Hari</span>'}</td>
                         <td class="text-center" style="padding:10px;">
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-100 text-red-800 uppercase inline-block">
@@ -1220,7 +1197,7 @@
                             </span>
                         </td>
                         <td class="text-right" style="padding:10px;">
-                            <button onclick="window.sendReminder('${item.nfm}', '${item.req}', '${item.dsc}', '${item.tglArrived}', '${item.tglTargetAmbil}')" 
+                            <button onclick="window.sendReminder('${item.nfm}', '${item.req}', '${item.dsc}', '${item.tglPlanning}', '${item.tglTargetAmbil}')" 
                                     class="bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase px-3 py-1.5 rounded-lg transition shadow-md whitespace-nowrap">
                                 📢 Kirim WA
                             </button>
@@ -1234,10 +1211,9 @@
 
             renderTable(deptStats);
             updateCharts(deptStats);
-            renderPipelineManager(); // Render daftar update cepat
+            renderPipelineManager();
         }
 
-        // Tampilkan kalkulasi total ke kartu pipeline
         function updatePipelineUI(pipe) {
             document.getElementById('pipeVal-PR').innerText = `Rp ${pipe['PR'].value.toLocaleString('id-ID')}`;
             document.getElementById('pipeQty-PR').innerText = `${pipe['PR'].count} Item Barang`;
@@ -1255,11 +1231,9 @@
             document.getElementById('pipeQty-ISSUED').innerText = `${pipe['ISSUED'].count} Item Barang`;
         }
 
-        // INTERAKSI CLIK ALUR: Filter & Tampilkan Item Yang Relevan
         window.selectPipelineStage = (stage) => {
             selectedStage = stage;
             
-            // Atur styling active pada kartu pipeline yang dipilih
             document.querySelectorAll('.pipeline-card').forEach(el => el.classList.remove('active-pipeline'));
             const stageId = stage === 'ON ORDER' ? 'ON_ORDER' : stage;
             const activeCard = document.getElementById(`pipe-${stageId}`);
@@ -1274,31 +1248,31 @@
             const today = new Date();
             today.setHours(0,0,0,0);
 
-            // Deteksi jika fase adalah ON SITE
             const isStageOnSite = stage === 'ON SITE';
             if (isStageOnSite) {
-                dynamicHeader.innerText = 'Tgl Tiba & Status Ambil';
+                dynamicHeader.innerText = 'Tgl Input & Status Ambil';
             } else {
                 dynamicHeader.innerText = 'Estimasi Value';
             }
 
-            // Kumpulkan seluruh item berstatus terpilih
             const matchedItems = [];
             allData.forEach(entry => {
-                entry.items.forEach(item => {
+                entry.items.forEach((item, idx) => {
                     const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
                     if (normStatus === stage) {
                         matchedItems.push({
+                            id: entry.id,
                             nfm: entry.nfm,
                             dept: entry.dept,
                             req: entry.req,
+                            tglPlanning: entry.tglPlanning,
+                            itemIndex: idx, // Perbaikan: Ambil indeks item asli
                             ...item
                         });
                     }
                 });
             });
 
-            // Tampilkan Detail
             titleEl.innerHTML = `Barang pada Fase: <span class="text-blue-600">${stage}</span>`;
             countEl.innerText = `${matchedItems.length} Item Terdeteksi`;
             tableContainer.classList.remove('hidden');
@@ -1312,7 +1286,7 @@
                 let rightColContent = "";
                 
                 if (isStageOnSite) {
-                    const daysOnSite = getDaysDiff(i.tglArrived);
+                    const daysSincePlan = getDaysDiff(i.tglPlanning);
                     let overdueText = "On Track";
                     let badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
                     
@@ -1324,19 +1298,19 @@
                             overdueText = `🚨 Terlewat ${delay} Hari`;
                             badgeClass = "bg-red-100 text-red-800 border-red-300 animate-pulse";
                         }
-                    } else if (daysOnSite > 3) {
-                        overdueText = `🚨 Mengendap ${daysOnSite} Hari`;
+                    } else if (daysSincePlan > 3) {
+                        overdueText = `🚨 Mengendap ${daysSincePlan} Hari`;
                         badgeClass = "bg-red-100 text-red-800 border-red-300 animate-pulse";
                     }
 
                     rightColContent = `
                         <div class="text-center space-y-1.5">
-                            <span class="font-black text-emerald-600 block text-[11px]">Tiba: ${i.tglArrived || '-'}</span>
+                            <span class="font-black text-emerald-600 block text-[11px]">Input: ${i.tglPlanning || '-'}</span>
                             <span class="font-bold text-slate-500 block text-[10px]">Batas: ${i.tglTargetAmbil || '3 Hari'}</span>
                             <span class="px-2 py-0.5 rounded border text-[9px] font-black ${badgeClass} uppercase inline-block">
                                 ${overdueText}
                             </span>
-                            <button onclick="window.sendReminder('${i.nfm}', '${i.req}', '${i.dsc}', '${i.tglArrived}', '${i.tglTargetAmbil || ""}')" 
+                            <button onclick="window.sendReminder('${i.nfm}', '${i.req}', '${i.dsc}', '${i.tglPlanning}', '${i.tglTargetAmbil || ""}')" 
                                     class="bg-red-600 hover:bg-red-700 text-white font-black text-[8px] uppercase px-2 py-1 rounded-md transition shadow-sm block mx-auto whitespace-nowrap">
                                 📢 Kirim WA
                             </button>
@@ -1353,16 +1327,16 @@
                 return `
                     <tr class="hover:bg-slate-50 transition">
                         <td class="font-black text-slate-900" style="padding:10px; font-size:13px;">NFM-${i.nfm}</td>
-                        <!-- MODIFIKASI: Input Edit PO & SC di Tabel Detail Pipeline Utama -->
                         <td style="padding:10px; font-size:12px;">
                             <div class="flex flex-col gap-1">
                                 <div class="flex items-center gap-1 text-[11px]">
                                     <span class="text-slate-400 font-bold">PO:</span>
-                                    <input type="text" value="${i.po || ''}" onchange="updateItem('${i.id}', ${i.items ? i.items.indexOf(i) : 0}, 'po', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-blue-600 outline-none">
+                                    <!-- Perbaikan: Menggunakan i.itemIndex agar langsung tepat sasaran -->
+                                    <input type="text" value="${i.po || ''}" onchange="updateItem('${i.id}', ${i.itemIndex}, 'po', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-blue-600 outline-none">
                                 </div>
                                 <div class="flex items-center gap-1 text-[11px]">
                                     <span class="text-slate-400 font-bold">SC:</span>
-                                    <input type="text" value="${i.sc || ''}" onchange="updateItem('${i.id}', ${i.items ? i.items.indexOf(i) : 0}, 'sc', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-slate-500 outline-none">
+                                    <input type="text" value="${i.sc || ''}" onchange="updateItem('${i.id}', ${i.itemIndex}, 'sc', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-slate-500 outline-none">
                                 </div>
                             </div>
                         </td>
@@ -1415,7 +1389,6 @@
         }
 
         function updateCharts(stats) {
-            // Pengaman agar tidak terjadi crash jika fungsi dipanggil sebelum chart ter-inisialisasi
             if (!mainChart || !pieChart) return;
             
             const labels = Object.keys(stats);
@@ -1430,203 +1403,6 @@
             pieChart.update();
         }
 
-        // EXCEL DOWNLOAD LOGIC
-        window.downloadExcel = () => {
-            if (allData.length === 0) {
-                showCustomToast("Tidak ada data untuk diunduh.", "error");
-                return;
-            }
-
-            const exportRows = [];
-            allData.forEach(entry => {
-                entry.items.forEach(item => {
-                    const daysOnSite = item.tglArrived ? getDaysDiff(item.tglArrived) : 0;
-                    exportRows.push({
-                        'No NFM': entry.nfm,
-                        'Departemen': entry.dept,
-                        'Requestor': entry.req,
-                        'Tgl Planning': entry.tglPlanning,
-                        'Aging (Hari)': entry.aging,
-                        'PO #': item.po,
-                        'SC #': item.sc,
-                        'Deskripsi Barang': item.dsc,
-                        'Qty Rencana': item.qty,
-                        'Harga Satuan (Rp)': item.prc,
-                        'Qty Datang': item.qtyArrived || 0,
-                        'Qty Keluar': item.qtyIssued || 0,
-                        'Status': item.status,
-                        'Tgl Tiba di Site': item.tglArrived || '-',
-                        'Target Ambil Gudang': item.tglTargetAmbil || '-',
-                        'Aging Gudang Site (Hari)': item.status === 'ON SITE' ? daysOnSite : '-',
-                        'Value Outstanding (Rp)': Math.max(0, item.qty - (item.qtyIssued || 0)) * (item.prc || 0),
-                        'Tgl Terakhir Update': entry.tglUpdate ? entry.tglUpdate.split('T')[0] : '-'
-                    });
-                });
-            });
-
-            const worksheet = XLSX.utils.json_to_sheet(exportRows);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "NFM Data");
-
-            const timestamp = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(workbook, `Wetar_NFM_Report_${timestamp}.xlsx`);
-        };
-
-        // CRUD Operations
-        window.addItemRow = () => {
-            const div = document.createElement('div');
-            div.className = "item-row grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-4 items-end animate-fade-in border-b border-slate-200 pb-6 last:border-0";
-            div.innerHTML = `
-                <div><label class="text-[9px] font-black uppercase text-slate-500">PO#</label><input type="text" class="input-field po" required placeholder="PO..."></div>
-                <div><label class="text-[9px] font-black uppercase text-slate-500">SC#</label><input type="text" class="input-field sc" required placeholder="SC..." oninput="window.handleSCOnInput(this)"></div>
-                <div><label class="text-[9px] font-black uppercase text-slate-500">Qty Plan</label><input type="number" class="input-field qty" required></div>
-                <div><label class="text-[9px] font-black uppercase text-slate-500">Price (Rp)</label><input type="number" class="input-field prc" required></div>
-                <div><label class="text-[9px] font-black uppercase text-slate-500">Target Ambil</label><input type="date" class="input-field tgt"></div>
-                <div class="relative"><label class="text-[9px] font-black uppercase text-slate-500">Desc</label><input type="text" class="input-field dsc" required placeholder="Barang..."><button type="button" onclick="this.parentElement.parentElement.remove()" class="absolute -top-6 right-0 text-[8px] font-black text-red-500 uppercase">Hapus</button></div>
-            `;
-            document.getElementById('itemsContainer').appendChild(div);
-        };
-
-        document.getElementById('nfmForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('saveBtn');
-            btn.disabled = true;
-            btn.innerText = "MENYIMPAN...";
-
-            const items = Array.from(document.querySelectorAll('#itemsContainer > .item-row')).map(r => ({
-                po: r.querySelector('.po').value.toUpperCase(),
-                sc: r.querySelector('.sc').value.toUpperCase(),
-                qty: parseFloat(r.querySelector('.qty').value),
-                prc: parseFloat(r.querySelector('.prc').value),
-                dsc: r.querySelector('.dsc').value,
-                tglTargetAmbil: r.querySelector('.tgt').value || "", // Menyimpan target ambil
-                status: 'PR', qtyArrived: 0, qtyIssued: 0
-            }));
-
-            const payload = {
-                dept: document.getElementById('in_dept').value,
-                req: document.getElementById('in_req').value.toUpperCase(),
-                nfm: document.getElementById('in_nfm').value,
-                tglPlanning: document.getElementById('in_date').value,
-                items,
-                tglUpdate: new Date().toISOString()
-            };
-
-            try {
-                if (db && user) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), payload);
-                } else {
-                    allData.push({ ...payload, id: Date.now().toString(), aging: calculateAging(payload.tglPlanning) });
-                    localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
-                    updateDashboard();
-                }
-                document.getElementById('nfmForm').reset();
-                document.getElementById('itemsContainer').innerHTML = '';
-                addItemRow();
-                switchView('report');
-                showCustomToast("Data Berhasil Disimpan!");
-            } catch (err) {
-                showCustomToast("Gagal menyimpan: " + err.message, "error");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "SIMPAN NFM & UPDATE DASHBOARD";
-            }
-        };
-
-        // Tracking Logic
-        document.getElementById('trackingSearch').oninput = (e) => {
-            const query = e.target.value.toUpperCase();
-            const res = document.getElementById('trackingResult');
-            if (!query) { res.innerHTML = ''; return; }
-
-            const filtered = allData.filter(d => d.nfm.toUpperCase().includes(query));
-            if (filtered.length === 0) {
-                res.innerHTML = `<div class="p-12 glass-card text-center font-black force-black bg-red-50 text-red-600">NFM TIDAK DITEMUKAN</div>`;
-                return;
-            }
-
-            res.innerHTML = filtered.map(f => `
-                <div class="glass-card p-8 border-t-8 border-blue-600 mb-6 animate-fade-in shadow-xl">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-black italic uppercase text-blue-600">Edit Data NFM #${f.nfm}</h3>
-                        <button onclick="deleteEntry('${f.id}')" class="text-red-500 font-black text-[10px] uppercase hover:underline">Hapus NFM</button>
-                    </div>
-                    
-                    <!-- Metadata Editor -->
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Nomor NFM</label>
-                            <input type="text" value="${f.nfm}" onchange="window.updateNfmMeta('${f.id}', 'nfm', this.value)" class="input-field bg-white py-1.5 px-3">
-                        </div>
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Nama Requestor</label>
-                            <input type="text" value="${f.req}" onchange="window.updateNfmMeta('${f.id}', 'req', this.value.toUpperCase())" class="input-field bg-white py-1.5 px-3">
-                        </div>
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Departemen</label>
-                            <select onchange="window.updateNfmMeta('${f.id}', 'dept', this.value)" class="input-field bg-white py-1.5 px-3">
-                                ${departments.map(d => `<option value="${d}" ${f.dept === d ? 'selected' : ''}>${d}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Tanggal Planning</label>
-                            <input type="date" value="${f.tglPlanning || ''}" onchange="window.updateNfmMeta('${f.id}', 'tglPlanning', this.value)" class="input-field bg-white py-1.5 px-3">
-                        </div>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full nfm-table">
-                            <!-- MODIFIKASI: Ditambahkan opsi input PO/SC inline di baris tabel -->
-                            <thead><tr><th>PO / SC (Dapat Direvisi)</th><th>Deskripsi & Target</th><th>Plan</th><th>Arrived</th><th>Issued</th><th>Status, Tgl Tiba & Target</th></tr></thead>
-                            <tbody>
-                                ${f.items.map((i, idx) => `
-                                    <tr>
-                                        <td class="text-blue-600">
-                                            <div class="flex flex-col gap-1.5">
-                                                <div class="flex items-center gap-1 text-[11px]">
-                                                    <span class="text-slate-400 font-bold">PO:</span>
-                                                    <input type="text" value="${i.po || ''}" onchange="updateItem('${f.id}', ${idx}, 'po', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-blue-600 outline-none">
-                                                </div>
-                                                <div class="flex items-center gap-1 text-[11px]">
-                                                    <span class="text-slate-400 font-bold">SC:</span>
-                                                    <input type="text" value="${i.sc || ''}" onchange="updateItem('${f.id}', ${idx}, 'sc', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-slate-500 outline-none">
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="font-bold text-slate-800 mb-1">${i.dsc}</div>
-                                            <div class="mt-1">
-                                                <label class="text-[8px] font-black text-slate-400 block uppercase">Target Ambil:</label>
-                                                <input type="date" value="${i.tglTargetAmbil || ''}" onchange="updateItem('${f.id}', ${idx}, 'tglTargetAmbil', this.value)" class="text-[9px] font-black border p-1 rounded w-full">
-                                            </div>
-                                        </td>
-                                        <td class="text-center">${i.qty}</td>
-                                        <td><input type="number" value="${i.qtyArrived || 0}" onchange="updateItem('${f.id}', ${idx}, 'qtyArrived', this.value)" class="w-16 border rounded p-1 text-center font-black"></td>
-                                        <td><input type="number" value="${i.qtyIssued || 0}" onchange="updateItem('${f.id}', ${idx}, 'qtyIssued', this.value)" class="w-16 border rounded p-1 text-center font-black"></td>
-                                        <td>
-                                            <select onchange="updateItem('${f.id}', ${idx}, 'status', this.value)" class="text-[10px] font-black border p-1 rounded w-full mb-1">
-                                                <option value="PR" ${i.status === 'PR' ? 'selected' : ''}>PR</option>
-                                                <option value="ON ORDER" ${i.status === 'ON ORDER' ? 'selected' : ''}>ORDER</option>
-                                                <option value="IN TRANSIT" ${i.status === 'IN TRANSIT' ? 'selected' : ''}>TRANSIT</option>
-                                                <option value="ON SITE" ${i.status === 'ON SITE' ? 'selected' : ''}>SITE</option>
-                                                <option value="ISSUED" ${i.status === 'ISSUED' ? 'selected' : ''}>ISSUED</option>
-                                            </select>
-                                            ${i.status === 'ON SITE' || i.status === 'ISSUED' ? `
-                                                <div class="mt-1">
-                                                    <label class="text-[8px] font-black text-slate-400 block uppercase">Tgl Tiba Site:</label>
-                                                    <input type="date" value="${i.tglArrived || ''}" onchange="updateItem('${f.id}', ${idx}, 'tglArrived', this.value)" class="text-[9px] font-black border p-1 rounded w-full">
-                                                </div>
-                                            ` : ''}
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `).join('');
-        };
-
         window.updateItem = async (did, idx, field, val) => {
             const entry = allData.find(d => d.id === did);
             if (!entry) return;
@@ -1635,19 +1411,15 @@
             
             const i = entry.items[idx];
             
-            // Logika Auto-Status & Auto Stamp tglArrived
-            const prevStatus = i.status;
             if (i.qtyIssued >= i.qty) {
                 i.status = 'ISSUED';
             } else if (i.qtyArrived > 0 && i.qtyIssued < i.qtyArrived) {
                 i.status = 'ON SITE';
             }
 
-            // Jika status baru menjadi ON SITE dan belum memiliki tglArrived, beri stamp hari ini
             if (i.status === 'ON SITE' && !i.tglArrived) {
                 i.tglArrived = new Date().toISOString().split('T')[0];
             } else if (i.status !== 'ON SITE' && i.status !== 'ISSUED') {
-                // Jika status turun lagi, hapus tanggal tibanya
                 delete i.tglArrived;
             }
 
@@ -1675,7 +1447,6 @@
             });
         };
 
-        // Navigation
         window.switchView = (v) => {
             document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-' + v).classList.remove('hidden');
@@ -1688,7 +1459,6 @@
             }
         };
 
-        // AI Analysis Logic
         window.triggerAIAnalysis = async () => {
             document.getElementById('ai-modal').classList.remove('hidden');
             const content = document.getElementById('ai-content');
