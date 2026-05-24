@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.15</title>
+    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.16</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -189,7 +189,7 @@
         <!-- VIEW: DASHBOARD -->
         <div id="view-report" class="p-6 md:p-10 space-y-8 animate-fade-in">
             
-            <!-- PENGINGAT PENGAMBILAN BARANG (OVERDUE ALERTS) -->
+            <!-- PENGINGAT PENGAMBILAN BARANG (OVERDUE GUDANG) -->
             <div id="overdue-alerts-panel" class="glass-card p-6 border-l-8 border-red-600 bg-red-50/20 hidden">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="text-xl">🚨</span>
@@ -205,9 +205,10 @@
                                 <th class="text-red-700 font-black text-[10px]" style="padding:10px;">NFM #</th>
                                 <th class="text-red-700 font-black text-[10px]" style="padding:10px;">Barang (SC#)</th>
                                 <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Requestor</th>
+                                <!-- PEMBARUAN: Diubah konsisten menjadi Tgl Input & Tgl Tiba sesuai review coretan user -->
                                 <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Tanggal Input</th>
-                                <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Target Ambil</th>
-                                <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Keterlambatan</th>
+                                <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Tanggal Tiba</th>
+                                <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Keterlambatan (Aging)</th>
                                 <th class="text-red-700 font-black text-[10px] text-right" style="padding:10px;">Aksi</th>
                             </tr>
                         </thead>
@@ -233,7 +234,8 @@
                     <div id="statIssued" class="text-2xl font-black text-slate-900 mt-2">Rp 0</div>
                 </div>
                 <div class="glass-card p-6 border-l-8 border-amber-600">
-                    <p class="text-[10px] font-black text-slate-400 uppercase">Avg Aging</p>
+                    <!-- PEMBARUAN: Label KPI diubah melacak performa masa tinggal barang -->
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Avg Aging Site</p>
                     <div id="statAge" class="text-2xl font-black text-slate-900 mt-2">0 Hari</div>
                 </div>
             </div>
@@ -353,7 +355,7 @@
                     <thead>
                         <tr>
                             <th class="force-black">Departemen</th>
-                            <th class="force-black text-center">Avg Aging</th>
+                            <th class="force-black text-center">Avg Aging Site</th>
                             <th class="force-black text-center">Outstanding Value</th>
                             <th class="text-right force-black">Total Issued</th>
                         </tr>
@@ -392,7 +394,7 @@
                     <div class="p-6 md:p-8 bg-slate-50 rounded-3xl border border-slate-200">
                         <div class="flex justify-between items-center mb-6">
                             <h4 class="text-[11px] font-black uppercase text-black tracking-widest">Detail Item List</h4>
-                            <span class="text-[8px] font-black bg-blue-100 text-blue-800 px-2 py-1 rounded uppercase">💡 Ketik SC# untuk Auto-Fill Deskripsi & Set Target Ambil</span>
+                            <span class="text-[8px] font-black bg-blue-100 text-blue-800 px-2 py-1 rounded uppercase">💡 Ketik SC# untuk Auto-Fill Deskripsi & Set Tgl Tiba</span>
                         </div>
                         <div id="itemsContainer" class="space-y-4"></div>
                         <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-blue-600 uppercase mt-6 hover:underline tracking-widest">+ Tambah Baris Barang</button>
@@ -455,7 +457,7 @@
                             <th class="force-black text-center">Plan Qty</th>
                             <th class="force-black text-center" style="width:120px;">Qty Datang</th>
                             <th class="force-black text-center" style="width:120px;">Qty Keluar</th>
-                            <th class="force-black text-center" style="width:130px;">Status / Target</th>
+                            <th class="force-black text-center" style="width:130px;">Status / Tgl Tiba</th>
                             <th class="force-black text-right">Aksi & Pengingat</th>
                         </tr>
                     </thead>
@@ -557,7 +559,7 @@
         window.sendReminder = (nfm, req, dsc, tglPlanning, tglTargetAmbil) => {
             const cleanTglPlanning = tglPlanning || '-';
             const cleanTarget = tglTargetAmbil || '-';
-            const msg = `Halo *${req}*, barang Anda (*${dsc}*) untuk NFM *#${nfm}* (Tanggal Input NFM: *${cleanTglPlanning}*) saat ini statusnya sudah ON SITE di gudang dan sudah bisa diambil (Target Batas Ambil: *${cleanTarget}*). Harap segera melakukan pengambilan. Terima kasih!`;
+            const msg = `Halo *${req}*, barang Anda (*${dsc}*) untuk NFM *#${nfm}* (Tanggal Input NFM: *${cleanTglPlanning}*) saat ini statusnya sudah ON SITE di gudang dan sudah bisa diambil (Tanggal Tiba di Site: *${cleanTarget}*). Harap segera melakukan pengambilan. Terima kasih!`;
             
             // Salin ke Clipboard
             copyTextToClipboard(msg);
@@ -968,7 +970,8 @@
                                 <option value="ON SITE" ${i.status === 'ON SITE' ? 'selected' : ''}>SITE</option>
                                 <option value="ISSUED" ${i.status === 'ISSUED' ? 'selected' : ''}>ISSUED</option>
                             </select>
-                            <input type="date" id="quick_tgt_${i.entryId}_${i.itemIndex}" value="${i.tglTargetAmbil || ''}" class="text-[9px] font-bold border-2 border-slate-200 p-1 w-full rounded" title="Target Tanggal Ambil">
+                            <!-- PEMBARUAN: Tanggal Tiba di Site menggantikan Target Ambil -->
+                            <input type="date" id="quick_tgt_${i.entryId}_${i.itemIndex}" value="${i.tglTargetAmbil || ''}" class="text-[9px] font-bold border-2 border-slate-200 p-1 w-full rounded" title="Tanggal Tiba di Site">
                         </td>
                         <td style="padding:12px; text-align:right;">
                             ${actionButtons}
@@ -987,6 +990,7 @@
             item.qtyArrived = item.qty;
             item.status = 'ON SITE';
             item.tglArrived = new Date().toISOString().split('T')[0];
+            item.tglTargetAmbil = new Date().toISOString().split('T')[0]; // Set tgl tiba otomatis
 
             try {
                 if (db && user) {
@@ -1019,7 +1023,7 @@
             item.qtyArrived = arr;
             item.qtyIssued = iss;
             item.status = st;
-            item.tglTargetAmbil = tgt;
+            item.tglTargetAmbil = tgt; // Berfungsi sebagai Tanggal Tiba
             item.po = po;
             item.sc = sc;
 
@@ -1029,9 +1033,11 @@
                 item.status = 'ON SITE';
             }
 
-            if (item.status === 'ON SITE' && !item.tglArrived) {
+            if (item.status === 'ON SITE' && !item.tglTargetAmbil) {
+                item.tglTargetAmbil = new Date().toISOString().split('T')[0];
                 item.tglArrived = new Date().toISOString().split('T')[0];
             } else if (item.status !== 'ON SITE' && item.status !== 'ISSUED') {
+                delete item.tglTargetAmbil;
                 delete item.tglArrived;
             }
 
@@ -1077,7 +1083,7 @@
 
         // Dashboard Logic & Pipeline Calculation
         function updateDashboard() {
-            let totals = { out: 0, site: 0, iss: 0, ageSum: 0 };
+            let totals = { out: 0, site: 0, iss: 0, ageSum: 0, siteAgeSum: 0, siteAgeCount: 0 };
             const deptStats = {};
             const overdueItems = [];
             const today = new Date();
@@ -1094,7 +1100,7 @@
             allData.forEach(entry => {
                 totals.ageSum += entry.aging;
                 
-                if (!deptStats[entry.dept]) deptStats[entry.dept] = { out: 0, iss: 0, age: 0, count: 0 };
+                if (!deptStats[entry.dept]) deptStats[entry.dept] = { out: 0, iss: 0, age: 0, count: 0, siteAgeSum: 0, siteAgeCount: 0 };
                 
                 deptStats[entry.dept].age += entry.aging;
                 deptStats[entry.dept].count++;
@@ -1124,26 +1130,26 @@
                         pipelineData[normalizedStatus].value += (qty * price);
                     }
 
-                    // Deteksi Overdue Barang di Site
+                    // PEMBARUAN: Kalkulasi Aging Gudang di Site & Pengingat Overdue dari Tanggal Tiba
                     if (normalizedStatus === 'ON SITE') {
                         let overdue = false;
                         let delayDays = 0;
+                        const tglTiba = item.tglTargetAmbil || item.tglArrived;
 
-                        if (item.tglTargetAmbil) {
-                            const target = new Date(item.tglTargetAmbil);
-                            target.setHours(0,0,0,0);
-                            if (today > target) {
-                                overdue = true;
-                                delayDays = Math.floor((today - target) / (1000 * 60 * 60 * 24));
-                            }
-                        } else if (entry.tglPlanning) {
-                            const planDate = new Date(entry.tglPlanning);
-                            planDate.setHours(0,0,0,0);
-                            const daysSincePlan = Math.floor((today - planDate) / (1000 * 60 * 60 * 24));
-                            if (daysSincePlan > 3) {
-                                overdue = true;
-                                delayDays = daysSincePlan - 3;
-                            }
+                        if (tglTiba) {
+                            const arrivalDate = new Date(tglTiba);
+                            arrivalDate.setHours(0,0,0,0);
+                            const daysOnSite = Math.floor((today - arrivalDate) / (1000 * 60 * 60 * 24));
+                            
+                            // Hitung akumulasi untuk average aging di site gudang
+                            totals.siteAgeSum += daysOnSite;
+                            totals.siteAgeCount++;
+                            deptStats[entry.dept].siteAgeSum += daysOnSite;
+                            deptStats[entry.dept].siteAgeCount++;
+
+                            // Masukkan ke overdue panel jika berada di site gudang >= 1 hari (Outstanding belum diambil)
+                            overdue = true;
+                            delayDays = daysOnSite;
                         }
 
                         if (overdue) {
@@ -1154,8 +1160,8 @@
                                 req: entry.req,
                                 dsc: item.dsc,
                                 sc: item.sc,
-                                tglPlanning: entry.tglPlanning,
-                                tglTargetAmbil: item.tglTargetAmbil,
+                                tglPlanning: entry.tglPlanning, // Tanggal Input
+                                tglTargetAmbil: tglTiba, // Tanggal Tiba
                                 delayDays: delayDays
                             });
                         }
@@ -1166,7 +1172,10 @@
             document.getElementById('statTotal').innerText = `Rp ${totals.out.toLocaleString('id-ID')}`;
             document.getElementById('statSite').innerText = `Rp ${totals.site.toLocaleString('id-ID')}`;
             document.getElementById('statIssued').innerText = `Rp ${totals.iss.toLocaleString('id-ID')}`;
-            document.getElementById('statAge').innerText = `${Math.round(totals.ageSum / (allData.length || 1))} Hari`;
+            
+            // PEMBARUAN: KPI Rata-rata Aging di Site dihitung secara presisi dari tanggal kedatangan
+            const avgSiteAge = totals.siteAgeCount > 0 ? Math.round(totals.siteAgeSum / totals.siteAgeCount) : 0;
+            document.getElementById('statAge').innerText = `${avgSiteAge} Hari`;
 
             updateSCLookup();
             populatePipelineFilters();
@@ -1189,11 +1198,12 @@
                             <div>${item.req}</div>
                             <div class="text-[9px] text-slate-400 uppercase">${item.dept}</div>
                         </td>
+                        <!-- PEMBARUAN: Tanggal Input dan Tanggal Tiba sudah disesuaikan -->
                         <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglPlanning || '-'}</td>
-                        <td class="text-center font-bold text-red-600" style="padding:10px; font-size:11px;">${item.tglTargetAmbil || '<span class="text-slate-400 italic">Batas 3 Hari</span>'}</td>
+                        <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglTargetAmbil || '-'}</td>
                         <td class="text-center" style="padding:10px;">
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-100 text-red-800 uppercase inline-block">
-                                ⚠️ Terlewat ${item.delayDays} Hari
+                                ⚠️ Mengendap ${item.delayDays} Hari
                             </span>
                         </td>
                         <td class="text-right" style="padding:10px;">
@@ -1250,7 +1260,7 @@
 
             const isStageOnSite = stage === 'ON SITE';
             if (isStageOnSite) {
-                dynamicHeader.innerText = 'Tgl Input & Status Ambil';
+                dynamicHeader.innerText = 'Tgl Input & Tgl Tiba';
             } else {
                 dynamicHeader.innerText = 'Estimasi Value';
             }
@@ -1286,31 +1296,24 @@
                 let rightColContent = "";
                 
                 if (isStageOnSite) {
-                    const daysSincePlan = getDaysDiff(i.tglPlanning);
+                    const tglTiba = i.tglTargetAmbil || i.tglArrived || '-';
+                    const daysSincePlan = tglTiba !== '-' ? getDaysDiff(tglTiba) : 0;
                     let overdueText = "On Track";
                     let badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
                     
-                    if (i.tglTargetAmbil) {
-                        const target = new Date(i.tglTargetAmbil);
-                        target.setHours(0,0,0,0);
-                        if (today > target) {
-                            const delay = Math.floor((today - target) / (1000 * 60 * 60 * 24));
-                            overdueText = `🚨 Terlewat ${delay} Hari`;
-                            badgeClass = "bg-red-100 text-red-800 border-red-300 animate-pulse";
-                        }
-                    } else if (daysSincePlan > 3) {
+                    if (daysSincePlan > 0) {
                         overdueText = `🚨 Mengendap ${daysSincePlan} Hari`;
                         badgeClass = "bg-red-100 text-red-800 border-red-300 animate-pulse";
                     }
 
                     rightColContent = `
                         <div class="text-center space-y-1.5">
-                            <span class="font-black text-emerald-600 block text-[11px]">Input: ${i.tglPlanning || '-'}</span>
-                            <span class="font-bold text-slate-500 block text-[10px]">Batas: ${i.tglTargetAmbil || '3 Hari'}</span>
+                            <span class="font-black text-slate-500 block text-[11px]">Input: ${i.tglPlanning || '-'}</span>
+                            <span class="font-black text-emerald-600 block text-[11px]">Tiba: ${tglTiba}</span>
                             <span class="px-2 py-0.5 rounded border text-[9px] font-black ${badgeClass} uppercase inline-block">
                                 ${overdueText}
                             </span>
-                            <button onclick="window.sendReminder('${i.nfm}', '${i.req}', '${i.dsc}', '${i.tglPlanning}', '${i.tglTargetAmbil || ""}')" 
+                            <button onclick="window.sendReminder('${i.nfm}', '${i.req}', '${i.dsc}', '${i.tglPlanning}', '${tglTiba}')" 
                                     class="bg-red-600 hover:bg-red-700 text-white font-black text-[8px] uppercase px-2 py-1 rounded-md transition shadow-sm block mx-auto whitespace-nowrap">
                                 📢 Kirim WA
                             </button>
@@ -1331,7 +1334,6 @@
                             <div class="flex flex-col gap-1">
                                 <div class="flex items-center gap-1 text-[11px]">
                                     <span class="text-slate-400 font-bold">PO:</span>
-                                    <!-- Perbaikan: Menggunakan i.itemIndex agar langsung tepat sasaran -->
                                     <input type="text" value="${i.po || ''}" onchange="updateItem('${i.id}', ${i.itemIndex}, 'po', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-blue-600 outline-none">
                                 </div>
                                 <div class="flex items-center gap-1 text-[11px]">
@@ -1361,14 +1363,17 @@
             const tbody = document.getElementById('summaryTable');
             tbody.innerHTML = Object.entries(stats)
                 .sort((a, b) => b[1].out - a[1].out)
-                .map(([name, data]) => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="force-black uppercase">${name}</td>
-                    <td class="force-black text-center">${Math.round(data.age / data.count)} H</td>
-                    <td class="force-black text-center text-blue-600">Rp ${data.out.toLocaleString('id-ID')}</td>
-                    <td class="text-right force-black text-indigo-600">Rp ${data.iss.toLocaleString('id-ID')}</td>
-                </tr>
-            `).join('');
+                .map(([name, data]) => {
+                    const avgDeptSiteAge = data.siteAgeCount > 0 ? Math.round(data.siteAgeSum / data.siteAgeCount) : 0;
+                    return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="force-black uppercase">${name}</td>
+                        <td class="force-black text-center">${avgDeptSiteAge} H</td>
+                        <td class="force-black text-center text-blue-600">Rp ${data.out.toLocaleString('id-ID')}</td>
+                        <td class="text-right force-black text-indigo-600">Rp ${data.iss.toLocaleString('id-ID')}</td>
+                    </tr>
+                    `;
+                }).join('');
         }
 
         // Charts
@@ -1417,9 +1422,11 @@
                 i.status = 'ON SITE';
             }
 
-            if (i.status === 'ON SITE' && !i.tglArrived) {
+            if (i.status === 'ON SITE' && !i.tglTargetAmbil) {
+                i.tglTargetAmbil = new Date().toISOString().split('T')[0];
                 i.tglArrived = new Date().toISOString().split('T')[0];
             } else if (i.status !== 'ON SITE' && i.status !== 'ISSUED') {
+                delete i.tglTargetAmbil;
                 delete i.tglArrived;
             }
 
