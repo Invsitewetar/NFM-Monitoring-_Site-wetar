@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.16</title>
+    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.17</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -62,7 +62,7 @@
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(0,97,255,0.4); }
 
         /* Modal Styles */
-        #ai-modal, #dept-modal, #confirm-modal { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); }
+        #ai-modal, #dept-modal, #confirm-modal, #export-modal { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); }
 
         /* Pipeline Step Card Styles */
         .pipeline-card {
@@ -130,6 +130,25 @@
         </div>
     </div>
 
+    <!-- EXPORT FALLBACK MODAL (FITUR FAILSAFE UTK BROWSER YANG MEMBLOKIR DOWNLOAD) -->
+    <div id="export-modal" class="fixed inset-0 z-[130] flex items-center justify-center p-6 hidden">
+        <div class="glass-card max-w-2xl w-full p-8 flex flex-col max-h-[85vh] animate-fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">📋</span>
+                    <h3 class="text-lg font-black text-slate-900 uppercase">Salin Data Logistik</h3>
+                </div>
+                <button onclick="closeExportModal()" class="text-slate-400 hover:text-black font-black">✕</button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4 font-bold">Browser Anda memblokir unduhan file langsung dari pratinjau ini. Silakan salin data di bawah ini, lalu tempel (paste / Ctrl+V) langsung ke Microsoft Excel Anda.</p>
+            <textarea id="export-text-area" class="input-field flex-1 font-mono text-[10px] h-64 p-4 mb-4" readonly></textarea>
+            <div class="flex gap-4">
+                <button onclick="copyExportText()" class="flex-1 bg-blue-600 text-white font-black py-3.5 rounded-xl shadow-lg hover:bg-blue-700 transition uppercase text-[10px]">Salin Semua Data</button>
+                <button onclick="closeExportModal()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl uppercase text-[10px]">Tutup</button>
+            </div>
+        </div>
+    </div>
+
     <!-- AI INSIGHTS MODAL -->
     <div id="ai-modal" class="fixed inset-0 z-[110] flex items-center justify-center p-6 hidden">
         <div class="glass-card max-w-2xl w-full p-8 shadow-2xl relative max-h-[80vh] flex flex-col">
@@ -189,7 +208,7 @@
         <!-- VIEW: DASHBOARD -->
         <div id="view-report" class="p-6 md:p-10 space-y-8 animate-fade-in">
             
-            <!-- PENGINGAT PENGAMBILAN BARANG (OVERDUE GUDANG) -->
+            <!-- PENGINGAT PENGAMBILAN BARANG (OVERDUE ALERTS) -->
             <div id="overdue-alerts-panel" class="glass-card p-6 border-l-8 border-red-600 bg-red-50/20 hidden">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="text-xl">🚨</span>
@@ -205,7 +224,6 @@
                                 <th class="text-red-700 font-black text-[10px]" style="padding:10px;">NFM #</th>
                                 <th class="text-red-700 font-black text-[10px]" style="padding:10px;">Barang (SC#)</th>
                                 <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Requestor</th>
-                                <!-- PEMBARUAN: Diubah konsisten menjadi Tgl Input & Tgl Tiba sesuai review coretan user -->
                                 <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Tanggal Input</th>
                                 <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Tanggal Tiba</th>
                                 <th class="text-red-700 font-black text-[10px] text-center" style="padding:10px;">Keterlambatan (Aging)</th>
@@ -234,7 +252,6 @@
                     <div id="statIssued" class="text-2xl font-black text-slate-900 mt-2">Rp 0</div>
                 </div>
                 <div class="glass-card p-6 border-l-8 border-amber-600">
-                    <!-- PEMBARUAN: Label KPI diubah melacak performa masa tinggal barang -->
                     <p class="text-[10px] font-black text-slate-400 uppercase">Avg Aging Site</p>
                     <div id="statAge" class="text-2xl font-black text-slate-900 mt-2">0 Hari</div>
                 </div>
@@ -999,7 +1016,7 @@
                     localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
                     updateDashboard();
                 }
-                showCustomToast(`Barang "${item.dsc}" berhasil di-set ON SITE!`);
+                showCustomToast("Barang \"" + item.dsc + "\" berhasil di-set ON SITE!");
                 renderPipelineManager();
             } catch (err) {
                 showCustomToast("Gagal menyimpan data: " + err.message, "error");
@@ -1048,7 +1065,7 @@
                     localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
                     updateDashboard();
                 }
-                showCustomToast(`Item "${item.dsc}" diperbarui!`);
+                showCustomToast("Item \"" + item.dsc + "\" diperbarui!");
                 renderPipelineManager();
             } catch (err) {
                 showCustomToast("Gagal memperbarui: " + err.message, "error");
@@ -1407,6 +1424,117 @@
             pieChart.data.datasets[0].data = data;
             pieChart.update();
         }
+
+        // EXCEL DOWNLOAD LOGIC WITH DUAL FAILSAFE FOR SANDBOXED ENVIRONMENTS
+        window.downloadExcel = () => {
+            if (allData.length === 0) {
+                showCustomToast("Tidak ada data untuk diunduh.", "error");
+                return;
+            }
+
+            // Flatten data for Excel
+            const exportRows = [];
+            allData.forEach(entry => {
+                if (!entry.items) return;
+                entry.items.forEach(item => {
+                    const tglTiba = item.tglTargetAmbil || item.tglArrived || '-';
+                    const daysOnSite = tglTiba !== '-' ? getDaysDiff(tglTiba) : 0;
+                    exportRows.push({
+                        'No NFM': entry.nfm || '',
+                        'Departemen': entry.dept || '',
+                        'Requestor': entry.req || '',
+                        'Tanggal Input': entry.tglPlanning || '',
+                        'Aging (Hari)': entry.aging || 0,
+                        'PO #': item.po || '',
+                        'SC #': item.sc || '',
+                        'Deskripsi Barang': item.dsc || '',
+                        'Qty Rencana': item.qty || 0,
+                        'Harga Satuan (Rp)': item.prc || 0,
+                        'Qty Datang': item.qtyArrived || 0,
+                        'Qty Keluar': item.qtyIssued || 0,
+                        'Status': item.status || 'PR',
+                        'Tanggal Tiba di Site': tglTiba,
+                        'Aging Gudang Site (Hari)': item.status === 'ON SITE' ? daysOnSite : '-',
+                        'Value Outstanding (Rp)': Math.max(0, (item.qty || 0) - (item.qtyIssued || 0)) * (item.prc || 0),
+                        'Tgl Terakhir Update': entry.tglUpdate ? entry.tglUpdate.split('T')[0] : '-'
+                    });
+                });
+            });
+
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `Wetar_NFM_Report_${timestamp}`;
+
+            // LEVEL 1: SheetJS Direct Download (XLSX Format)
+            if (typeof XLSX !== 'undefined') {
+                try {
+                    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "NFM Data");
+                    XLSX.writeFile(workbook, `${filename}.xlsx`);
+                    showCustomToast("Excel (.xlsx) berhasil diunduh!");
+                    return;
+                } catch (err) {
+                    console.warn("SheetJS download blocked or failed, trying Level 2 CSV download...", err);
+                }
+            }
+
+            // LEVEL 2: Fallback CSV Blob Download (Standard Spreadsheet Format)
+            try {
+                const headers = Object.keys(exportRows[0]);
+                const csvRows = [headers.join(',')];
+
+                exportRows.forEach(row => {
+                    const values = headers.map(header => {
+                        const val = row[header];
+                        const escaped = ('' + val).replace(/"/g, '""');
+                        return `"${escaped}"`;
+                    });
+                    csvRows.push(values.join(','));
+                });
+
+                const csvContent = "\uFEFF" + csvRows.join('\n'); // Add UTF-8 BOM for direct Excel click load
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `${filename}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showCustomToast("Excel diblokir, CSV berhasil diunduh!");
+                return;
+            } catch (csvErr) {
+                console.warn("Direct CSV file download is blocked by iframe sandboxing, running copy-paste fallback modal...", csvErr);
+            }
+
+            // LEVEL 3: Ultimate Copy-Paste Fallback Modal (Works 100% on any tightly-sandboxed preview frame)
+            showExportFallback(exportRows);
+        };
+
+        window.showExportFallback = (rows) => {
+            const headers = Object.keys(rows[0]);
+            // Tab-Separated format is natively understood by Excel when pasting
+            const tsvRows = [headers.join('\t')];
+            rows.forEach(row => {
+                const values = headers.map(header => '' + (row[header] !== undefined ? row[header] : ''));
+                tsvRows.push(values.join('\t'));
+            });
+            
+            document.getElementById('export-text-area').value = tsvRows.join('\n');
+            document.getElementById('export-modal').classList.remove('hidden');
+            showCustomToast("Browser memblokir unduhan! Silakan salin data.", "error");
+        };
+
+        window.closeExportModal = () => {
+            document.getElementById('export-modal').classList.add('hidden');
+        };
+
+        window.copyExportText = () => {
+            const txt = document.getElementById('export-text-area').value;
+            copyTextToClipboard(txt);
+            showCustomToast("Data tersalin! Buka Excel lalu tekan Ctrl+V.");
+        };
 
         window.updateItem = async (did, idx, field, val) => {
             const entry = allData.find(d => d.id === did);
