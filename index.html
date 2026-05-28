@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.19</title>
+    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.20</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -505,7 +505,8 @@
         import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const apiKey = ""; // Global API Key for Gemini
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-sync-v32';
+        // PEMBARUAN: Ubah kembali ke ID database asli Anda 'wetar-sync-permanent-v2' agar data cloud otomatis tertarik kembali!
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'wetar-sync-permanent-v2';
         let db, auth, user;
         let allData = [];
         let mainChart, pieChart;
@@ -1519,7 +1520,7 @@
                                 <td class="text-center font-black text-slate-900" style="padding:10px; font-size:11px;">
                                     <div>${item.req}</div>
                                     <div class="text-[9px] text-slate-400 uppercase">${item.dept}</div>
-                                </td>
+                                end </td>
                                 <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglPlanning || '-'}</td>
                                 <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglTargetAmbil || '-'}</td>
                                 <td class="text-center" style="padding:10px;">
@@ -1560,7 +1561,23 @@
             }
 
             try {
-                loadLocalBackup();
+                // SPREAD RECOVERY: Membaca database v31 dan backup utama agar data kembali seketika!
+                const legacyConfig = localStorage.getItem('wetar_v31_config');
+                if (legacyConfig && !localStorage.getItem('wetar_v32_config')) {
+                    localStorage.setItem('wetar_v32_config', legacyConfig);
+                }
+
+                let local = localStorage.getItem('wetar_db_v32');
+                if (!local) {
+                    local = localStorage.getItem('wetar_db_permanent');
+                    if (local) {
+                        localStorage.setItem('wetar_db_v32', local);
+                    }
+                }
+
+                if (local) {
+                    allData = JSON.parse(local).map(d => ({ ...d, aging: calculateAging(d.tglPlanning) }));
+                }
             } catch (e) {
                 console.error("Local backup loading failed:", e);
             }
@@ -1572,7 +1589,7 @@
             }
             
             try {
-                const savedConfig = localStorage.getItem('wetar_v32_config');
+                const savedConfig = localStorage.getItem('wetar_v32_config') || localStorage.getItem('wetar_v31_config');
                 if (savedConfig) {
                     await setupFirebase(JSON.parse(savedConfig));
                 } else if (typeof __firebase_config !== 'undefined') {
@@ -1580,6 +1597,12 @@
                 }
             } catch (e) {
                 console.error("Firebase setup failed:", e);
+            }
+
+            try {
+                updateDashboard();
+            } catch (e) {
+                console.error("Initial dashboard update failed:", e);
             }
 
             try {
