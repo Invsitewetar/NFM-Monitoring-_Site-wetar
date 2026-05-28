@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.18</title>
+    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.19</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -130,7 +130,7 @@
         </div>
     </div>
 
-    <!-- EXPORT FALLBACK MODAL (FITUR FAILSAFE UTK BROWSER YANG MEMBLOKIR DOWNLOAD) -->
+    <!-- EXPORT FALLBACK MODAL -->
     <div id="export-modal" class="fixed inset-0 z-[130] flex items-center justify-center p-6 hidden">
         <div class="glass-card max-w-2xl w-full p-8 flex flex-col max-h-[85vh] animate-fade-in">
             <div class="flex justify-between items-center mb-4">
@@ -413,6 +413,7 @@
                             <h4 class="text-[11px] font-black uppercase text-black tracking-widest">Detail Item List</h4>
                             <span class="text-[8px] font-black bg-blue-100 text-blue-800 px-2 py-1 rounded uppercase">💡 Ketik SC# untuk Auto-Fill Deskripsi & Set Tgl Tiba</span>
                         </div>
+                        <!-- BARIS DINAMIS AKAN DITAMBAHKAN DI SINI -->
                         <div id="itemsContainer" class="space-y-4"></div>
                         <!-- PERBAIKAN UTAMA: onclick mengarah ke window.addItemRow() agar aman di Modular JS -->
                         <button type="button" onclick="window.addItemRow()" class="text-[10px] font-black text-blue-600 uppercase mt-6 hover:underline tracking-widest">+ Tambah Baris Barang</button>
@@ -811,7 +812,7 @@
                             if (normStatus === currentPipelineTab) passTab = true;
                         }
 
-                        if (!passTab) return;
+                    if (!passTab) return;
 
                         if (pipelineSearchQuery) {
                             const inSearch = (
@@ -1395,164 +1396,199 @@
 
         // Dashboard Logic & Pipeline Calculation
         function updateDashboard() {
-            let totals = { out: 0, site: 0, iss: 0, ageSum: 0, siteAgeSum: 0, siteAgeCount: 0 };
-            const deptStats = {};
-            const overdueItems = [];
-            const today = new Date();
-            today.setHours(0,0,0,0);
+            try {
+                let totals = { out: 0, site: 0, iss: 0, ageSum: 0, siteAgeSum: 0, siteAgeCount: 0 };
+                const deptStats = {};
+                const overdueItems = [];
+                const today = new Date();
+                today.setHours(0,0,0,0);
 
-            const pipelineData = {
-                'PR': { value: 0, count: 0 },
-                'ON ORDER': { value: 0, count: 0 },
-                'IN TRANSIT': { value: 0, count: 0 },
-                'ON SITE': { value: 0, count: 0 },
-                'ISSUED': { value: 0, count: 0 }
-            };
+                const pipelineData = {
+                    'PR': { value: 0, count: 0 },
+                    'ON ORDER': { value: 0, count: 0 },
+                    'IN TRANSIT': { value: 0, count: 0 },
+                    'ON SITE': { value: 0, count: 0 },
+                    'ISSUED': { value: 0, count: 0 }
+                };
 
-            allData.forEach(entry => {
-                totals.ageSum += entry.aging;
-                
-                if (!deptStats[entry.dept]) deptStats[entry.dept] = { out: 0, iss: 0, age: 0, count: 0, siteAgeSum: 0, siteAgeCount: 0 };
-                
-                deptStats[entry.dept].age += entry.aging;
-                deptStats[entry.dept].count++;
+                allData.forEach(entry => {
+                    totals.ageSum += (entry.aging || 0);
+                    
+                    const deptName = entry.dept || "SCM";
+                    if (!deptStats[deptName]) deptStats[deptName] = { out: 0, iss: 0, age: 0, count: 0, siteAgeSum: 0, siteAgeCount: 0 };
+                    
+                    deptStats[deptName].age += (entry.aging || 0);
+                    deptStats[deptName].count++;
 
-                if (entry.items) {
-                    entry.items.forEach(item => {
-                        const price = item.prc || 0;
-                        const qty = item.qty || 0;
-                        const arrived = item.qtyArrived || 0;
-                        const issued = item.qtyIssued || 0;
-                        const rawStatus = item.status || 'PR';
+                    if (entry.items) {
+                        entry.items.forEach(item => {
+                            if (!item) return;
+                            const price = item.prc || 0;
+                            const qty = item.qty || 0;
+                            const arrived = item.qtyArrived || 0;
+                            const issued = item.qtyIssued || 0;
+                            const rawStatus = item.status || 'PR';
 
-                        const normalizedStatus = (rawStatus === 'ORDER' || rawStatus === 'ON ORDER') ? 'ON ORDER' : rawStatus;
+                            const normalizedStatus = (rawStatus === 'ORDER' || rawStatus === 'ON ORDER') ? 'ON ORDER' : rawStatus;
 
-                        const outVal = Math.max(0, qty - issued) * price;
-                        const siteVal = Math.max(0, arrived - issued) * price;
-                        const issVal = issued * price;
+                            const outVal = Math.max(0, qty - issued) * price;
+                            const siteVal = Math.max(0, arrived - issued) * price;
+                            const issVal = issued * price;
 
-                        totals.out += outVal;
-                        totals.site += siteVal;
-                        totals.iss += issVal;
+                            totals.out += outVal;
+                            totals.site += siteVal;
+                            totals.iss += issVal;
 
-                        deptStats[entry.dept].out += outVal;
-                        deptStats[entry.dept].iss += issVal;
+                            deptStats[deptName].out += outVal;
+                            deptStats[deptName].iss += issVal;
 
-                        if (pipelineData[normalizedStatus]) {
-                            pipelineData[normalizedStatus].count++;
-                            pipelineData[normalizedStatus].value += (qty * price);
-                        }
-
-                        // Kalkulasi Aging Gudang di Site & Pengingat Overdue dari Tanggal Tiba
-                        if (normalizedStatus === 'ON SITE') {
-                            let overdue = false;
-                            let delayDays = 0;
-                            const tglTiba = item.tglTargetAmbil || item.tglArrived;
-
-                            if (tglTiba) {
-                                const arrivalDate = new Date(tglTiba);
-                                arrivalDate.setHours(0,0,0,0);
-                                const daysOnSite = Math.floor((today - arrivalDate) / (1000 * 60 * 60 * 24));
-                                
-                                totals.siteAgeSum += daysOnSite;
-                                totals.siteAgeCount++;
-                                deptStats[entry.dept].siteAgeSum += daysOnSite;
-                                deptStats[entry.dept].siteAgeCount++;
-
-                                overdue = true;
-                                delayDays = daysOnSite;
+                            if (pipelineData[normalizedStatus]) {
+                                pipelineData[normalizedStatus].count++;
+                                pipelineData[normalizedStatus].value += (qty * price);
                             }
 
-                            if (overdue) {
-                                overdueItems.push({
-                                    id: entry.id,
-                                    nfm: entry.nfm,
-                                    dept: entry.dept,
-                                    req: entry.req,
-                                    dsc: item.dsc,
-                                    sc: item.sc,
-                                    tglPlanning: entry.tglPlanning, 
-                                    tglTargetAmbil: tglTiba, 
-                                    delayDays: delayDays
-                                });
+                            // Kalkulasi Aging Gudang di Site & Pengingat Overdue dari Tanggal Tiba
+                            if (normalizedStatus === 'ON SITE') {
+                                let overdue = false;
+                                let delayDays = 0;
+                                const tglTiba = item.tglTargetAmbil || item.tglArrived;
+
+                                if (tglTiba) {
+                                    const arrivalDate = new Date(tglTiba);
+                                    arrivalDate.setHours(0,0,0,0);
+                                    const daysOnSite = Math.floor((today - arrivalDate) / (1000 * 60 * 60 * 24));
+                                    
+                                    totals.siteAgeSum += daysOnSite;
+                                    totals.siteAgeCount++;
+                                    deptStats[deptName].siteAgeSum += daysOnSite;
+                                    deptStats[deptName].siteAgeCount++;
+
+                                    overdue = true;
+                                    delayDays = daysOnSite;
+                                }
+
+                                if (overdue) {
+                                    overdueItems.push({
+                                        id: entry.id,
+                                        nfm: entry.nfm,
+                                        dept: deptName,
+                                        req: entry.req,
+                                        dsc: item.dsc,
+                                        sc: item.sc,
+                                        tglPlanning: entry.tglPlanning, 
+                                        tglTargetAmbil: tglTiba, 
+                                        delayDays: delayDays
+                                    });
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+                });
+
+                const statTotalEl = document.getElementById('statTotal');
+                if (statTotalEl) statTotalEl.innerText = `Rp ${totals.out.toLocaleString('id-ID')}`;
+                
+                const statSiteEl = document.getElementById('statSite');
+                if (statSiteEl) statSiteEl.innerText = `Rp ${totals.site.toLocaleString('id-ID')}`;
+                
+                const statIssuedEl = document.getElementById('statIssued');
+                if (statIssuedEl) statIssuedEl.innerText = `Rp ${totals.iss.toLocaleString('id-ID')}`;
+                
+                const avgSiteAge = totals.siteAgeCount > 0 ? Math.round(totals.siteAgeSum / totals.siteAgeCount) : 0;
+                const statAgeEl = document.getElementById('statAge');
+                if (statAgeEl) statAgeEl.innerText = `${avgSiteAge} Hari`;
+
+                updateSCLookup();
+                populatePipelineFilters();
+                renderDepartmentDropdowns();
+                updatePipelineUI(pipelineData);
+
+                const alertsPanel = document.getElementById('overdue-alerts-panel');
+                const alertsTableBody = document.getElementById('overdueAlertsTableBody');
+
+                if (overdueItems.length > 0) {
+                    if (alertsPanel) alertsPanel.classList.remove('hidden');
+                    if (alertsTableBody) {
+                        alertsTableBody.innerHTML = overdueItems.map(item => `
+                            <tr class="hover:bg-red-50 transition">
+                                <td class="font-black text-slate-900" style="padding:10px; font-size:12px;">NFM-${item.nfm}</td>
+                                <td class="font-bold text-slate-800" style="padding:10px; font-size:12px;">
+                                    <div>${item.dsc}</div>
+                                    <div class="text-[10px] text-slate-400 font-bold">${item.sc}</div>
+                                </td>
+                                <td class="text-center font-black text-slate-900" style="padding:10px; font-size:11px;">
+                                    <div>${item.req}</div>
+                                    <div class="text-[9px] text-slate-400 uppercase">${item.dept}</div>
+                                </td>
+                                <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglPlanning || '-'}</td>
+                                <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglTargetAmbil || '-'}</td>
+                                <td class="text-center" style="padding:10px;">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-100 text-red-800 uppercase inline-block">
+                                        ⚠️ Mengendap ${item.delayDays} Hari
+                                    </span>
+                                </td>
+                                <td class="text-right" style="padding:10px;">
+                                    <button onclick="window.sendReminder('${item.nfm}', '${item.req}', '${item.dsc}', '${item.tglPlanning}', '${item.tglTargetAmbil}')" 
+                                            class="bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase px-3 py-1.5 rounded-lg transition shadow-md whitespace-nowrap">
+                                        📢 Kirim WA
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                } else {
+                    if (alertsPanel) alertsPanel.classList.add('hidden');
+                    if (alertsTableBody) alertsTableBody.innerHTML = '';
                 }
-            });
 
-            document.getElementById('statTotal').innerText = `Rp ${totals.out.toLocaleString('id-ID')}`;
-            document.getElementById('statSite').innerText = `Rp ${totals.site.toLocaleString('id-ID')}`;
-            document.getElementById('statIssued').innerText = `Rp ${totals.iss.toLocaleString('id-ID')}`;
-            
-            const avgSiteAge = totals.siteAgeCount > 0 ? Math.round(totals.siteAgeSum / totals.siteAgeCount) : 0;
-            document.getElementById('statAge').innerText = `${avgSiteAge} Hari`;
-
-            updateSCLookup();
-            populatePipelineFilters();
-            renderDepartmentDropdowns();
-            updatePipelineUI(pipelineData);
-
-            const alertsPanel = document.getElementById('overdue-alerts-panel');
-            const alertsTableBody = document.getElementById('overdueAlertsTableBody');
-
-            if (overdueItems.length > 0) {
-                if (alertsPanel) alertsPanel.classList.remove('hidden');
-                if (alertsTableBody) {
-                    alertsTableBody.innerHTML = overdueItems.map(item => `
-                        <tr class="hover:bg-red-50 transition">
-                            <td class="font-black text-slate-900" style="padding:10px; font-size:12px;">NFM-${item.nfm}</td>
-                            <td class="font-bold text-slate-800" style="padding:10px; font-size:12px;">
-                                <div>${item.dsc}</div>
-                                <div class="text-[10px] text-slate-400 font-bold">${item.sc}</div>
-                            </td>
-                            <td class="text-center font-black text-slate-900" style="padding:10px; font-size:11px;">
-                                <div>${item.req}</div>
-                                <div class="text-[9px] text-slate-400 uppercase">${item.dept}</div>
-                            </td>
-                            <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglPlanning || '-'}</td>
-                            <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglTargetAmbil || '-'}</td>
-                            <td class="text-center" style="padding:10px;">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-100 text-red-800 uppercase inline-block">
-                                    ⚠️ Mengendap ${item.delayDays} Hari
-                                </span>
-                            </td>
-                            <td class="text-right" style="padding:10px;">
-                                <button onclick="window.sendReminder('${item.nfm}', '${item.req}', '${item.dsc}', '${item.tglPlanning}', '${item.tglTargetAmbil}')" 
-                                        class="bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase px-3 py-1.5 rounded-lg transition shadow-md whitespace-nowrap">
-                                    📢 Kirim WA
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
-                }
-            } else {
-                if (alertsPanel) alertsPanel.classList.add('hidden');
-                if (alertsTableBody) alertsTableBody.innerHTML = '';
+                renderTable(deptStats);
+                updateCharts(deptStats);
+                renderPipelineManager();
+            } catch (e) {
+                console.error("Error in updateDashboard:", e);
             }
-
-            renderTable(deptStats);
-            updateCharts(deptStats);
-            renderPipelineManager();
         }
 
         // ==========================================
         // WINDOW & APP LOAD EVENT LISTENER
         // ==========================================
         window.addEventListener('load', async () => {
-            initCharts();
-            loadLocalBackup();
-            renderDepartmentDropdowns();
-            
-            const savedConfig = localStorage.getItem('wetar_v32_config');
-            if (savedConfig) {
-                await setupFirebase(JSON.parse(savedConfig));
-            } else if (typeof __firebase_config !== 'undefined') {
-                await setupFirebase(JSON.parse(__firebase_config));
+            try {
+                initCharts();
+            } catch (e) {
+                console.error("Charts initialization failed:", e);
             }
 
-            if (document.getElementById('itemsContainer').children.length === 0) {
-                addItemRow();
+            try {
+                loadLocalBackup();
+            } catch (e) {
+                console.error("Local backup loading failed:", e);
+            }
+
+            try {
+                renderDepartmentDropdowns();
+            } catch (e) {
+                console.error("Departments rendering failed:", e);
+            }
+            
+            try {
+                const savedConfig = localStorage.getItem('wetar_v32_config');
+                if (savedConfig) {
+                    await setupFirebase(JSON.parse(savedConfig));
+                } else if (typeof __firebase_config !== 'undefined') {
+                    await setupFirebase(JSON.parse(__firebase_config));
+                }
+            } catch (e) {
+                console.error("Firebase setup failed:", e);
+            }
+
+            try {
+                const container = document.getElementById('itemsContainer');
+                if (container && container.children.length === 0) {
+                    addItemRow();
+                }
+            } catch (e) {
+                console.error("Adding default item row failed:", e);
             }
         });
 
@@ -1701,6 +1737,30 @@
                 `).join('');
             };
         }
+
+        // Expose functions globally for layout interactions
+        window.addItemRow = addItemRow;
+        window.filterPipelineView = filterPipelineView;
+        window.triggerPipelineSearch = triggerPipelineSearch;
+        window.populatePipelineFilters = populatePipelineFilters;
+        window.quickCheckOnSite = quickCheckOnSite;
+        window.saveQuickPipelineRow = saveQuickPipelineRow;
+        window.updateNfmMeta = updateNfmMeta;
+        window.selectPipelineStage = selectPipelineStage;
+        window.updateItem = updateItem;
+        window.deleteEntry = deleteEntry;
+        window.switchView = switchView;
+        window.triggerAIAnalysis = triggerAIAnalysis;
+        window.closeAI = closeAI;
+        window.showExportFallback = showExportFallback;
+        window.closeExportModal = closeExportModal;
+        window.copyExportText = copyExportText;
+        window.downloadExcel = downloadExcel;
+        window.openDeptModal = openDeptModal;
+        window.closeDeptModal = closeDeptModal;
+        window.addNewDepartment = addNewDepartment;
+        window.deleteDepartment = deleteDepartment;
+        window.applySetup = applySetup;
 
     </script>
 </body>
