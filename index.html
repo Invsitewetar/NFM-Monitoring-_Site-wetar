@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.17</title>
+    <title>Monitoring NFM - Site Wetar - Executive Dashboard v32.18</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -208,7 +208,7 @@
         <!-- VIEW: DASHBOARD -->
         <div id="view-report" class="p-6 md:p-10 space-y-8 animate-fade-in">
             
-            <!-- PENGINGAT PENGAMBILAN BARANG (OVERDUE ALERTS) -->
+            <!-- PENGINGAT PENGAMBILAN BARANG (OVERDUE GUDANG) -->
             <div id="overdue-alerts-panel" class="glass-card p-6 border-l-8 border-red-600 bg-red-50/20 hidden">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="text-xl">🚨</span>
@@ -414,7 +414,8 @@
                             <span class="text-[8px] font-black bg-blue-100 text-blue-800 px-2 py-1 rounded uppercase">💡 Ketik SC# untuk Auto-Fill Deskripsi & Set Tgl Tiba</span>
                         </div>
                         <div id="itemsContainer" class="space-y-4"></div>
-                        <button type="button" onclick="addItemRow()" class="text-[10px] font-black text-blue-600 uppercase mt-6 hover:underline tracking-widest">+ Tambah Baris Barang</button>
+                        <!-- PERBAIKAN UTAMA: onclick mengarah ke window.addItemRow() agar aman di Modular JS -->
+                        <button type="button" onclick="window.addItemRow()" class="text-[10px] font-black text-blue-600 uppercase mt-6 hover:underline tracking-widest">+ Tambah Baris Barang</button>
                     </div>
                     
                     <div class="flex gap-4">
@@ -434,11 +435,11 @@
                     </div>
                     <!-- Filter Status Tabs -->
                     <div class="flex flex-wrap gap-2 w-full lg:w-auto">
-                        <button onclick="filterPipelineView('ALL')" id="tab-pipe-ALL" class="bg-blue-600 text-white font-black text-[10px] uppercase px-4 py-2.5 rounded-xl shadow-md">Semua (${countPendingStage('ALL')})</button>
-                        <button onclick="filterPipelineView('PR')" id="tab-pipe-PR" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">PR (${countPendingStage('PR')})</button>
-                        <button onclick="filterPipelineView('ON ORDER')" id="tab-pipe-ON_ORDER" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">PO / Order (${countPendingStage('ON ORDER')})</button>
-                        <button onclick="filterPipelineView('IN TRANSIT')" id="tab-pipe-IN_TRANSIT" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">Transit (${countPendingStage('IN TRANSIT')})</button>
-                        <button onclick="filterPipelineView('ON SITE')" id="tab-pipe-ON_SITE" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">Sudah di Site (${countPendingStage('ON SITE')})</button>
+                        <button onclick="window.filterPipelineView('ALL')" id="tab-pipe-ALL" class="bg-blue-600 text-white font-black text-[10px] uppercase px-4 py-2.5 rounded-xl shadow-md">Semua (0)</button>
+                        <button onclick="window.filterPipelineView('PR')" id="tab-pipe-PR" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">PR (0)</button>
+                        <button onclick="window.filterPipelineView('ON ORDER')" id="tab-pipe-ON_ORDER" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">PO / Order (0)</button>
+                        <button onclick="window.filterPipelineView('IN TRANSIT')" id="tab-pipe-IN_TRANSIT" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">Transit (0)</button>
+                        <button onclick="window.filterPipelineView('ON SITE')" id="tab-pipe-ON_SITE" class="bg-slate-100 text-slate-700 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl">Sudah di Site (0)</button>
                     </div>
                 </div>
                 
@@ -446,18 +447,18 @@
                 <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
                     <div>
                         <label class="text-[9px] font-black uppercase text-slate-400 mb-1 block">Cari Kata Kunci</label>
-                        <input type="text" id="pipelineFilterSearch" class="input-field bg-white" placeholder="Cari NFM, PO, SC, Barang..." oninput="triggerPipelineSearch()">
+                        <input type="text" id="pipelineFilterSearch" class="input-field bg-white" placeholder="Cari NFM, PO, SC, Barang..." oninput="window.triggerPipelineSearch()">
                     </div>
                     <div>
                         <label class="text-[9px] font-black uppercase text-slate-400 mb-1 block">Filter Departemen</label>
-                        <select id="pipelineFilterDept" class="input-field bg-white" onchange="triggerPipelineSearch()">
+                        <select id="pipelineFilterDept" class="input-field bg-white" onchange="window.triggerPipelineSearch()">
                             <option value="ALL">SEMUA DEPARTEMEN</option>
                             <!-- Diisi secara dinamis oleh renderer dropdown departemen -->
                         </select>
                     </div>
                     <div>
                         <label class="text-[9px] font-black uppercase text-slate-400 mb-1 block">Filter Requestor (Nama)</label>
-                        <select id="pipelineFilterReq" class="input-field bg-white" onchange="triggerPipelineSearch()">
+                        <select id="pipelineFilterReq" class="input-field bg-white" onchange="window.triggerPipelineSearch()">
                             <option value="ALL">SEMUA REQUESTOR</option>
                             <!-- Diisi secara dinamis dari JS -->
                         </select>
@@ -515,8 +516,11 @@
         // DEPARTEMEN LIST UTAMA
         let departments = ['MAINTENANCE FIXED', 'MAINTENANCE MOBILE', 'PROCESSING', 'MINING', 'SCM'];
 
-        // Global Custom Toast Notification
-        window.showCustomToast = (msg, type = 'success') => {
+        // ==========================================
+        // LOCAL FUNCTION DECLARATIONS (MODULAR SAFE)
+        // ==========================================
+
+        function showCustomToast(msg, type = 'success') {
             const existing = document.getElementById('custom-toast');
             if (existing) existing.remove();
 
@@ -536,15 +540,18 @@
                 toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
                 setTimeout(() => toast.remove(), 500);
             }, 3500);
-        };
+        }
+        window.showCustomToast = showCustomToast;
 
-        // CUSTOM CONFIRM MODAL SYSTEM
         let confirmCallback = null;
-        window.showCustomConfirm = (text, callback) => {
+        function showCustomConfirm(text, callback) {
             document.getElementById('confirm-modal-text').innerText = text;
             document.getElementById('confirm-modal').classList.remove('hidden');
             confirmCallback = callback;
-        };
+        }
+        window.showCustomConfirm = showCustomConfirm;
+
+        // Custom Confirm Event Listeners
         document.getElementById('confirm-cancel').onclick = () => {
             document.getElementById('confirm-modal').classList.add('hidden');
             confirmCallback = null;
@@ -555,8 +562,7 @@
             confirmCallback = null;
         };
 
-        // Clipboard copy compatibility fallback for browser frames
-        window.copyTextToClipboard = (text) => {
+        function copyTextToClipboard(text) {
             const tempTextArea = document.createElement("textarea");
             tempTextArea.value = text;
             tempTextArea.style.position = "fixed"; 
@@ -570,24 +576,20 @@
                 showCustomToast("Gagal menyalin teks.", "error");
             }
             document.body.removeChild(tempTextArea);
-        };
+        }
+        window.copyTextToClipboard = copyTextToClipboard;
 
-        // Trigger SMS/WhatsApp Template copy AND open WhatsApp Web
-        window.sendReminder = (nfm, req, dsc, tglPlanning, tglTargetAmbil) => {
+        function sendReminder(nfm, req, dsc, tglPlanning, tglTargetAmbil) {
             const cleanTglPlanning = tglPlanning || '-';
             const cleanTarget = tglTargetAmbil || '-';
             const msg = `Halo *${req}*, barang Anda (*${dsc}*) untuk NFM *#${nfm}* (Tanggal Input NFM: *${cleanTglPlanning}*) saat ini statusnya sudah ON SITE di gudang dan sudah bisa diambil (Tanggal Tiba di Site: *${cleanTarget}*). Harap segera melakukan pengambilan. Terima kasih!`;
-            
-            // Salin ke Clipboard
             copyTextToClipboard(msg);
-            
-            // Redirect langsung ke WhatsApp Web / WhatsApp Mobile
             const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
             window.open(waUrl, '_blank');
-        };
+        }
+        window.sendReminder = sendReminder;
 
-        // DYNAMIC DEPARTMENTS LOGIC
-        window.renderDepartmentDropdowns = () => {
+        function renderDepartmentDropdowns() {
             const inDept = document.getElementById('in_dept');
             if (inDept) {
                 inDept.innerHTML = departments.map(d => `<option value="${d}">${d}</option>`).join('');
@@ -598,29 +600,33 @@
                 pipeDept.innerHTML = `<option value="ALL">SEMUA DEPARTEMEN</option>` + 
                     departments.map(d => `<option value="${d}" ${currentSelected === d ? 'selected' : ''}>${d}</option>`).join('');
             }
-        };
+        }
+        window.renderDepartmentDropdowns = renderDepartmentDropdowns;
 
-        window.openDeptModal = () => {
+        function openDeptModal() {
             document.getElementById('dept-modal').classList.remove('hidden');
             renderDeptModalList();
-        };
+        }
+        window.openDeptModal = openDeptModal;
 
-        window.closeDeptModal = () => {
+        function closeDeptModal() {
             document.getElementById('dept-modal').classList.add('hidden');
-        };
+        }
+        window.closeDeptModal = closeDeptModal;
 
-        window.renderDeptModalList = () => {
+        function renderDeptModalList() {
             const container = document.getElementById('dept-list-container');
             if (!container) return;
             container.innerHTML = departments.map(d => `
                 <div class="flex justify-between items-center py-2.5">
                     <span class="font-black text-slate-800 text-sm uppercase">${d}</span>
-                    <button onclick="deleteDepartment('${d}')" class="text-red-500 font-black text-[10px] uppercase hover:underline">Hapus</button>
+                    <button onclick="window.deleteDepartment('${d}')" class="text-red-500 font-black text-[10px] uppercase hover:underline">Hapus</button>
                 </div>
             `).join('');
-        };
+        }
+        window.renderDeptModalList = renderDeptModalList;
 
-        window.addNewDepartment = async () => {
+        async function addNewDepartment() {
             const input = document.getElementById('new-dept-input');
             const name = input.value.toUpperCase().trim();
             if (!name) return;
@@ -634,15 +640,17 @@
             input.value = '';
             await saveDepartments();
             showCustomToast(`Departemen ${name} berhasil ditambahkan!`);
-        };
+        }
+        window.addNewDepartment = addNewDepartment;
 
-        window.deleteDepartment = (name) => {
+        function deleteDepartment(name) {
             showCustomConfirm(`Hapus departemen ${name} dari daftar? Hal ini tidak akan mengubah data NFM lama, namun departemen ini tidak akan muncul lagi di opsi input baru.`, async () => {
                 departments = departments.filter(d => d !== name);
                 await saveDepartments();
                 showCustomToast(`Departemen ${name} dihapus!`);
             });
-        };
+        }
+        window.deleteDepartment = deleteDepartment;
 
         async function saveDepartments() {
             localStorage.setItem('wetar_departments', JSON.stringify(departments));
@@ -658,98 +666,12 @@
             }
         }
 
-        // Initialize App
-        window.addEventListener('load', async () => {
-            initCharts();
-            loadLocalBackup();
-            renderDepartmentDropdowns();
-            
-            const savedConfig = localStorage.getItem('wetar_v32_config');
-            if (savedConfig) {
-                await setupFirebase(JSON.parse(savedConfig));
-            } else if (typeof __firebase_config !== 'undefined') {
-                await setupFirebase(JSON.parse(__firebase_config));
-            }
-
-            if (document.getElementById('itemsContainer').children.length === 0) addItemRow();
-        });
-
-        async function setupFirebase(config) {
-            try {
-                const app = initializeApp(config);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                const initAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                };
-                
-                await initAuth();
-                
-                onAuthStateChanged(auth, (u) => {
-                    if (u) {
-                        user = u;
-                        document.getElementById('cloud-status').className = 'w-2.5 h-2.5 rounded-full bg-green-500 mr-2';
-                        document.getElementById('status-text').innerText = "Cloud Sync Active";
-                        bindFirestore();
-                    }
-                });
-            } catch (e) {
-                console.error("Firebase Auth Error", e);
-            }
-        }
-
-        function bindFirestore() {
-            if (!user) return;
-            const entriesRef = collection(db, 'artifacts', appId, 'public', 'data', 'entries');
-            onSnapshot(entriesRef, (snap) => {
-                allData = snap.docs.map(d => ({
-                    ...d.data(),
-                    id: d.id,
-                    aging: calculateAging(d.data().tglPlanning)
-                }));
-                localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
-                updateDashboard();
-                if (selectedStage) selectPipelineStage(selectedStage); // Auto refresh detail yang terpilih
-            }, (err) => console.error("Snapshot Error", err));
-
-            // Sync Dynamic Departments Settings Document
-            const deptDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'departments');
-            onSnapshot(deptDocRef, (docSnap) => {
-                if (docSnap.exists() && docSnap.data().list) {
-                    departments = docSnap.data().list;
-                    localStorage.setItem('wetar_departments', JSON.stringify(departments));
-                    renderDepartmentDropdowns();
-                    if (!document.getElementById('dept-modal').classList.contains('hidden')) {
-                        renderDeptModalList();
-                    }
-                }
-            }, (err) => console.error("Department Sync Error", err));
-        }
-
-        function loadLocalBackup() {
-            const local = localStorage.getItem('wetar_db_v32');
-            if (local) {
-                allData = JSON.parse(local).map(d => ({ ...d, aging: calculateAging(d.tglPlanning) }));
-                updateDashboard();
-            }
-            const localDepts = localStorage.getItem('wetar_departments');
-            if (localDepts) {
-                departments = JSON.parse(localDepts);
-            }
-        }
-
         function calculateAging(dateStr) {
             if (!dateStr) return 0;
             const diff = new Date() - new Date(dateStr);
             return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
         }
 
-        // Helper untuk hitung selisih hari spesifik
         function getDaysDiff(dateStr) {
             if (!dateStr) return 0;
             const today = new Date();
@@ -760,7 +682,6 @@
             return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
         }
 
-        // Membangun kamus data relasi SC# ke Deskripsi agar bisa auto-fill
         function updateSCLookup() {
             scLookup = {};
             allData.forEach(entry => {
@@ -778,8 +699,7 @@
             });
         }
 
-        // Event Listener ketika user mengetik SC# di form input
-        window.handleSCOnInput = (inputEl) => {
+        function handleSCOnInput(inputEl) {
             const scVal = inputEl.value.toUpperCase().trim();
             const row = inputEl.closest('.item-row');
             if (!row) return;
@@ -796,30 +716,32 @@
                     }, 800);
                 }
             }
-        };
+        }
+        window.handleSCOnInput = handleSCOnInput;
 
-        // PIPELINE CEPAT: Fungsi untuk menghitung total barang per stage
-        window.countPendingStage = (stage) => {
+        function countPendingStage(stage) {
             let totalCount = 0;
             allData.forEach(entry => {
-                entry.items.forEach(item => {
-                    const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
-                    if (stage === 'ALL') {
-                        if (normStatus !== 'ISSUED') {
-                            totalCount++;
+                if (entry.items) {
+                    entry.items.forEach(item => {
+                        const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
+                        if (stage === 'ALL') {
+                            if (normStatus !== 'ISSUED') {
+                                totalCount++;
+                            }
+                        } else {
+                            if (normStatus === stage) {
+                                totalCount++;
+                            }
                         }
-                    } else {
-                        if (normStatus === stage) {
-                            totalCount++;
-                        }
-                    }
-                });
+                    });
+                }
             });
             return totalCount;
-        };
+        }
+        window.countPendingStage = countPendingStage;
 
-        // PIPELINE CEPAT: Ganti Kategori Tab Filter
-        window.filterPipelineView = (stage) => {
+        function filterPipelineView(stage) {
             currentPipelineTab = stage;
             
             const tabs = ['ALL', 'PR', 'ON_ORDER', 'IN_TRANSIT', 'ON_SITE'];
@@ -836,16 +758,16 @@
             }
 
             renderPipelineManager();
-        };
+        }
+        window.filterPipelineView = filterPipelineView;
 
-        // PIPELINE CEPAT: Event pencarian real-time
-        window.triggerPipelineSearch = () => {
+        function triggerPipelineSearch() {
             pipelineSearchQuery = document.getElementById('pipelineFilterSearch').value.toUpperCase().trim();
             renderPipelineManager();
-        };
+        }
+        window.triggerPipelineSearch = triggerPipelineSearch;
 
-        // PIPELINE CEPAT: Populasi dropdown Requestor unik secara otomatis
-        window.populatePipelineFilters = () => {
+        function populatePipelineFilters() {
             const reqSelect = document.getElementById('pipelineFilterReq');
             if (!reqSelect) return;
             
@@ -863,9 +785,9 @@
                 optionsHtml += `<option value="${req}" ${currentSelected === req ? 'selected' : ''}>${req}</option>`;
             });
             reqSelect.innerHTML = optionsHtml;
-        };
+        }
+        window.populatePipelineFilters = populatePipelineFilters;
 
-        // PIPELINE CEPAT: Render List Pipeline Manager dengan Filter Departemen & Requestor
         function renderPipelineManager() {
             const tableBody = document.getElementById('quickPipelineTableBody');
             if (!tableBody) return;
@@ -878,40 +800,42 @@
                 if (filterDept !== 'ALL' && entry.dept !== filterDept) return;
                 if (filterReq !== 'ALL' && entry.req.toUpperCase().trim() !== filterReq) return;
 
-                entry.items.forEach((item, idx) => {
-                    const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
-                    
-                    let passTab = false;
-                    if (currentPipelineTab === 'ALL') {
-                        if (normStatus !== 'ISSUED') passTab = true;
-                    } else {
-                        if (normStatus === currentPipelineTab) passTab = true;
-                    }
+                if (entry.items) {
+                    entry.items.forEach((item, idx) => {
+                        const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
+                        
+                        let passTab = false;
+                        if (currentPipelineTab === 'ALL') {
+                            if (normStatus !== 'ISSUED') passTab = true;
+                        } else {
+                            if (normStatus === currentPipelineTab) passTab = true;
+                        }
 
-                    if (!passTab) return;
+                        if (!passTab) return;
 
-                    if (pipelineSearchQuery) {
-                        const inSearch = (
-                            entry.nfm.toUpperCase().includes(pipelineSearchQuery) ||
-                            entry.req.toUpperCase().includes(pipelineSearchQuery) ||
-                            entry.dept.toUpperCase().includes(pipelineSearchQuery) ||
-                            item.dsc.toUpperCase().includes(pipelineSearchQuery) ||
-                            (item.po && item.po.toUpperCase().includes(pipelineSearchQuery)) ||
-                            (item.sc && item.sc.toUpperCase().includes(pipelineSearchQuery))
-                        );
-                        if (!inSearch) return;
-                    }
+                        if (pipelineSearchQuery) {
+                            const inSearch = (
+                                entry.nfm.toUpperCase().includes(pipelineSearchQuery) ||
+                                entry.req.toUpperCase().includes(pipelineSearchQuery) ||
+                                entry.dept.toUpperCase().includes(pipelineSearchQuery) ||
+                                item.dsc.toUpperCase().includes(pipelineSearchQuery) ||
+                                (item.po && item.po.toUpperCase().includes(pipelineSearchQuery)) ||
+                                (item.sc && item.sc.toUpperCase().includes(pipelineSearchQuery))
+                            );
+                            if (!inSearch) return;
+                        }
 
-                    matchedItems.push({
-                        entryId: entry.id,
-                        itemIndex: idx,
-                        nfm: entry.nfm,
-                        dept: entry.dept,
-                        req: entry.req,
-                        tglPlanning: entry.tglPlanning,
-                        ...item
+                        matchedItems.push({
+                            entryId: entry.id,
+                            itemIndex: idx,
+                            nfm: entry.nfm,
+                            dept: entry.dept,
+                            req: entry.req,
+                            tglPlanning: entry.tglPlanning,
+                            ...item
+                        });
                     });
-                });
+                }
             });
 
             const allBtn = document.getElementById('tab-pipe-ALL');
@@ -940,14 +864,14 @@
                                     class="bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md whitespace-nowrap">
                                 📢 Kirim WA
                             </button>
-                            <button onclick="saveQuickPipelineRow('${i.entryId}', ${i.itemIndex})" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md">Simpan</button>
+                            <button onclick="window.saveQuickPipelineRow('${i.entryId}', ${i.itemIndex})" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md">Simpan</button>
                         </div>
                     `;
                 } else {
                     actionButtons = `
                         <div class="flex gap-1 justify-end">
-                            <button onclick="quickCheckOnSite('${i.entryId}', ${i.itemIndex})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md whitespace-nowrap">✔️ Tiba di Site</button>
-                            <button onclick="saveQuickPipelineRow('${i.entryId}', ${i.itemIndex})" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md">Simpan</button>
+                            <button onclick="window.quickCheckOnSite('${i.entryId}', ${i.itemIndex})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md whitespace-nowrap">✔️ Tiba di Site</button>
+                            <button onclick="window.saveQuickPipelineRow('${i.entryId}', ${i.itemIndex})" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase px-2.5 py-2 rounded-lg transition shadow-md">Simpan</button>
                         </div>
                     `;
                 }
@@ -987,7 +911,6 @@
                                 <option value="ON SITE" ${i.status === 'ON SITE' ? 'selected' : ''}>SITE</option>
                                 <option value="ISSUED" ${i.status === 'ISSUED' ? 'selected' : ''}>ISSUED</option>
                             </select>
-                            <!-- PEMBARUAN: Tanggal Tiba di Site menggantikan Target Ambil -->
                             <input type="date" id="quick_tgt_${i.entryId}_${i.itemIndex}" value="${i.tglTargetAmbil || ''}" class="text-[9px] font-bold border-2 border-slate-200 p-1 w-full rounded" title="Tanggal Tiba di Site">
                         </td>
                         <td style="padding:12px; text-align:right;">
@@ -997,9 +920,9 @@
                 `;
             }).join('');
         }
+        window.renderPipelineManager = renderPipelineManager;
 
-        // PIPELINE CEPAT: Aksi Pintas Checklist instan (Tiba di Site)
-        window.quickCheckOnSite = async (did, idx) => {
+        async function quickCheckOnSite(did, idx) {
             const entry = allData.find(d => d.id === did);
             if (!entry) return;
 
@@ -1021,10 +944,10 @@
             } catch (err) {
                 showCustomToast("Gagal menyimpan data: " + err.message, "error");
             }
-        };
+        }
+        window.quickCheckOnSite = quickCheckOnSite;
 
-        // PIPELINE CEPAT: Simpan Perubahan Baris Manual
-        window.saveQuickPipelineRow = async (did, idx) => {
+        async function saveQuickPipelineRow(did, idx) {
             const entry = allData.find(d => d.id === did);
             if (!entry) return;
 
@@ -1070,10 +993,10 @@
             } catch (err) {
                 showCustomToast("Gagal memperbarui: " + err.message, "error");
             }
-        };
+        }
+        window.saveQuickPipelineRow = saveQuickPipelineRow;
 
-        // UPDATE METADATA NFM
-        window.updateNfmMeta = async (did, field, val) => {
+        async function updateNfmMeta(did, field, val) {
             const entry = allData.find(d => d.id === did);
             if (!entry) return;
 
@@ -1096,169 +1019,10 @@
             } catch (err) {
                 showCustomToast("Gagal memperbarui data: " + err.message, "error");
             }
-        };
-
-        // Dashboard Logic & Pipeline Calculation
-        function updateDashboard() {
-            let totals = { out: 0, site: 0, iss: 0, ageSum: 0, siteAgeSum: 0, siteAgeCount: 0 };
-            const deptStats = {};
-            const overdueItems = [];
-            const today = new Date();
-            today.setHours(0,0,0,0);
-
-            const pipelineData = {
-                'PR': { value: 0, count: 0 },
-                'ON ORDER': { value: 0, count: 0 },
-                'IN TRANSIT': { value: 0, count: 0 },
-                'ON SITE': { value: 0, count: 0 },
-                'ISSUED': { value: 0, count: 0 }
-            };
-
-            allData.forEach(entry => {
-                totals.ageSum += entry.aging;
-                
-                if (!deptStats[entry.dept]) deptStats[entry.dept] = { out: 0, iss: 0, age: 0, count: 0, siteAgeSum: 0, siteAgeCount: 0 };
-                
-                deptStats[entry.dept].age += entry.aging;
-                deptStats[entry.dept].count++;
-
-                entry.items.forEach(item => {
-                    const price = item.prc || 0;
-                    const qty = item.qty || 0;
-                    const arrived = item.qtyArrived || 0;
-                    const issued = item.qtyIssued || 0;
-                    const rawStatus = item.status || 'PR';
-
-                    const normalizedStatus = (rawStatus === 'ORDER' || rawStatus === 'ON ORDER') ? 'ON ORDER' : rawStatus;
-
-                    const outVal = Math.max(0, qty - issued) * price;
-                    const siteVal = Math.max(0, arrived - issued) * price;
-                    const issVal = issued * price;
-
-                    totals.out += outVal;
-                    totals.site += siteVal;
-                    totals.iss += issVal;
-
-                    deptStats[entry.dept].out += outVal;
-                    deptStats[entry.dept].iss += issVal;
-
-                    if (pipelineData[normalizedStatus]) {
-                        pipelineData[normalizedStatus].count++;
-                        pipelineData[normalizedStatus].value += (qty * price);
-                    }
-
-                    // PEMBARUAN: Kalkulasi Aging Gudang di Site & Pengingat Overdue dari Tanggal Tiba
-                    if (normalizedStatus === 'ON SITE') {
-                        let overdue = false;
-                        let delayDays = 0;
-                        const tglTiba = item.tglTargetAmbil || item.tglArrived;
-
-                        if (tglTiba) {
-                            const arrivalDate = new Date(tglTiba);
-                            arrivalDate.setHours(0,0,0,0);
-                            const daysOnSite = Math.floor((today - arrivalDate) / (1000 * 60 * 60 * 24));
-                            
-                            // Hitung akumulasi untuk average aging di site gudang
-                            totals.siteAgeSum += daysOnSite;
-                            totals.siteAgeCount++;
-                            deptStats[entry.dept].siteAgeSum += daysOnSite;
-                            deptStats[entry.dept].siteAgeCount++;
-
-                            // Masukkan ke overdue panel jika berada di site gudang >= 1 hari (Outstanding belum diambil)
-                            overdue = true;
-                            delayDays = daysOnSite;
-                        }
-
-                        if (overdue) {
-                            overdueItems.push({
-                                id: entry.id,
-                                nfm: entry.nfm,
-                                dept: entry.dept,
-                                req: entry.req,
-                                dsc: item.dsc,
-                                sc: item.sc,
-                                tglPlanning: entry.tglPlanning, // Tanggal Input
-                                tglTargetAmbil: tglTiba, // Tanggal Tiba
-                                delayDays: delayDays
-                            });
-                        }
-                    }
-                });
-            });
-
-            document.getElementById('statTotal').innerText = `Rp ${totals.out.toLocaleString('id-ID')}`;
-            document.getElementById('statSite').innerText = `Rp ${totals.site.toLocaleString('id-ID')}`;
-            document.getElementById('statIssued').innerText = `Rp ${totals.iss.toLocaleString('id-ID')}`;
-            
-            // PEMBARUAN: KPI Rata-rata Aging di Site dihitung secara presisi dari tanggal kedatangan
-            const avgSiteAge = totals.siteAgeCount > 0 ? Math.round(totals.siteAgeSum / totals.siteAgeCount) : 0;
-            document.getElementById('statAge').innerText = `${avgSiteAge} Hari`;
-
-            updateSCLookup();
-            populatePipelineFilters();
-            renderDepartmentDropdowns();
-            updatePipelineUI(pipelineData);
-
-            const alertsPanel = document.getElementById('overdue-alerts-panel');
-            const alertsTableBody = document.getElementById('overdueAlertsTableBody');
-
-            if (overdueItems.length > 0) {
-                alertsPanel.classList.remove('hidden');
-                alertsTableBody.innerHTML = overdueItems.map(item => `
-                    <tr class="hover:bg-red-50 transition">
-                        <td class="font-black text-slate-900" style="padding:10px; font-size:12px;">NFM-${item.nfm}</td>
-                        <td class="font-bold text-slate-800" style="padding:10px; font-size:12px;">
-                            <div>${item.dsc}</div>
-                            <div class="text-[10px] text-slate-400 font-bold">${item.sc}</div>
-                        </td>
-                        <td class="text-center font-black text-slate-900" style="padding:10px; font-size:11px;">
-                            <div>${item.req}</div>
-                            <div class="text-[9px] text-slate-400 uppercase">${item.dept}</div>
-                        </td>
-                        <!-- PEMBARUAN: Tanggal Input dan Tanggal Tiba sudah disesuaikan -->
-                        <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglPlanning || '-'}</td>
-                        <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglTargetAmbil || '-'}</td>
-                        <td class="text-center" style="padding:10px;">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-100 text-red-800 uppercase inline-block">
-                                ⚠️ Mengendap ${item.delayDays} Hari
-                            </span>
-                        </td>
-                        <td class="text-right" style="padding:10px;">
-                            <button onclick="window.sendReminder('${item.nfm}', '${item.req}', '${item.dsc}', '${item.tglPlanning}', '${item.tglTargetAmbil}')" 
-                                    class="bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase px-3 py-1.5 rounded-lg transition shadow-md whitespace-nowrap">
-                                📢 Kirim WA
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                alertsPanel.classList.add('hidden');
-                alertsTableBody.innerHTML = '';
-            }
-
-            renderTable(deptStats);
-            updateCharts(deptStats);
-            renderPipelineManager();
         }
+        window.updateNfmMeta = updateNfmMeta;
 
-        function updatePipelineUI(pipe) {
-            document.getElementById('pipeVal-PR').innerText = `Rp ${pipe['PR'].value.toLocaleString('id-ID')}`;
-            document.getElementById('pipeQty-PR').innerText = `${pipe['PR'].count} Item Barang`;
-
-            document.getElementById('pipeVal-ON_ORDER').innerText = `Rp ${pipe['ON ORDER'].value.toLocaleString('id-ID')}`;
-            document.getElementById('pipeQty-ON_ORDER').innerText = `${pipe['ON ORDER'].count} Item Barang`;
-
-            document.getElementById('pipeVal-IN_TRANSIT').innerText = `Rp ${pipe['IN TRANSIT'].value.toLocaleString('id-ID')}`;
-            document.getElementById('pipeQty-IN_TRANSIT').innerText = `${pipe['IN TRANSIT'].count} Item Barang`;
-
-            document.getElementById('pipeVal-ON_SITE').innerText = `Rp ${pipe['ON SITE'].value.toLocaleString('id-ID')}`;
-            document.getElementById('pipeQty-ON_SITE').innerText = `${pipe['ON SITE'].count} Item Barang`;
-
-            document.getElementById('pipeVal-ISSUED').innerText = `Rp ${pipe['ISSUED'].value.toLocaleString('id-ID')}`;
-            document.getElementById('pipeQty-ISSUED').innerText = `${pipe['ISSUED'].count} Item Barang`;
-        }
-
-        window.selectPipelineStage = (stage) => {
+        function selectPipelineStage(stage) {
             selectedStage = stage;
             
             document.querySelectorAll('.pipeline-card').forEach(el => el.classList.remove('active-pipeline'));
@@ -1284,20 +1048,22 @@
 
             const matchedItems = [];
             allData.forEach(entry => {
-                entry.items.forEach((item, idx) => {
-                    const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
-                    if (normStatus === stage) {
-                        matchedItems.push({
-                            id: entry.id,
-                            nfm: entry.nfm,
-                            dept: entry.dept,
-                            req: entry.req,
-                            tglPlanning: entry.tglPlanning,
-                            itemIndex: idx, // Perbaikan: Ambil indeks item asli
-                            ...item
-                        });
-                    }
-                });
+                if (entry.items) {
+                    entry.items.forEach((item, idx) => {
+                        const normStatus = (item.status === 'ORDER' || item.status === 'ON ORDER') ? 'ON ORDER' : item.status;
+                        if (normStatus === stage) {
+                            matchedItems.push({
+                                id: entry.id,
+                                nfm: entry.nfm,
+                                dept: entry.dept,
+                                req: entry.req,
+                                tglPlanning: entry.tglPlanning,
+                                itemIndex: idx, // Ambil indeks item asli
+                                ...item
+                            });
+                        }
+                    });
+                }
             });
 
             titleEl.innerHTML = `Barang pada Fase: <span class="text-blue-600">${stage}</span>`;
@@ -1351,11 +1117,11 @@
                             <div class="flex flex-col gap-1">
                                 <div class="flex items-center gap-1 text-[11px]">
                                     <span class="text-slate-400 font-bold">PO:</span>
-                                    <input type="text" value="${i.po || ''}" onchange="updateItem('${i.id}', ${i.itemIndex}, 'po', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-blue-600 outline-none">
+                                    <input type="text" value="${i.po || ''}" onchange="window.updateItem('${i.id}', ${i.itemIndex}, 'po', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-blue-600 outline-none">
                                 </div>
                                 <div class="flex items-center gap-1 text-[11px]">
                                     <span class="text-slate-400 font-bold">SC:</span>
-                                    <input type="text" value="${i.sc || ''}" onchange="updateItem('${i.id}', ${i.itemIndex}, 'sc', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-slate-500 outline-none">
+                                    <input type="text" value="${i.sc || ''}" onchange="window.updateItem('${i.id}', ${i.itemIndex}, 'sc', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-slate-500 outline-none">
                                 </div>
                             </div>
                         </td>
@@ -1374,10 +1140,12 @@
                     </tr>
                 `;
             }).join('');
-        };
+        }
+        window.selectPipelineStage = selectPipelineStage;
 
         function renderTable(stats) {
             const tbody = document.getElementById('summaryTable');
+            if (!tbody) return;
             tbody.innerHTML = Object.entries(stats)
                 .sort((a, b) => b[1].out - a[1].out)
                 .map(([name, data]) => {
@@ -1393,150 +1161,7 @@
                 }).join('');
         }
 
-        // Charts
-        function initCharts() {
-            const ctxBar = document.getElementById('mainChart').getContext('2d');
-            mainChart = new Chart(ctxBar, {
-                type: 'bar',
-                data: { labels: [], datasets: [{ label: 'Value', data: [], backgroundColor: '#0061ff', borderRadius: 8 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            const ctxPie = document.getElementById('pieChart').getContext('2d');
-            pieChart = new Chart(ctxPie, {
-                type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#0061ff', '#10b981', '#f59e0b', '#6366f1', '#ec4899'] }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { font: { weight: '800', size: 10 } } } } }
-            });
-        }
-
-        function updateCharts(stats) {
-            if (!mainChart || !pieChart) return;
-            
-            const labels = Object.keys(stats);
-            const data = labels.map(l => stats[l].out);
-
-            mainChart.data.labels = labels;
-            mainChart.data.datasets[0].data = data;
-            mainChart.update();
-
-            pieChart.data.labels = labels;
-            pieChart.data.datasets[0].data = data;
-            pieChart.update();
-        }
-
-        // EXCEL DOWNLOAD LOGIC WITH DUAL FAILSAFE FOR SANDBOXED ENVIRONMENTS
-        window.downloadExcel = () => {
-            if (allData.length === 0) {
-                showCustomToast("Tidak ada data untuk diunduh.", "error");
-                return;
-            }
-
-            // Flatten data for Excel
-            const exportRows = [];
-            allData.forEach(entry => {
-                if (!entry.items) return;
-                entry.items.forEach(item => {
-                    const tglTiba = item.tglTargetAmbil || item.tglArrived || '-';
-                    const daysOnSite = tglTiba !== '-' ? getDaysDiff(tglTiba) : 0;
-                    exportRows.push({
-                        'No NFM': entry.nfm || '',
-                        'Departemen': entry.dept || '',
-                        'Requestor': entry.req || '',
-                        'Tanggal Input': entry.tglPlanning || '',
-                        'Aging (Hari)': entry.aging || 0,
-                        'PO #': item.po || '',
-                        'SC #': item.sc || '',
-                        'Deskripsi Barang': item.dsc || '',
-                        'Qty Rencana': item.qty || 0,
-                        'Harga Satuan (Rp)': item.prc || 0,
-                        'Qty Datang': item.qtyArrived || 0,
-                        'Qty Keluar': item.qtyIssued || 0,
-                        'Status': item.status || 'PR',
-                        'Tanggal Tiba di Site': tglTiba,
-                        'Aging Gudang Site (Hari)': item.status === 'ON SITE' ? daysOnSite : '-',
-                        'Value Outstanding (Rp)': Math.max(0, (item.qty || 0) - (item.qtyIssued || 0)) * (item.prc || 0),
-                        'Tgl Terakhir Update': entry.tglUpdate ? entry.tglUpdate.split('T')[0] : '-'
-                    });
-                });
-            });
-
-            const timestamp = new Date().toISOString().split('T')[0];
-            const filename = `Wetar_NFM_Report_${timestamp}`;
-
-            // LEVEL 1: SheetJS Direct Download (XLSX Format)
-            if (typeof XLSX !== 'undefined') {
-                try {
-                    const worksheet = XLSX.utils.json_to_sheet(exportRows);
-                    const workbook = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(workbook, worksheet, "NFM Data");
-                    XLSX.writeFile(workbook, `${filename}.xlsx`);
-                    showCustomToast("Excel (.xlsx) berhasil diunduh!");
-                    return;
-                } catch (err) {
-                    console.warn("SheetJS download blocked or failed, trying Level 2 CSV download...", err);
-                }
-            }
-
-            // LEVEL 2: Fallback CSV Blob Download (Standard Spreadsheet Format)
-            try {
-                const headers = Object.keys(exportRows[0]);
-                const csvRows = [headers.join(',')];
-
-                exportRows.forEach(row => {
-                    const values = headers.map(header => {
-                        const val = row[header];
-                        const escaped = ('' + val).replace(/"/g, '""');
-                        return `"${escaped}"`;
-                    });
-                    csvRows.push(values.join(','));
-                });
-
-                const csvContent = "\uFEFF" + csvRows.join('\n'); // Add UTF-8 BOM for direct Excel click load
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.setAttribute("href", url);
-                link.setAttribute("download", `${filename}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                showCustomToast("Excel diblokir, CSV berhasil diunduh!");
-                return;
-            } catch (csvErr) {
-                console.warn("Direct CSV file download is blocked by iframe sandboxing, running copy-paste fallback modal...", csvErr);
-            }
-
-            // LEVEL 3: Ultimate Copy-Paste Fallback Modal (Works 100% on any tightly-sandboxed preview frame)
-            showExportFallback(exportRows);
-        };
-
-        window.showExportFallback = (rows) => {
-            const headers = Object.keys(rows[0]);
-            // Tab-Separated format is natively understood by Excel when pasting
-            const tsvRows = [headers.join('\t')];
-            rows.forEach(row => {
-                const values = headers.map(header => '' + (row[header] !== undefined ? row[header] : ''));
-                tsvRows.push(values.join('\t'));
-            });
-            
-            document.getElementById('export-text-area').value = tsvRows.join('\n');
-            document.getElementById('export-modal').classList.remove('hidden');
-            showCustomToast("Browser memblokir unduhan! Silakan salin data.", "error");
-        };
-
-        window.closeExportModal = () => {
-            document.getElementById('export-modal').classList.add('hidden');
-        };
-
-        window.copyExportText = () => {
-            const txt = document.getElementById('export-text-area').value;
-            copyTextToClipboard(txt);
-            showCustomToast("Data tersalin! Buka Excel lalu tekan Ctrl+V.");
-        };
-
-        window.updateItem = async (did, idx, field, val) => {
+        function updateItem(did, idx, field, val) {
             const entry = allData.find(d => d.id === did);
             if (!entry) return;
             
@@ -1559,15 +1184,16 @@
             }
 
             if (db && user) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items: entry.items });
+                updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did), { items: entry.items });
             } else {
                 localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
                 updateDashboard();
                 if (selectedStage) selectPipelineStage(selectedStage);
             }
-        };
+        }
+        window.updateItem = updateItem;
 
-        window.deleteEntry = async (did) => {
+        function deleteEntry(did) {
             showCustomConfirm("Apakah Anda yakin ingin menghapus NFM ini beserta seluruh item di dalamnya secara permanen?", async () => {
                 if (db && user) {
                     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'entries', did));
@@ -1580,9 +1206,10 @@
                 }
                 showCustomToast("NFM berhasil dihapus!");
             });
-        };
+        }
+        window.deleteEntry = deleteEntry;
 
-        window.switchView = (v) => {
+        function switchView(v) {
             document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-' + v).classList.remove('hidden');
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
@@ -1592,9 +1219,10 @@
                 populatePipelineFilters();
                 renderPipelineManager();
             }
-        };
+        }
+        window.switchView = switchView;
 
-        window.triggerAIAnalysis = async () => {
+        async function triggerAIAnalysis() {
             document.getElementById('ai-modal').classList.remove('hidden');
             const content = document.getElementById('ai-content');
             content.innerHTML = `<div class="flex flex-col items-center py-12"><div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div><p class="font-black text-slate-400 uppercase text-[10px]">Menyusun Laporan Intelijen...</p></div>`;
@@ -1633,22 +1261,446 @@
             } catch (err) {
                 content.innerHTML = `<p class="text-red-500 font-bold">Terjadi kesalahan koneksi AI.</p>`;
             }
-        };
+        }
+        window.triggerAIAnalysis = triggerAIAnalysis;
 
-        window.closeAI = () => document.getElementById('ai-modal').classList.add('hidden');
-        
-        window.applySetup = () => {
-            const raw = document.getElementById('config-input').value.trim();
-            try { 
-                JSON.parse(raw); 
-                localStorage.setItem('wetar_v32_config', raw); 
-                location.reload(); 
-            } catch(e) { 
-                showCustomToast("Format JSON tidak valid!", "error"); 
+        function closeAI() {
+            document.getElementById('ai-modal').classList.add('hidden');
+        }
+        window.closeAI = closeAI;
+
+        function showExportFallback(rows) {
+            const headers = Object.keys(rows[0]);
+            const tsvRows = [headers.join('\t')];
+            rows.forEach(row => {
+                const values = headers.map(header => '' + (row[header] !== undefined ? row[header] : ''));
+                tsvRows.push(values.join('\t'));
+            });
+            
+            document.getElementById('export-text-area').value = tsvRows.join('\n');
+            document.getElementById('export-modal').classList.remove('hidden');
+            showCustomToast("Browser memblokir unduhan! Silakan salin data.", "error");
+        }
+        window.showExportFallback = showExportFallback;
+
+        function closeExportModal() {
+            document.getElementById('export-modal').classList.add('hidden');
+        }
+        window.closeExportModal = closeExportModal;
+
+        function copyExportText() {
+            const txt = document.getElementById('export-text-area').value;
+            copyTextToClipboard(txt);
+            showCustomToast("Data tersalin! Buka Excel lalu tekan Ctrl+V.");
+        }
+        window.copyExportText = copyExportText;
+
+        function addItemRow() {
+            const div = document.createElement('div');
+            div.className = "item-row grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-4 items-end animate-fade-in border-b border-slate-200 pb-6 last:border-0";
+            div.innerHTML = `
+                <div><label class="text-[9px] font-black uppercase text-slate-500">PO#</label><input type="text" class="input-field po" required placeholder="PO..."></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500">SC#</label><input type="text" class="input-field sc" required placeholder="SC..." oninput="window.handleSCOnInput(this)"></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500">Qty Plan</label><input type="number" class="input-field qty" required></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500">Price (Rp)</label><input type="number" class="input-field prc" required></div>
+                <div><label class="text-[9px] font-black uppercase text-slate-500 font-bold">Tanggal Tiba</label><input type="date" class="input-field tgt"></div>
+                <div class="relative"><label class="text-[9px] font-black uppercase text-slate-500">Desc</label><input type="text" class="input-field dsc" required placeholder="Barang..."><button type="button" onclick="this.parentElement.parentElement.remove()" class="absolute -top-6 right-0 text-[8px] font-black text-red-500 uppercase">Hapus</button></div>
+            `;
+            document.getElementById('itemsContainer').appendChild(div);
+        }
+        window.addItemRow = addItemRow;
+
+        function downloadExcel() {
+            if (allData.length === 0) {
+                showCustomToast("Tidak ada data untuk diunduh.", "error");
+                return;
             }
-        };
-        
-        document.getElementById('cloud-activate-btn').onclick = applySetup;
+
+            const exportRows = [];
+            allData.forEach(entry => {
+                if (!entry.items) return;
+                entry.items.forEach(item => {
+                    const tglTiba = item.tglTargetAmbil || item.tglArrived || '-';
+                    const daysOnSite = tglTiba !== '-' ? getDaysDiff(tglTiba) : 0;
+                    exportRows.push({
+                        'No NFM': entry.nfm || '',
+                        'Departemen': entry.dept || '',
+                        'Requestor': entry.req || '',
+                        'Tanggal Input': entry.tglPlanning || '',
+                        'Aging (Hari)': entry.aging || 0,
+                        'PO #': item.po || '',
+                        'SC #': item.sc || '',
+                        'Deskripsi Barang': item.dsc || '',
+                        'Qty Rencana': item.qty || 0,
+                        'Harga Satuan (Rp)': item.prc || 0,
+                        'Qty Datang': item.qtyArrived || 0,
+                        'Qty Keluar': item.qtyIssued || 0,
+                        'Status': item.status || 'PR',
+                        'Tanggal Tiba di Site': tglTiba,
+                        'Aging Gudang Site (Hari)': item.status === 'ON SITE' ? daysOnSite : '-',
+                        'Value Outstanding (Rp)': Math.max(0, (item.qty || 0) - (item.qtyIssued || 0)) * (item.prc || 0),
+                        'Tgl Terakhir Update': entry.tglUpdate ? entry.tglUpdate.split('T')[0] : '-'
+                    });
+                });
+            });
+
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `Wetar_NFM_Report_${timestamp}`;
+
+            if (typeof XLSX !== 'undefined') {
+                try {
+                    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "NFM Data");
+                    XLSX.writeFile(workbook, `${filename}.xlsx`);
+                    showCustomToast("Excel (.xlsx) berhasil diunduh!");
+                    return;
+                } catch (err) {
+                    console.warn("SheetJS download blocked or failed, trying Level 2 CSV download...", err);
+                }
+            }
+
+            try {
+                const headers = Object.keys(exportRows[0]);
+                const csvRows = [headers.join(',')];
+
+                exportRows.forEach(row => {
+                    const values = headers.map(header => {
+                        const val = row[header];
+                        const escaped = ('' + val).replace(/"/g, '""');
+                        return `"${escaped}"`;
+                    });
+                    csvRows.push(values.join(','));
+                });
+
+                const csvContent = "\uFEFF" + csvRows.join('\n'); 
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `${filename}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showCustomToast("Excel diblokir, CSV berhasil diunduh!");
+                return;
+            } catch (csvErr) {
+                console.warn("Direct CSV file download is blocked, running copy-paste fallback...", csvErr);
+            }
+
+            showExportFallback(exportRows);
+        }
+        window.downloadExcel = downloadExcel;
+
+        // Dashboard Logic & Pipeline Calculation
+        function updateDashboard() {
+            let totals = { out: 0, site: 0, iss: 0, ageSum: 0, siteAgeSum: 0, siteAgeCount: 0 };
+            const deptStats = {};
+            const overdueItems = [];
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            const pipelineData = {
+                'PR': { value: 0, count: 0 },
+                'ON ORDER': { value: 0, count: 0 },
+                'IN TRANSIT': { value: 0, count: 0 },
+                'ON SITE': { value: 0, count: 0 },
+                'ISSUED': { value: 0, count: 0 }
+            };
+
+            allData.forEach(entry => {
+                totals.ageSum += entry.aging;
+                
+                if (!deptStats[entry.dept]) deptStats[entry.dept] = { out: 0, iss: 0, age: 0, count: 0, siteAgeSum: 0, siteAgeCount: 0 };
+                
+                deptStats[entry.dept].age += entry.aging;
+                deptStats[entry.dept].count++;
+
+                if (entry.items) {
+                    entry.items.forEach(item => {
+                        const price = item.prc || 0;
+                        const qty = item.qty || 0;
+                        const arrived = item.qtyArrived || 0;
+                        const issued = item.qtyIssued || 0;
+                        const rawStatus = item.status || 'PR';
+
+                        const normalizedStatus = (rawStatus === 'ORDER' || rawStatus === 'ON ORDER') ? 'ON ORDER' : rawStatus;
+
+                        const outVal = Math.max(0, qty - issued) * price;
+                        const siteVal = Math.max(0, arrived - issued) * price;
+                        const issVal = issued * price;
+
+                        totals.out += outVal;
+                        totals.site += siteVal;
+                        totals.iss += issVal;
+
+                        deptStats[entry.dept].out += outVal;
+                        deptStats[entry.dept].iss += issVal;
+
+                        if (pipelineData[normalizedStatus]) {
+                            pipelineData[normalizedStatus].count++;
+                            pipelineData[normalizedStatus].value += (qty * price);
+                        }
+
+                        // Kalkulasi Aging Gudang di Site & Pengingat Overdue dari Tanggal Tiba
+                        if (normalizedStatus === 'ON SITE') {
+                            let overdue = false;
+                            let delayDays = 0;
+                            const tglTiba = item.tglTargetAmbil || item.tglArrived;
+
+                            if (tglTiba) {
+                                const arrivalDate = new Date(tglTiba);
+                                arrivalDate.setHours(0,0,0,0);
+                                const daysOnSite = Math.floor((today - arrivalDate) / (1000 * 60 * 60 * 24));
+                                
+                                totals.siteAgeSum += daysOnSite;
+                                totals.siteAgeCount++;
+                                deptStats[entry.dept].siteAgeSum += daysOnSite;
+                                deptStats[entry.dept].siteAgeCount++;
+
+                                overdue = true;
+                                delayDays = daysOnSite;
+                            }
+
+                            if (overdue) {
+                                overdueItems.push({
+                                    id: entry.id,
+                                    nfm: entry.nfm,
+                                    dept: entry.dept,
+                                    req: entry.req,
+                                    dsc: item.dsc,
+                                    sc: item.sc,
+                                    tglPlanning: entry.tglPlanning, 
+                                    tglTargetAmbil: tglTiba, 
+                                    delayDays: delayDays
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            document.getElementById('statTotal').innerText = `Rp ${totals.out.toLocaleString('id-ID')}`;
+            document.getElementById('statSite').innerText = `Rp ${totals.site.toLocaleString('id-ID')}`;
+            document.getElementById('statIssued').innerText = `Rp ${totals.iss.toLocaleString('id-ID')}`;
+            
+            const avgSiteAge = totals.siteAgeCount > 0 ? Math.round(totals.siteAgeSum / totals.siteAgeCount) : 0;
+            document.getElementById('statAge').innerText = `${avgSiteAge} Hari`;
+
+            updateSCLookup();
+            populatePipelineFilters();
+            renderDepartmentDropdowns();
+            updatePipelineUI(pipelineData);
+
+            const alertsPanel = document.getElementById('overdue-alerts-panel');
+            const alertsTableBody = document.getElementById('overdueAlertsTableBody');
+
+            if (overdueItems.length > 0) {
+                if (alertsPanel) alertsPanel.classList.remove('hidden');
+                if (alertsTableBody) {
+                    alertsTableBody.innerHTML = overdueItems.map(item => `
+                        <tr class="hover:bg-red-50 transition">
+                            <td class="font-black text-slate-900" style="padding:10px; font-size:12px;">NFM-${item.nfm}</td>
+                            <td class="font-bold text-slate-800" style="padding:10px; font-size:12px;">
+                                <div>${item.dsc}</div>
+                                <div class="text-[10px] text-slate-400 font-bold">${item.sc}</div>
+                            </td>
+                            <td class="text-center font-black text-slate-900" style="padding:10px; font-size:11px;">
+                                <div>${item.req}</div>
+                                <div class="text-[9px] text-slate-400 uppercase">${item.dept}</div>
+                            </td>
+                            <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglPlanning || '-'}</td>
+                            <td class="text-center font-bold text-slate-700" style="padding:10px; font-size:11px;">${item.tglTargetAmbil || '-'}</td>
+                            <td class="text-center" style="padding:10px;">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-100 text-red-800 uppercase inline-block">
+                                    ⚠️ Mengendap ${item.delayDays} Hari
+                                </span>
+                            </td>
+                            <td class="text-right" style="padding:10px;">
+                                <button onclick="window.sendReminder('${item.nfm}', '${item.req}', '${item.dsc}', '${item.tglPlanning}', '${item.tglTargetAmbil}')" 
+                                        class="bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase px-3 py-1.5 rounded-lg transition shadow-md whitespace-nowrap">
+                                    📢 Kirim WA
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } else {
+                if (alertsPanel) alertsPanel.classList.add('hidden');
+                if (alertsTableBody) alertsTableBody.innerHTML = '';
+            }
+
+            renderTable(deptStats);
+            updateCharts(deptStats);
+            renderPipelineManager();
+        }
+
+        // ==========================================
+        // WINDOW & APP LOAD EVENT LISTENER
+        // ==========================================
+        window.addEventListener('load', async () => {
+            initCharts();
+            loadLocalBackup();
+            renderDepartmentDropdowns();
+            
+            const savedConfig = localStorage.getItem('wetar_v32_config');
+            if (savedConfig) {
+                await setupFirebase(JSON.parse(savedConfig));
+            } else if (typeof __firebase_config !== 'undefined') {
+                await setupFirebase(JSON.parse(__firebase_config));
+            }
+
+            if (document.getElementById('itemsContainer').children.length === 0) {
+                addItemRow();
+            }
+        });
+
+        // Form Submit Handler
+        const nfmForm = document.getElementById('nfmForm');
+        if (nfmForm) {
+            nfmForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('saveBtn');
+                btn.disabled = true;
+                btn.innerText = "MENYIMPAN...";
+
+                const items = Array.from(document.querySelectorAll('#itemsContainer > .item-row')).map(r => ({
+                    po: r.querySelector('.po').value.toUpperCase(),
+                    sc: r.querySelector('.sc').value.toUpperCase(),
+                    qty: parseFloat(r.querySelector('.qty').value),
+                    prc: parseFloat(r.querySelector('.prc').value),
+                    dsc: r.querySelector('.dsc').value,
+                    tglTargetAmbil: r.querySelector('.tgt').value || "", 
+                    status: 'PR', qtyArrived: 0, qtyIssued: 0
+                }));
+
+                const payload = {
+                    dept: document.getElementById('in_dept').value,
+                    req: document.getElementById('in_req').value.toUpperCase(),
+                    nfm: document.getElementById('in_nfm').value,
+                    tglPlanning: document.getElementById('in_date').value,
+                    items,
+                    tglUpdate: new Date().toISOString()
+                };
+
+                try {
+                    if (db && user) {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'entries'), payload);
+                    } else {
+                        allData.push({ ...payload, id: Date.now().toString(), aging: calculateAging(payload.tglPlanning) });
+                        localStorage.setItem('wetar_db_v32', JSON.stringify(allData));
+                        updateDashboard();
+                    }
+                    document.getElementById('nfmForm').reset();
+                    document.getElementById('itemsContainer').innerHTML = '';
+                    addItemRow();
+                    switchView('report');
+                    showCustomToast("Data Berhasil Disimpan!");
+                } catch (err) {
+                    showCustomToast("Gagal menyimpan: " + err.message, "error");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = "SIMPAN NFM & UPDATE DASHBOARD";
+                }
+            };
+        }
+
+        // Search Input Handler
+        const trackingSearch = document.getElementById('trackingSearch');
+        if (trackingSearch) {
+            trackingSearch.oninput = (e) => {
+                const query = e.target.value.toUpperCase();
+                const res = document.getElementById('trackingResult');
+                if (!query) { res.innerHTML = ''; return; }
+
+                const filtered = allData.filter(d => d.nfm.toUpperCase().includes(query));
+                if (filtered.length === 0) {
+                    res.innerHTML = `<div class="p-12 glass-card text-center font-black force-black bg-red-50 text-red-600">NFM TIDAK DITEMUKAN</div>`;
+                    return;
+                }
+
+                res.innerHTML = filtered.map(f => `
+                    <div class="glass-card p-8 border-t-8 border-blue-600 mb-6 animate-fade-in shadow-xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-black italic uppercase text-blue-600">Edit Data NFM #${f.nfm}</h3>
+                            <button onclick="window.deleteEntry('${f.id}')" class="text-red-500 font-black text-[10px] uppercase hover:underline">Hapus NFM</button>
+                        </div>
+                        
+                        <!-- Metadata Editor -->
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Nomor NFM</label>
+                                <input type="text" value="${f.nfm}" onchange="window.updateNfmMeta('${f.id}', 'nfm', this.value)" class="input-field bg-white py-1.5 px-3">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Nama Requestor</label>
+                                <input type="text" value="${f.req}" onchange="window.updateNfmMeta('${f.id}', 'req', this.value.toUpperCase())" class="input-field bg-white py-1.5 px-3">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Departemen</label>
+                                <select onchange="window.updateNfmMeta('${f.id}', 'dept', this.value)" class="input-field bg-white py-1.5 px-3">
+                                    ${departments.map(d => `<option value="${d}" ${f.dept === d ? 'selected' : ''}>${d}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 block uppercase mb-1">Tanggal Input</label>
+                                <input type="date" value="${f.tglPlanning || ''}" onchange="window.updateNfmMeta('${f.id}', 'tglPlanning', this.value)" class="input-field bg-white py-1.5 px-3">
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full nfm-table">
+                                <thead><tr><th>PO / SC (Edit)</th><th>Deskripsi & Target</th><th>Plan</th><th>Arrived</th><th>Issued</th><th>Status, Tgl Tiba & Target</th></tr></thead>
+                                <tbody>
+                                    ${f.items.map((i, idx) => `
+                                        <tr>
+                                            <td class="text-blue-600">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="flex items-center gap-1 text-[11px]">
+                                                        <span class="text-slate-400 font-bold">PO:</span>
+                                                        <input type="text" value="${i.po || ''}" onchange="window.updateItem('${f.id}', ${idx}, 'po', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-blue-600 outline-none">
+                                                    </div>
+                                                    <div class="flex items-center gap-1 text-[11px]">
+                                                        <span class="text-slate-400 font-bold">SC:</span>
+                                                        <input type="text" value="${i.sc || ''}" onchange="window.updateItem('${f.id}', ${idx}, 'sc', this.value.toUpperCase())" class="w-24 border rounded px-1.5 py-0.5 font-bold text-slate-500 outline-none">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="font-bold text-slate-800 mb-1">${i.dsc}</div>
+                                                <div class="mt-1">
+                                                    <label class="text-[8px] font-black text-slate-400 block uppercase">Tanggal Tiba Site:</label>
+                                                    <input type="date" value="${i.tglTargetAmbil || ''}" onchange="window.updateItem('${f.id}', ${idx}, 'tglTargetAmbil', this.value)" class="text-[9px] font-black border p-1 rounded w-full">
+                                                </div>
+                                            </td>
+                                            <td class="text-center">${i.qty}</td>
+                                            <td><input type="number" value="${i.qtyArrived || 0}" onchange="window.updateItem('${f.id}', ${idx}, 'qtyArrived', this.value)" class="w-16 border rounded p-1 text-center font-black"></td>
+                                            <td><input type="number" value="${i.qtyIssued || 0}" onchange="window.updateItem('${f.id}', ${idx}, 'qtyIssued', this.value)" class="w-16 border rounded p-1 text-center font-black"></td>
+                                            <td>
+                                                <select onchange="window.updateItem('${f.id}', ${idx}, 'status', this.value)" class="text-[10px] font-black border p-1 rounded w-full mb-1">
+                                                    <option value="PR" ${i.status === 'PR' ? 'selected' : ''}>PR</option>
+                                                    <option value="ON ORDER" ${i.status === 'ON ORDER' ? 'selected' : ''}>ORDER</option>
+                                                    <option value="IN TRANSIT" ${i.status === 'IN TRANSIT' ? 'selected' : ''}>TRANSIT</option>
+                                                    <option value="ON SITE" ${i.status === 'ON SITE' ? 'selected' : ''}>SITE</option>
+                                                    <option value="ISSUED" ${i.status === 'ISSUED' ? 'selected' : ''}>ISSUED</option>
+                                                </select>
+                                                ${i.status === 'ON SITE' || i.status === 'ISSUED' ? `
+                                                    <div class="mt-1">
+                                                        <label class="text-[8px] font-black text-slate-400 block uppercase">Tgl Tiba Site:</label>
+                                                        <input type="date" value="${i.tglArrived || ''}" onchange="window.updateItem('${f.id}', ${idx}, 'tglArrived', this.value)" class="text-[9px] font-black border p-1 rounded w-full">
+                                                    </div>
+                                                ` : ''}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `).join('');
+            };
+        }
 
     </script>
 </body>
